@@ -1,0 +1,302 @@
+# PH Google — full local stack
+#
+#   docker compose up -d --build          frontend, backend, OpenSearch, Dashboards, Redis
+#   docker compose --profile local-db up -d --build   ... and a local MongoDB
+#   docker compose --profile crawler up -d worker     start the crawl worker (deliberately)
+#   docker compose down                   stop everything (data is kept)
+#   docker compose down -v                stop and delete the index and database
+#   docker compose logs -f backend        follow one service
+#
+# Everything runs locally on one machine. There is no cloud service, no
+# managed OpenSearch, no AWS account and nothing to pay for.
+#
+# Ports
+#   8080  Frontend (nginx)             -> http://localhost:8080
+#   5000  Backend API                  -> http://localhost:5000/api/health
+#   9200  OpenSearch REST API          -> http://localhost:9200
+#   9600  OpenSearch metrics
+#   5601  OpenSearch Dashboards        -> http://localhost:5601
+#   6379  Redis (crawl queue)
+#   27017 MongoDB (local-db profile only)
+#
+# The crawl worker has no port: it takes work from the queue rather than
+# answering requests. It is behind the `crawler` profile, so a plain
+# `docker compose up -d` does NOT start it — see the worker service below.
+#
+# Configuration
+#   The backend reads ph-google-backend/.env for MONGO_URI and JWT_SECRET.
+#   Copy .env.example to .env and fill those in before the first run.
+#   Settings that are wrong *inside* a container — the OpenSearch host, the
+#   allowed CORS origin — are overridden below, because `environment` takes
+#   precedence over `env_file`.
+#
+# Security
+#   The OpenSearch security plugin is disabled, so 9200 is plain HTTP with no
+#   credentials. That is a local-development choice and nothing else; the
+#   staging/production configuration is documented at the bottom of this file.
+
+services:
+  # -------------------------------------------------------------------------
+  # Search engine
+  # -------------------------------------------------------------------------
+  opensearch:
+    image: opensearchproject/opensearch:2.19.1
+    container_name: ph-google-opensearch
+    environment:
+      # Single-node: no cluster bootstrapping, no replica allocation waits.
+      - discovery.type=single-node
+      - cluster.name=ph-google
+      - node.name=ph-google-node1
+
+      # Local development only — gives http:// with no auth on 9200.
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+
+      # 512MB heap is plenty for a laptop-sized index and leaves room for
+      # the rest of the machine. Raise it if you index millions of pages.
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+
+      # A laptop's disk fills up; without this OpenSearch flips the index to
+      # read-only at 85% used and writes start failing with a confusing error.
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      # The backend waits on this, so it must reflect a genuinely queryable
+      # node rather than a process that has merely started.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.1
+    container_name: ph-google-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      # Must match the security setting on the node above.
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Application database
+  #
+  # Only started with `--profile local-db`. By default the backend uses the
+  # MONGO_URI in ph-google-backend/.env, which is usually a MongoDB Atlas
+  # cluster. To use this container instead, point that same variable at it:
+  #
+  #   MONGO_URI=mongodb://mongo:27017/ph-google
+  #
+  # -------------------------------------------------------------------------
+  mongo:
+    image: mongo:7
+    container_name: ph-google-mongo
+    profiles: ["local-db"]
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      # Published so you can inspect it with Compass or mongosh from the host.
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Crawl queue
+  #
+  # Redis carries the crawl queue and nothing else. The frontier, every crawl
+  # job and all crawl results live in MongoDB, so losing this container costs
+  # the queue's position rather than the crawl — the worker's next
+  # maintenance sweep rebuilds the queue from the frontier.
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: ph-google-redis
+    # appendonly keeps queue state across a restart. Not strictly required
+    # given the above, but it saves re-deriving everything after a reboot.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    ports:
+      # Published so you can inspect the queue with redis-cli from the host.
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Backend API
+  # -------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./ph-google-backend
+      dockerfile: Dockerfile
+    image: ph-google-backend:local
+    container_name: ph-google-backend
+    env_file:
+      # MONGO_URI, JWT_SECRET and the rest of the developer's settings.
+      # required: false so a missing .env produces the backend's own
+      # "MONGO_URI is not set" message instead of a compose parse error.
+      - path: ./ph-google-backend/.env
+        required: false
+    environment:
+      # These four override whatever .env says, because .env describes running
+      # on the host and this is a container.
+      #
+      # `opensearch` is the service name on the compose network; localhost
+      # inside this container is the container itself.
+      OPENSEARCH_NODE: http://opensearch:9200
+      REDIS_URL: redis://redis:6379
+      PORT: "5000"
+      # The origin the browser actually loads the frontend from.
+      FRONTEND_URL: http://localhost:8080,http://localhost:3000
+      # Defaults to production so the containerised stack behaves the way a
+      # deployment does. Run `NODE_ENV=development docker compose up` when you
+      # want readable logs and stack traces in responses.
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "5000:5000"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Reaps zombie processes and forwards signals, so server.js's SIGTERM
+    # handler runs and the HTTP server drains cleanly.
+    init: true
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Crawl worker
+  #
+  # The same image as the backend, running a different entry point. It is the
+  # only process that fetches a page: the API validates a crawl request,
+  # writes it down and enqueues it, and everything after that happens here.
+  #
+  # NOT started by `docker compose up -d`. A running worker fetches pages on
+  # its own: it resumes unfinished crawl jobs and re-crawls pages that are due
+  # (CRAWLER_RECRAWL_AFTER_DAYS), with no admin action. So it sits behind the
+  # `crawler` profile and has to be started on purpose:
+  #
+  #   docker compose --profile crawler up -d worker
+  #   docker compose --profile crawler stop worker
+  #
+  # Scale it with:  docker compose --profile crawler up -d --scale worker=3 worker
+  # Per-host politeness still holds — the queue job id is the hostname, so no
+  # two workers can be on the same site at once however many you run.
+  # -------------------------------------------------------------------------
+  worker:
+    profiles:
+      - crawler
+    build:
+      context: ./ph-google-backend
+      dockerfile: Dockerfile
+    image: ph-google-backend:local
+    # No container_name: it would prevent `--scale worker=N`.
+    command: ["node", "worker.js"]
+    env_file:
+      - path: ./ph-google-backend/.env
+        required: false
+    environment:
+      OPENSEARCH_NODE: http://opensearch:9200
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # SIGTERM lets the slice in flight finish its page and release its lease,
+    # so a deploy does not leave a URL stuck until the next sweep reclaims it.
+    init: true
+    stop_grace_period: 30s
+    # The image's HEALTHCHECK probes the API on :5000, which this process
+    # never serves, so it would always report unhealthy. The worker has no
+    # health endpoint of its own; `restart` covers a crashed process.
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Frontend
+  # -------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./ph-google-frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the bundle at build time. This is the URL the browser
+        # uses, so it is the host's published port — not http://backend:5000,
+        # which only resolves inside the compose network.
+        VITE_API_BASE_URL: http://localhost:5000/api
+    image: ph-google-frontend:local
+    container_name: ph-google-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        # `service_started`, not `service_healthy`: nginx serves static files
+        # and does not need the API to boot. Waiting would only delay the UI
+        # that shows you the API is down.
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  opensearch-data:
+    driver: local
+  mongo-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# Running OpenSearch with the security plugin enabled (staging / production)
+#
+# The configuration above is for a laptop. Anything reachable by more than one
+# person needs authentication and TLS.
+#
+# 1. Remove DISABLE_SECURITY_PLUGIN and DISABLE_INSTALL_DEMO_CONFIG from the
+#    opensearch service, and DISABLE_SECURITY_DASHBOARDS_PLUGIN from
+#    dashboards.
+# 2. Add an initial admin password (2.12+ refuses to start without one). Pass
+#    it from the environment rather than writing it in this file:
+#       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?set this}
+# 3. The node then serves HTTPS with a self-signed certificate, so set in
+#    ph-google-backend/.env:
+#       OPENSEARCH_NODE=https://opensearch:9200
+#       OPENSEARCH_USERNAME=admin
+#       OPENSEARCH_PASSWORD=<the same password>
+#       OPENSEARCH_TLS_REJECT_UNAUTHORIZED=false   # self-signed cert only
+#    In production, install a real certificate and leave TLS verification on.
+# 4. Replace the demo certificates with ones issued for the real hostname,
+#    create a non-admin role for the application, and stop publishing 9200
+#    and 5601 to the host — reach them through the compose network or an
+#    authenticated proxy instead.
+# 5. Give the backend a long, unique JWT_SECRET and serve the frontend over
+#    HTTPS, so the auth cookies introduced in Phase 4 can be Secure.
+# ---------------------------------------------------------------------------

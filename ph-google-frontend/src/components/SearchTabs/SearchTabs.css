@@ -1,0 +1,107 @@
+.ph-search-tabs-bar {
+  width: 100%;
+  background: var(--ph-bg);
+  border-bottom: 1px solid var(--ph-border);
+}
+
+.ph-search-tabs-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ph-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+
+.ph-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Active state is carried by weight, colour AND a tangerine underline, so it
+   does not depend on colour perception alone. */
+.ph-tab-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ph-text-secondary);
+  transition: color var(--ph-transition-fast);
+  white-space: nowrap;
+}
+
+.ph-tab-item:hover {
+  color: var(--ph-text);
+}
+
+.ph-tab-item.active {
+  color: var(--ph-text);
+  font-weight: 600;
+}
+
+.ph-tab-item.active svg {
+  color: var(--ph-primary-ink);
+}
+
+.ph-tab-item:focus-visible {
+  outline-offset: -4px;
+}
+
+.ph-tab-indicator {
+  position: absolute;
+  bottom: -1px;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  background: var(--ph-primary);
+  border-radius: 2px 2px 0 0;
+}
+
+.ph-filters-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--ph-radius-md);
+  border: 1px solid var(--ph-border-strong);
+  background: var(--ph-surface);
+  color: var(--ph-text);
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+}
+
+.ph-filters-toggle-btn:hover {
+  border-color: var(--ph-text);
+}
+
+.ph-filters-toggle-btn.active {
+  border-color: var(--ph-primary);
+  background: var(--ph-primary-soft);
+  color: var(--ph-text);
+}
+
+@media (max-width: 768px) {
+  .ph-search-tabs-container {
+    padding: 0 16px;
+  }
+  .ph-tab-item {
+    padding: 13px 10px;
+  }
+}

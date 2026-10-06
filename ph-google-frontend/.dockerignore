@@ -1,0 +1,27 @@
+# Vite inlines every VITE_* variable into the bundle, so a stray .env here
+# would be baked into files served to the public.
+.env
+.env.*
+!.env.example
+
+# Reinstalled inside the image from the lockfile.
+node_modules
+
+# Built inside the image; a stale host copy would be overwritten anyway.
+dist
+coverage
+
+# Build metadata
+.git
+.gitignore
+.dockerignore
+Dockerfile
+eslint.config.js
+.prettierrc.json
+.prettierignore
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db

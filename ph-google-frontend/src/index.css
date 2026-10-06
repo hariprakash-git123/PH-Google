@@ -1,0 +1,603 @@
+/* ==========================================================================
+   PH SPECTRUM — DESIGN SYSTEM & GLOBAL STYLES
+
+   "Warm. Intelligent. Human."
+
+   Warm ivory ground, charcoal type, one tangerine identity colour. Teal,
+   yellow and violet are supporting accents used sparingly (roughly 70%
+   neutral, 20% ink, 10% accent). Hierarchy comes from type, spacing and
+   thin borders — not from gradients, glows or heavy shadows.
+
+   The --ph-* tokens are the source of truth. The older names further down
+   (--bg-main, --accent-primary …) are aliases kept so every component
+   stylesheet inherits the system without a rewrite; prefer --ph-* in new
+   code.
+
+   Colour roles and why there are two tangerines:
+     --ph-primary       brand fill (#F26B38). Buttons, marks, indicators.
+                        It is only 3:1 on white, so it never carries small
+                        text; text placed ON it uses --ph-on-primary.
+     --ph-primary-ink   the same hue deepened to pass WCAG AA (≥4.5:1) as
+                        text on ivory/white — links, active labels, icons.
+   Teal, yellow and violet follow the same fill / ink / soft pattern.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Neutrals ---- */
+  --ph-bg: #f7f5f0;
+  --ph-bg-sunken: #efece5;
+  --ph-surface: #ffffff;
+  --ph-surface-hover: #f3f0ea;
+  --ph-text: #171717;
+  --ph-text-secondary: #66645f;
+  --ph-text-muted: #6f6c66;
+  --ph-border: #ddd9d0;
+  --ph-border-subtle: #eae6de;
+  /* 3:1 against white — the boundary of inputs must be perceivable */
+  --ph-border-strong: #9a948a;
+
+  /* ---- Brand: tangerine ---- */
+  --ph-primary: #f26b38;
+  --ph-primary-hover: #e25a27;
+  --ph-primary-ink: #b4461a;
+  --ph-primary-ink-hover: #93370f;
+  --ph-primary-soft: #fcebe2;
+  --ph-on-primary: #171717;
+
+  /* ---- Supporting accents ---- */
+  --ph-secondary: #1fa7a0;
+  --ph-secondary-ink: #0f766e;
+  --ph-secondary-soft: #e0f2f0;
+  --ph-highlight: #e9b949;
+  --ph-highlight-ink: #8a6412;
+  --ph-highlight-soft: #fbf3dc;
+  --ph-violet: #7357e8;
+  --ph-violet-ink: #5b45c4;
+  --ph-violet-soft: #eeeafc;
+  /* Logo sprig only — the one green in the brand */
+  --ph-leaf: #8dc63f;
+
+  /* ---- Status (always paired with an icon or label, never colour alone) ---- */
+  --ph-success: #15803d;
+  --ph-success-soft: #e5f3e9;
+  --ph-danger: #b42318;
+  --ph-danger-soft: #fbe9e7;
+  --ph-warning: #8a6412;
+  --ph-warning-soft: #fbf3dc;
+
+  /* ---- Interaction ---- */
+  --ph-focus: #b4461a;
+  --ph-overlay: rgba(23, 23, 23, 0.45);
+  /* Media never sits on ivory — letterboxing is always charcoal */
+  --ph-media-bg: #171717;
+
+  /* ---- Radius: hierarchy, not pills everywhere ---- */
+  --ph-radius-xs: 4px; /* skeleton lines, tiny markers */
+  --ph-radius-sm: 6px; /* inputs, selects, small controls */
+  --ph-radius-md: 8px; /* buttons, cards */
+  --ph-radius-lg: 12px; /* dropdowns, modals, media */
+  --ph-radius-pill: 9999px; /* search bar, tags, avatars */
+
+  /* ---- Elevation: borders do the work; shadows only for overlays ---- */
+  --ph-shadow-sm: 0 1px 2px rgba(23, 23, 23, 0.05);
+  --ph-shadow-md: 0 2px 8px rgba(23, 23, 23, 0.06);
+  --ph-shadow-lg: 0 12px 28px rgba(23, 23, 23, 0.12);
+
+  /* ---- Typography ---- */
+  --ph-font-display:
+    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ph-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ph-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --ph-text-xs: 13px; /* metadata floor — nothing important goes smaller */
+  --ph-text-sm: 14px; /* navigation, secondary UI */
+  --ph-text-base: 16px; /* body, inputs */
+  --ph-text-md: 17px; /* search input */
+  --ph-text-lg: 20px; /* result titles */
+  --ph-text-xl: 24px; /* page headings */
+  --ph-text-2xl: 32px;
+  --ph-text-display: 44px; /* homepage wordmark */
+
+  /* ---- Spacing (4px base) ---- */
+  --ph-space-1: 4px;
+  --ph-space-2: 8px;
+  --ph-space-3: 12px;
+  --ph-space-4: 16px;
+  --ph-space-5: 20px;
+  --ph-space-6: 24px;
+  --ph-space-8: 32px;
+  --ph-space-10: 40px;
+  --ph-space-12: 48px;
+  --ph-space-16: 64px;
+
+  --ph-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ph-transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --header-height: 64px;
+}
+
+/* Dark theme — the same brand in warm charcoal, not a separate app.
+   Only the tokens that change are listed. */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ph-bg: #171717;
+  --ph-bg-sunken: #1d1c1b;
+  --ph-surface: #222222;
+  --ph-surface-hover: #2b2a27;
+  --ph-text: #f4f1ea;
+  --ph-text-secondary: #aaa69e;
+  --ph-text-muted: #948f86;
+  --ph-border: #3a3834;
+  --ph-border-subtle: #2e2d2a;
+  --ph-border-strong: #6f6b63;
+
+  --ph-primary: #f26b38;
+  --ph-primary-hover: #ff8250;
+  --ph-primary-ink: #f47a4a;
+  --ph-primary-ink-hover: #ff9c74;
+  --ph-primary-soft: rgba(242, 107, 56, 0.15);
+  --ph-on-primary: #171717;
+
+  --ph-secondary: #1fa7a0;
+  --ph-secondary-ink: #3dbdb5;
+  --ph-secondary-soft: rgba(31, 167, 160, 0.15);
+  --ph-highlight: #e9b949;
+  --ph-highlight-ink: #e9b949;
+  --ph-highlight-soft: rgba(233, 185, 73, 0.12);
+  --ph-violet: #7357e8;
+  --ph-violet-ink: #a897f5;
+  --ph-violet-soft: rgba(115, 87, 232, 0.18);
+
+  --ph-success: #5bd28a;
+  --ph-success-soft: rgba(91, 210, 138, 0.13);
+  --ph-danger: #f5877c;
+  --ph-danger-soft: rgba(245, 135, 124, 0.13);
+  --ph-warning: #e9b949;
+  --ph-warning-soft: rgba(233, 185, 73, 0.12);
+
+  --ph-focus: #ff9c74;
+  --ph-overlay: rgba(0, 0, 0, 0.6);
+  --ph-media-bg: #0f0f0f;
+
+  --ph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ph-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --ph-shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   Legacy aliases — component stylesheets were written against these names.
+   Declared on both selectors so they re-resolve when the theme flips.
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme='dark'] {
+  --bg-main: var(--ph-bg);
+  --bg-surface: var(--ph-surface);
+  --bg-surface-hover: var(--ph-surface-hover);
+  --bg-secondary: var(--ph-bg-sunken);
+  --bg-elevated: var(--ph-surface);
+
+  --text-primary: var(--ph-text);
+  --text-secondary: var(--ph-text-secondary);
+  --text-muted: var(--ph-text-muted);
+
+  /* "accent-primary" is used for text, icons and borders, so it maps to the
+     text-safe ink. Solid fills reference --ph-primary directly. */
+  --accent-primary: var(--ph-primary-ink);
+  --accent-hover: var(--ph-primary-ink-hover);
+  --accent-light: var(--ph-primary-soft);
+  --accent-glow: transparent;
+  --accent-secondary: var(--ph-secondary-ink);
+  --accent-warm: var(--ph-highlight-ink);
+  --accent-warning: var(--ph-warning);
+
+  --border-color: var(--ph-border);
+  --border-subtle: var(--ph-border-subtle);
+  --border-focus: var(--ph-border-strong);
+
+  --shadow-sm: var(--ph-shadow-sm);
+  --shadow-md: var(--ph-shadow-md);
+  --shadow-lg: var(--ph-shadow-lg);
+  --shadow-search: var(--ph-shadow-sm);
+  --shadow-search-focus: 0 0 0 3px var(--ph-primary-soft);
+
+  --radius-sm: var(--ph-radius-sm);
+  --radius-md: var(--ph-radius-md);
+  --radius-lg: var(--ph-radius-lg);
+  --radius-full: var(--ph-radius-pill);
+
+  --font-heading: var(--ph-font-display);
+  --font-body: var(--ph-font-sans);
+  --font-mono: var(--ph-font-mono);
+
+  --transition-fast: var(--ph-transition-fast);
+  --transition-normal: var(--ph-transition-normal);
+}
+
+/* Base Resets */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--ph-bg);
+  color: var(--ph-text);
+  font-family: var(--ph-font-sans);
+  font-size: var(--ph-text-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--ph-font-display);
+  font-weight: 700;
+  color: var(--ph-text);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--ph-primary-ink);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color var(--ph-transition-fast);
+}
+
+a:hover {
+  color: var(--ph-primary-ink-hover);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+  color: inherit;
+}
+
+/* One focus treatment everywhere: a solid ring that clears the element,
+   visible on ivory, white and charcoal alike. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+[role='tab']:focus-visible {
+  outline: 2px solid var(--ph-focus);
+  outline-offset: 2px;
+}
+
+/* Visually hidden, still announced by screen readers */
+.ph-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   BUTTON SYSTEM
+
+   Five roles cover every button in the product. Component class names are
+   aliased onto a role instead of re-declaring colour, radius and weight, so
+   each look has one source of truth and the markup stays unchanged.
+
+     primary    solid tangerine, charcoal label — the committing action
+     secondary  outlined      — an alternative action of equal weight
+     ghost      text only     — inline/tertiary navigation
+     chip       small pill    — a selectable suggestion
+     chrome     muted         — header / toolbar navigation and icon buttons
+
+   Buttons take the medium radius; only the search bar and chips are pills.
+   Size stays with the component: a submit button inside an input is
+   legitimately smaller than a hero button while sharing the same role.
+   ========================================================================== */
+
+/* Shared geometry and typography for the labelled roles */
+.ph-btn-primary,
+.ph-btn-secondary,
+.ph-btn-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: var(--ph-radius-md);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast),
+    color var(--ph-transition-fast);
+}
+
+/* Role 1 — primary */
+.ph-btn-primary,
+.ph-searchbar-submit-btn {
+  background: var(--ph-primary);
+  color: var(--ph-on-primary);
+}
+
+.ph-btn-primary:hover,
+.ph-searchbar-submit-btn:hover {
+  background: var(--ph-primary-hover);
+  color: var(--ph-on-primary);
+}
+
+/* Role 2 — secondary */
+.ph-btn-secondary,
+.ph-btn-secondary-action {
+  background: var(--ph-surface);
+  border-color: var(--ph-border-strong);
+  color: var(--ph-text);
+}
+
+.ph-btn-secondary:hover,
+.ph-btn-secondary-action:hover {
+  border-color: var(--ph-text);
+  background: var(--ph-surface-hover);
+}
+
+/* Role 3 — ghost (inline text action, button or link) */
+.ph-btn-ghost,
+.ph-feature-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 2px 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+  color: var(--ph-primary-ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition:
+    color var(--ph-transition-fast),
+    text-decoration-color var(--ph-transition-fast);
+}
+
+.ph-btn-ghost:hover,
+.ph-feature-link-btn:hover {
+  color: var(--ph-primary-ink-hover);
+  text-decoration-color: currentColor;
+}
+
+/* Role 4 — chip */
+.ph-btn-chip,
+.ph-chip-btn {
+  font-family: inherit;
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 6px 12px;
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-surface);
+  color: var(--ph-text);
+  border: 1px solid var(--ph-border);
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast),
+    color var(--ph-transition-fast);
+}
+
+.ph-btn-chip:hover,
+.ph-chip-btn:hover {
+  background: var(--ph-primary-soft);
+  color: var(--ph-text);
+  border-color: var(--ph-primary);
+}
+
+/* Role 5 — chrome: muted navigation controls.
+   Labelled chrome takes the button radius; icon-only chrome is a circle. */
+.ph-btn-chrome,
+.ph-header-link,
+.ph-btn-icon,
+.ph-header-icon-btn,
+.ph-searchbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--ph-radius-md);
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  color: var(--ph-text-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--ph-transition-fast),
+    color var(--ph-transition-fast);
+}
+
+.ph-btn-chrome:hover,
+.ph-header-link:hover,
+.ph-btn-icon:hover,
+.ph-header-icon-btn:hover,
+.ph-searchbar-btn:hover {
+  background: var(--ph-surface-hover);
+  color: var(--ph-text);
+}
+
+/* Icon-only variant: square footprint with a circular hit area */
+.ph-btn-icon,
+.ph-header-icon-btn,
+.ph-searchbar-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--ph-radius-pill);
+}
+
+/* ==========================================================================
+   SHARED COMPONENTS
+   ========================================================================== */
+
+/* Tag — a small label. Neutral by default; tone modifiers for categories. */
+.ph-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-bg-sunken);
+  color: var(--ph-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Status Badge (kept for any page still using it — no glow, no pulse) */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-surface);
+  color: var(--ph-text-secondary);
+  font-size: var(--ph-text-xs);
+  font-weight: 600;
+  border: 1px solid var(--ph-border);
+}
+
+.status-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ph-secondary);
+}
+
+/* Card — a thin-bordered white sheet. Not every card is clickable, so the
+   base card has no hover lift; interactive cards add their own state. */
+.ph-card {
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-md);
+  padding: var(--ph-space-5);
+}
+
+/* Responsive Container */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+/* Utility Animations — short and purposeful */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--ph-transition-normal) ease-out forwards;
+}
+
+/* Skeleton shimmer for loading states */
+@keyframes ph-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.animate-pulse {
+  animation: ph-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+/* Spinner utility — used by loading states across the app.
+   (Also declared in Admin.css; kept here so it does not depend on that
+   page's stylesheet being loaded.) */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respect the OS "reduce motion" setting */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

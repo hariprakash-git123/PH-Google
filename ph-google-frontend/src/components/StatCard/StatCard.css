@@ -1,0 +1,57 @@
+.ph-stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.ph-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ph-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ph-stat-change {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.ph-stat-positive {
+  background: var(--ph-success-soft);
+  color: var(--ph-success);
+}
+
+.ph-stat-neutral {
+  background: var(--accent-light);
+  color: var(--accent-primary);
+}
+
+.ph-stat-warning {
+  background: var(--ph-warning-soft);
+  color: var(--ph-warning);
+}
+
+.ph-stat-value {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.ph-stat-subtext {
+  font-size: 12px;
+  color: var(--text-muted);
+}

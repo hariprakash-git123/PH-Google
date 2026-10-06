@@ -1,0 +1,151 @@
+.ph-filters-panel {
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-md);
+  padding: 18px 24px;
+  margin: 16px 0;
+}
+
+.ph-filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ph-filters-header h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ph-text);
+}
+
+.ph-filters-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ph-text-secondary);
+  border-radius: 50%;
+  transition:
+    background-color var(--ph-transition-fast),
+    color var(--ph-transition-fast);
+}
+
+.ph-filters-close-btn:hover {
+  background: var(--ph-surface-hover);
+  color: var(--ph-text);
+}
+
+.ph-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.ph-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ph-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+  color: var(--ph-text);
+}
+
+.ph-filter-select {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: var(--ph-radius-sm);
+  border: 1px solid var(--ph-border-strong);
+  background: var(--ph-surface);
+  color: var(--ph-text);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color var(--ph-transition-fast);
+}
+
+.ph-filter-select:hover {
+  border-color: var(--ph-text-secondary);
+}
+
+.ph-filter-select:focus {
+  border-color: var(--ph-primary);
+}
+
+/* Toggle Switch — the "On/Off" text travels with it, so state is never
+   signalled by colour alone. */
+.ph-toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 76px;
+  height: 40px;
+  padding: 4px;
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-bg-sunken);
+  border: 1px solid var(--ph-border-strong);
+  cursor: pointer;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+  position: relative;
+}
+
+.ph-toggle-switch.on {
+  background: var(--ph-primary-soft);
+  border-color: var(--ph-primary);
+}
+
+.ph-toggle-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ph-text-secondary);
+  transition:
+    transform var(--ph-transition-fast),
+    background-color var(--ph-transition-fast);
+}
+
+.ph-toggle-switch.on .ph-toggle-thumb {
+  transform: translateX(34px);
+  background: var(--ph-primary);
+}
+
+.ph-toggle-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ph-text-secondary);
+  position: absolute;
+  left: 10px;
+}
+
+.ph-toggle-switch.on .ph-toggle-text {
+  left: 12px;
+  color: var(--ph-text);
+}
+
+/* Text input styled to match the select controls */
+.ph-filter-input {
+  font-family: inherit;
+  cursor: text;
+}
+
+.ph-filter-input::placeholder {
+  color: var(--ph-text-muted);
+  opacity: 1;
+}
+
+/* Explains which controls reach the index and which are local */
+.ph-filters-note {
+  margin: 14px 0 0;
+  font-size: var(--ph-text-xs);
+  line-height: 1.5;
+  color: var(--ph-text-secondary);
+}

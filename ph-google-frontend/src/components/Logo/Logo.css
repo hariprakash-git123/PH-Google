@@ -1,0 +1,84 @@
+.ph-logo-link {
+  text-decoration: none;
+  display: inline-block;
+  user-select: none;
+  border-radius: var(--ph-radius-md);
+}
+
+.ph-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The bird follows the ink colour; the sprig stays leaf green */
+.ph-logo-mark {
+  display: block;
+  flex-shrink: 0;
+  color: var(--ph-text);
+}
+
+.ph-logo-mark-sprig {
+  fill: var(--ph-leaf);
+  stroke: var(--ph-leaf);
+}
+
+.ph-logo-mark-sprig ellipse {
+  stroke: none;
+}
+
+/* Wordmark: a heavy "PH" and a lighter "Search" — contrast by weight,
+   not by colour or gradient. */
+.ph-logo-title {
+  font-family: var(--ph-font-display);
+  font-weight: 800;
+  color: var(--ph-text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ph-logo-highlight {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ph-text);
+}
+
+.ph-logo-tagline {
+  display: block;
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+/* Sizing Variants */
+.ph-logo-small .ph-logo-title {
+  font-size: 20px;
+}
+
+.ph-logo-medium .ph-logo-title {
+  font-size: 26px;
+}
+
+.ph-logo-large {
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.ph-logo-large .ph-logo-title {
+  font-size: var(--ph-text-display);
+}
+
+.ph-logo-large .ph-logo-tagline {
+  font-size: 17px;
+  margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .ph-logo-large .ph-logo-title {
+    font-size: 36px;
+  }
+}

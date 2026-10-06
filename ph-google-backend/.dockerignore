@@ -1,0 +1,34 @@
+# Secrets must never reach an image layer. A layer is readable by anyone who
+# can pull the image, and deleting the file in a later layer does not remove
+# it from the earlier one.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Reinstalled inside the image from the lockfile; a host copy may hold
+# platform-specific binaries that do not run on alpine.
+node_modules
+
+# Not needed at runtime
+tests
+scripts/dev
+coverage
+logs
+*.log
+
+# Build metadata
+.git
+.gitignore
+.dockerignore
+Dockerfile
+eslint.config.js
+.prettierrc.json
+.prettierignore
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db

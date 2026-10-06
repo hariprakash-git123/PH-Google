@@ -1,0 +1,160 @@
+.ph-admin-sidebar {
+  width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: #141414;
+  border-right: 1px solid #2e2d2a;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.ph-admin-logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #2e2d2a;
+  margin-bottom: 24px;
+}
+
+.ph-admin-badge {
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(242, 107, 56, 0.2);
+  color: #f47a4a;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(242, 107, 56, 0.3);
+}
+
+.ph-admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ph-admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: #aaa69e;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.ph-admin-nav-item:hover {
+  background: #2b2a27;
+  color: #f4f1ea;
+}
+
+.ph-admin-nav-item.active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ph-admin-sidebar-bottom {
+  padding-top: 16px;
+  border-top: 1px solid #2e2d2a;
+}
+
+.ph-admin-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  color: #aaa69e;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  background: #1f1f1e;
+  border: 1px solid #2e2d2a;
+}
+
+.ph-admin-back-btn:hover {
+  color: #f4f1ea;
+  background: #2b2a27;
+  border-color: #3a3834;
+}
+
+/* The admin console is always dark, so the logo is drawn in ivory here
+   whatever the site theme. */
+.ph-admin-sidebar .ph-logo-container,
+.ph-admin-mobile-bar .ph-logo-container {
+  --ph-text: #f4f1ea;
+}
+
+.ph-admin-mobile-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #141414;
+  border-bottom: 1px solid #2e2d2a;
+  position: sticky;
+  top: 0;
+  z-index: 110;
+}
+
+.ph-admin-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: #f4f1ea;
+}
+
+.ph-admin-menu-toggle:hover {
+  background: #2b2a27;
+}
+
+@media (max-width: 992px) {
+  .ph-admin-mobile-bar {
+    display: flex;
+  }
+
+  /* A closed drawer is hidden from keyboard and screen readers too. */
+  /* The drawer opens below the mobile bar, which keeps the logo and the
+     close button; its own logo row would only repeat them. */
+  .ph-admin-sidebar {
+    position: fixed;
+    top: 65px;
+    height: calc(100vh - 65px);
+    left: -280px;
+    max-width: 85vw;
+    visibility: hidden;
+    transition:
+      left var(--transition-normal),
+      visibility var(--transition-normal);
+  }
+
+  .ph-admin-sidebar .ph-admin-logo-wrapper {
+    display: none;
+  }
+
+  .ph-admin-sidebar.mobile-open {
+    left: 0;
+    visibility: visible;
+    overflow-y: auto;
+  }
+
+  .ph-admin-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 95;
+  }
+}

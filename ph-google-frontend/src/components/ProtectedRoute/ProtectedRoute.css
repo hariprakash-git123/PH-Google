@@ -1,0 +1,61 @@
+.ph-access-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: var(--ph-text-secondary);
+}
+
+.ph-access-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ph-bg);
+}
+
+.ph-access-main {
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 56px;
+  padding-bottom: 60px;
+}
+
+.ph-access-card {
+  padding: 32px;
+  text-align: center;
+}
+
+.ph-access-icon {
+  color: var(--ph-danger);
+  margin-bottom: 12px;
+}
+
+.ph-access-card h1 {
+  font-size: var(--ph-text-xl);
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.ph-access-card p {
+  color: var(--ph-text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.ph-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+  .ph-access-main {
+    padding-top: 32px;
+  }
+  .ph-access-card {
+    padding: 24px 16px;
+  }
+}

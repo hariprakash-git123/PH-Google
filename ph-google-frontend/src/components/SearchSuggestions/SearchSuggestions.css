@@ -1,0 +1,62 @@
+.ph-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-lg);
+  box-shadow: var(--ph-shadow-lg);
+  overflow: hidden;
+  z-index: 100;
+  padding: 6px 0;
+}
+
+.ph-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background-color var(--ph-transition-fast);
+}
+
+/* Keyboard-highlighted row gets a tangerine edge as well as a fill, so the
+   state is not carried by a subtle background alone. */
+.ph-suggestion-item:hover,
+.ph-suggestion-item.active {
+  background: var(--ph-surface-hover);
+}
+
+.ph-suggestion-item.active {
+  border-left-color: var(--ph-primary);
+}
+
+.ph-suggestion-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ph-text-muted);
+}
+
+.ph-suggestion-icon.trending {
+  color: var(--ph-primary-ink);
+}
+
+.ph-suggestion-text {
+  flex: 1;
+  font-size: var(--ph-text-base);
+  color: var(--ph-text);
+  font-weight: 500;
+}
+
+.ph-suggestion-category {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ph-text-secondary);
+  background: var(--ph-bg-sunken);
+  padding: 2px 8px;
+  border-radius: var(--ph-radius-pill);
+}

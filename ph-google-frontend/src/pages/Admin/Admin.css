@@ -1,0 +1,630 @@
+.ph-admin-page {
+  display: flex;
+  min-height: 100vh;
+  background: #141414;
+  color: #f4f1ea;
+}
+
+.ph-admin-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #141414;
+  color: #aaa69e;
+  font-size: 15px;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ph-admin-main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 1400px;
+  min-width: 0;
+}
+
+.ph-admin-header {
+  margin-bottom: 24px;
+}
+
+.ph-admin-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  margin-bottom: 12px;
+}
+
+.ph-admin-status-badge .dot.green {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.ph-admin-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #f4f1ea;
+  margin-bottom: 4px;
+}
+
+.ph-admin-subtitle {
+  font-size: 14px;
+  color: #aaa69e;
+}
+
+.ph-admin-notice-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(242, 107, 56, 0.1);
+  border: 1px solid rgba(242, 107, 56, 0.3);
+  color: #ebe7df;
+  margin-bottom: 28px;
+}
+
+.ph-notice-icon {
+  color: #f47a4a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ph-admin-notice-banner strong {
+  color: #f47a4a;
+  font-size: 14px;
+}
+
+.ph-admin-notice-banner p {
+  font-size: 13.5px;
+  color: #aaa69e;
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.ph-admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.ph-admin-page .ph-card {
+  background: #1f1f1e;
+  border-color: #2e2d2a;
+  color: #f4f1ea;
+}
+
+.ph-admin-page .ph-stat-label {
+  color: #aaa69e;
+}
+
+.ph-admin-page .ph-stat-value {
+  color: #f4f1ea;
+}
+
+.ph-admin-page .ph-stat-subtext {
+  color: #948f86;
+}
+
+.ph-admin-panels-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.ph-admin-panel {
+  padding: 24px;
+}
+
+.ph-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ph-panel-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f4f1ea;
+}
+
+.ph-panel-sub {
+  font-size: 12.5px;
+  color: #948f86;
+}
+
+.ph-range-pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #2e2d2a;
+  color: #aaa69e;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+/* Crawler Bar Chart */
+.ph-crawler-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 180px;
+  padding-top: 20px;
+  gap: 12px;
+}
+
+.ph-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.ph-chart-bar-wrap {
+  flex: 1;
+  width: 100%;
+  max-width: 28px;
+  display: flex;
+  align-items: flex-end;
+  background: #2e2d2a;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+}
+
+.ph-chart-bar {
+  width: 100%;
+  background: #f26b38;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s ease-out;
+}
+
+.ph-chart-bar:hover {
+  background: #ff8250;
+}
+
+.ph-chart-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: #948f86;
+  margin-top: 8px;
+}
+
+/* Health Rows */
+.ph-health-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ph-health-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ph-health-row-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+}
+
+.ph-health-label {
+  color: #d6d1c7;
+  font-weight: 500;
+}
+
+.ph-health-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #f47a4a;
+}
+
+.ph-progress-track {
+  height: 8px;
+  background: #2e2d2a;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.ph-progress-fill {
+  height: 100%;
+  background: #f26b38;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+@media (max-width: 1200px) {
+  .ph-admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ph-admin-panels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Below the sidebar breakpoint (AdminSidebar.css) the sidebar becomes a
+   drawer and the mobile bar sits above the content, not beside it. */
+@media (max-width: 992px) {
+  .ph-admin-page {
+    flex-direction: column;
+  }
+  .ph-admin-main {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ph-admin-main {
+    padding: 20px 16px;
+  }
+  .ph-admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Admin console — panels added when the dashboard was connected to
+   the real admin/analytics APIs.
+   --------------------------------------------------------------- */
+
+.ph-admin-notice-error {
+  border-color: var(--accent-warning, #d97706);
+}
+
+.ph-admin-empty-inline {
+  padding: 26px 16px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+/* Tables ------------------------------------------------------- */
+.ph-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ph-admin-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ph-admin-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.ph-admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ph-admin-table a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.ph-admin-table a:hover {
+  text-decoration: underline;
+}
+
+/* Long URLs and queries must not blow out the table width */
+.ph-td-url {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ph-td-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ph-admin-table-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+/* Status pills -------------------------------------------------- */
+.ph-job-status {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+}
+
+.ph-job-running,
+.ph-job-crawling {
+  background: var(--ph-secondary-soft);
+  color: var(--ph-secondary-ink);
+}
+.ph-job-queued,
+.ph-job-pending,
+.ph-job-discovered {
+  background: var(--ph-warning-soft);
+  color: var(--ph-warning);
+}
+.ph-job-completed,
+.ph-job-indexed {
+  background: var(--ph-success-soft);
+  color: var(--ph-success);
+}
+.ph-job-failed,
+.ph-job-error {
+  background: var(--ph-danger-soft);
+  color: var(--ph-danger);
+}
+.ph-job-stopped,
+.ph-job-stopping {
+  background: var(--ph-bg-sunken);
+  color: var(--ph-text-secondary);
+}
+.ph-job-crawled {
+  background: var(--ph-violet-soft);
+  color: var(--ph-violet-ink);
+}
+
+/* Crawl start form ---------------------------------------------- */
+.ph-crawl-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.ph-crawl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ph-crawl-field-wide {
+  flex: 1 1 280px;
+}
+
+.ph-crawl-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ph-crawl-field input[type='url'],
+.ph-crawl-field input[type='number'] {
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.ph-crawl-field input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.ph-crawl-field input[type='number'] {
+  width: 110px;
+}
+
+.ph-crawl-field-check label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Topic crawl ---------------------------------------------------- */
+.ph-topic-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1 1 100%;
+}
+
+.ph-topic-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.ph-topic-chip input {
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.ph-topic-chip small {
+  color: var(--text-secondary);
+}
+
+.ph-topic-budget {
+  align-self: center;
+}
+
+.ph-topic-over {
+  color: #f59e0b;
+}
+
+.ph-job-topic {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: #2e2d2a;
+  color: #aaa69e;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ph-crawl-field-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+/* Action buttons ------------------------------------------------ */
+.ph-admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--ph-primary);
+  background: var(--ph-primary);
+  color: var(--ph-on-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.ph-admin-action-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.ph-admin-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ph-admin-action-small {
+  height: 28px;
+  padding: 0 11px;
+  font-size: 12px;
+}
+
+.ph-admin-action-danger {
+  background: transparent;
+  border-color: var(--border-color);
+  color: #b91c1c;
+}
+
+.ph-admin-action-danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+/* Inline search box in a panel header ---------------------------- */
+.ph-admin-search-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-base);
+  color: var(--text-secondary);
+}
+
+.ph-admin-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  width: 190px;
+}
+
+/* Progress cell in the jobs table -------------------------------- */
+.ph-job-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.ph-job-progress .ph-progress-track {
+  flex: 1;
+}
+
+.ph-job-progress span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Amber status dot for a busy (non-idle) system */
+.ph-admin-status-badge .dot.amber {
+  background: #f59e0b;
+}
+
+@media (max-width: 860px) {
+  .ph-admin-table {
+    font-size: 12px;
+  }
+  .ph-td-url {
+    max-width: 160px;
+  }
+  .ph-admin-search-box input {
+    width: 120px;
+  }
+  .ph-crawl-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ph-crawl-field input[type='number'] {
+    width: 100%;
+  }
+}

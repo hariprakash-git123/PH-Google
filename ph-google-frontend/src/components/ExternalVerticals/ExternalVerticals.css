@@ -1,0 +1,328 @@
+/* ---------------------------------------------------------------
+   Google image / video / map results. The grids and cards reuse the
+   existing ImageResults and VideoResults styles; only what is new is
+   here: tiles that are links, the place card, and the skeletons.
+   --------------------------------------------------------------- */
+
+/* An image tile: a button that opens the preview. */
+.ph-ext-tile {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: zoom-in;
+}
+
+/* --- Image preview (lightbox) ---------------------------------
+   The frame, close and previous/next buttons are the existing
+   .ph-lightbox styles from ImageResults.css. */
+
+.ph-ext-lb-dialog {
+  display: flex;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ph-ext-lb .ph-lightbox-inner {
+  width: min(1000px, 92vw);
+  max-height: 92vh;
+}
+
+/* Over a pale image the translucent white buttons disappear. */
+.ph-ext-lb .ph-lightbox-close,
+.ph-ext-lb .ph-lightbox-nav {
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.ph-ext-lb .ph-lightbox-close:hover,
+.ph-ext-lb .ph-lightbox-nav:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.ph-ext-lb-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  background: var(--ph-media-bg, #111);
+  overflow: hidden;
+}
+
+.ph-ext-lb .ph-ext-lb-image {
+  max-width: 100%;
+  max-height: 62vh;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.ph-ext-lb .ph-ext-lb-image.is-loaded {
+  opacity: 1;
+}
+
+/* The grid thumbnail, shown at once while the full image arrives. */
+.ph-ext-lb .ph-ext-lb-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+  filter: blur(6px);
+  opacity: 0.6;
+}
+
+.ph-ext-lb-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.ph-ext-lb-failed {
+  flex-direction: column;
+  gap: 8px;
+  color: #d8d4cc;
+  font-size: 14px;
+}
+
+.ph-ext-lb-failed p {
+  margin: 0;
+}
+
+.ph-ext-lb-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.ph-ext-lb-title {
+  overflow-wrap: anywhere;
+}
+
+.ph-ext-lb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ph-ext-lb-actions button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ph-ext-lb-actions button:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.ph-ext-lb-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ph-danger, #b3261e);
+}
+
+@media (max-width: 640px) {
+  .ph-ext-lb .ph-lightbox-inner {
+    width: 100%;
+    max-height: 94vh;
+  }
+  .ph-ext-lb .ph-ext-lb-image {
+    max-height: 46vh;
+  }
+  .ph-ext-lb-stage {
+    min-height: 160px;
+  }
+  .ph-ext-lb .ph-lightbox-close {
+    top: 8px;
+    right: 8px;
+  }
+  .ph-ext-lb .ph-lightbox-prev {
+    left: 6px;
+  }
+  .ph-ext-lb .ph-lightbox-next {
+    right: 6px;
+  }
+  /* Three actions fit one row on a phone; each stays a full tap target. */
+  .ph-ext-lb-actions .ph-ext-place-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+.ph-ext-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ph-ext-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Places --------------------------------------------------- */
+
+.ph-ext-place-list {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ph-ext-place {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.ph-ext-place-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ph-ext-place-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.ph-ext-place-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.ph-ext-place-rating strong {
+  color: var(--text-primary);
+}
+
+.ph-ext-stars {
+  color: #e7a10c;
+  letter-spacing: 1px;
+}
+
+.ph-ext-stars-empty {
+  color: var(--ph-border-strong, #ccc);
+}
+
+.ph-ext-place-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.ph-ext-place-line svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.ph-ext-place-line a {
+  color: inherit;
+}
+
+.ph-ext-place-coords {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ph-ext-place-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ph-ext-place-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--ph-radius-pill, 999px);
+  border: 1px solid var(--border-color);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.ph-ext-place-btn:hover {
+  border-color: var(--ph-primary);
+}
+
+.ph-ext-place-btn.primary {
+  background: var(--ph-primary);
+  border-color: var(--ph-primary);
+  color: var(--ph-on-primary, #fff);
+}
+
+.ph-ext-place-btn.primary:hover {
+  background: var(--ph-primary-hover, var(--ph-primary));
+}
+
+.ph-ext-place-thumb {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-hover);
+}
+
+@media (max-width: 480px) {
+  .ph-ext-place {
+    padding: 14px 16px;
+  }
+  .ph-ext-place-thumb {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+/* --- Skeletons ------------------------------------------------ */
+
+.ph-ext-skeleton-tile {
+  cursor: default;
+}
+
+.ph-ext-skeleton-block {
+  background: var(--ph-bg-sunken);
+  cursor: default;
+}
+
+.ph-ext-skeleton-text {
+  width: 80%;
+  height: 14px;
+}
+
+.ph-ext-skeleton-text.short {
+  width: 45%;
+}

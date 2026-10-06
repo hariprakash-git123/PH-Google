@@ -1,0 +1,203 @@
+/* ==========================================================================
+   PH search bar — the most recognisable PH element.
+
+   A white field on the ivory page with a clearly visible edge, generous
+   type, and a tangerine circular submit carrying a charcoal arrow:
+
+     [ ⌕  What are you looking for?            🎙  ( → ) ]
+
+   Focus turns the edge tangerine and adds a soft ring — no glow, no blue.
+   ========================================================================== */
+
+.ph-searchbar-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.ph-searchbar-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--ph-surface);
+  border: 1.5px solid var(--ph-border-strong);
+  border-radius: var(--ph-radius-pill);
+  box-shadow: var(--ph-shadow-sm);
+  transition:
+    border-color var(--ph-transition-fast),
+    box-shadow var(--ph-transition-fast);
+}
+
+.ph-searchbar-box:hover {
+  border-color: var(--ph-text-secondary);
+}
+
+.ph-searchbar-box:focus-within {
+  border-color: var(--ph-primary);
+  box-shadow: 0 0 0 4px var(--ph-primary-soft);
+}
+
+/* Sizing Variants */
+.ph-searchbar-large .ph-searchbar-box {
+  height: 62px;
+  padding: 0 7px 0 22px;
+}
+
+.ph-searchbar-header .ph-searchbar-box {
+  height: 46px;
+  padding: 0 4px 0 16px;
+}
+
+.ph-searchbar-icon-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ph-text-secondary);
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: color var(--ph-transition-fast);
+}
+
+.ph-searchbar-box:focus-within .ph-searchbar-icon-left {
+  color: var(--ph-primary-ink);
+}
+
+.ph-searchbar-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ph-text);
+  font-family: var(--ph-font-sans);
+  font-size: 18px;
+  font-weight: 400;
+  outline: none;
+}
+
+.ph-searchbar-header .ph-searchbar-input {
+  font-size: var(--ph-text-base);
+}
+
+.ph-searchbar-input::placeholder {
+  color: var(--ph-text-muted);
+  opacity: 1;
+}
+
+.ph-searchbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* .ph-searchbar-btn uses the shared icon role (index.css); only the
+   in-field size is overridden here. */
+.ph-searchbar-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.ph-searchbar-header .ph-searchbar-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Submit — the tangerine circle. The primary role in index.css supplies
+   the colours; geometry lives here. */
+.ph-searchbar-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  border-radius: var(--ph-radius-pill);
+  transition: background-color var(--ph-transition-fast);
+}
+
+.ph-searchbar-header .ph-searchbar-submit-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Toast Message */
+.ph-toast-notice {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ph-text);
+  color: var(--ph-bg);
+  padding: 10px 16px;
+  border-radius: var(--ph-radius-md);
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--ph-shadow-md);
+  white-space: nowrap;
+  z-index: 120;
+}
+
+@media (max-width: 600px) {
+  .ph-searchbar-large .ph-searchbar-box {
+    height: 56px;
+    padding: 0 5px 0 16px;
+  }
+
+  .ph-searchbar-large .ph-searchbar-icon-left {
+    margin-right: 10px;
+  }
+
+  .ph-searchbar-large .ph-searchbar-input {
+    font-size: 17px;
+  }
+
+  .ph-searchbar-actions {
+    gap: 0;
+  }
+
+  .ph-searchbar-large .ph-searchbar-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ph-searchbar-large .ph-searchbar-submit-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ph-searchbar-header .ph-searchbar-box {
+    padding-left: 12px;
+  }
+
+  .ph-searchbar-header .ph-searchbar-icon-left {
+    margin-right: 8px;
+  }
+
+  /* The header field is narrow on phones — the mic yields to the text */
+  .ph-searchbar-header .ph-btn-mic {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .ph-searchbar-large .ph-searchbar-input {
+    font-size: 16px;
+  }
+
+  .ph-searchbar-large .ph-searchbar-icon-left svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+/* The field's focus is shown on the whole box (border + ring) */
+.ph-searchbar-input:focus,
+.ph-searchbar-input:focus-visible {
+  outline: none !important;
+}

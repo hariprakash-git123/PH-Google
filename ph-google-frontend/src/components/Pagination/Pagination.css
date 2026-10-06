@@ -1,0 +1,84 @@
+.ph-pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+/* No capsule container — the numbers sit directly on the page */
+.ph-pagination-pages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ph-page-number {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 6px;
+  border-radius: var(--ph-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ph-text);
+  border: 1px solid transparent;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+}
+
+.ph-page-number:hover {
+  background: var(--ph-surface);
+  border-color: var(--ph-border);
+}
+
+.ph-page-number.active {
+  background: var(--ph-primary);
+  border-color: var(--ph-primary);
+  color: var(--ph-on-primary);
+}
+
+.ph-page-next {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 14px;
+  height: 40px;
+  border-radius: var(--ph-radius-md);
+  border: 1px solid var(--ph-border-strong);
+  background: var(--ph-surface);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ph-text);
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+}
+
+.ph-page-next:hover:not(:disabled) {
+  border-color: var(--ph-text);
+  background: var(--ph-surface-hover);
+}
+
+.ph-page-next:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Ellipsis between non-contiguous page numbers */
+.ph-page-ellipsis {
+  width: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ph-text-secondary);
+  user-select: none;
+}
+
+/* The "Prev" control mirrors "Next" with the chevron leading */
+.ph-page-prev {
+  flex-direction: row;
+}

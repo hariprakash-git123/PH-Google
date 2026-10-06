@@ -1,0 +1,92 @@
+{
+  "name": "ph-google-backend",
+  "version": "1.0.0",
+  "description": "PH Google search engine backend — crawler, inverted index, ranking, search API, analytics and admin dashboard.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "worker": "node worker.js",
+    "worker:dev": "node --watch worker.js",
+    "test": "jest --runInBand",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:integration": "jest tests/integration --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
+    "migrate": "node scripts/backfillPageFields.js",
+    "create-admin": "node seed.js",
+    "crawl": "node scripts/dev/testCrawler.js",
+    "crawl:topics": "node scripts/crawlTopics.js",
+    "verify": "node scripts/verifyApi.js",
+    "reindex": "node scripts/reindexVerticals.js",
+    "seed-index": "node scripts/seedIndex.js",
+    "search:reindex": "node scripts/reindexOpenSearch.js",
+    "search:health": "node -e \"require('./services/opensearch/client').checkHealth(true).then(h=>{console.log(JSON.stringify(h,null,2));process.exit(h.ok?0:1)})\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "search-engine",
+    "inverted-index",
+    "crawler",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "globalSetup": "<rootDir>/tests/helpers/globalSetup.js",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/helpers/setupTests.js"
+    ],
+    "collectCoverageFrom": [
+      "controllers/**/*.js",
+      "services/**/*.js",
+      "crawler/**/*.js",
+      "utils/**/*.js",
+      "middleware/**/*.js",
+      "models/**/*.js"
+    ],
+    "testTimeout": 60000,
+    "verbose": true
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@opensearch-project/opensearch": "^3.6.0",
+    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^6.3.8",
+    "cheerio": "^1.2.0",
+    "compression": "^1.8.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "htmlparser2": "^10.1.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.1",
+    "robots-parser": "^3.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jest": "^29.16.6",
+    "globals": "^17.12.0",
+    "jest": "^30.5.1",
+    "mongodb-memory-server": "^11.2.0",
+    "prettier": "^3.9.8",
+    "supertest": "^7.2.2"
+  }
+}

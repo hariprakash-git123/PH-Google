@@ -1,0 +1,286 @@
+.ph-header {
+  width: 100%;
+  height: var(--header-height);
+  background: var(--ph-bg);
+  border-bottom: 1px solid transparent;
+  z-index: 90;
+}
+
+/* On results the header stays put and separates by a hairline — no shadow */
+.ph-header-sticky {
+  position: sticky;
+  top: 0;
+  background: var(--ph-bg);
+  border-bottom-color: var(--ph-border);
+}
+
+.ph-header-container {
+  max-width: 1400px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ph-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ph-header-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
+}
+
+/* .ph-header-link uses the shared chrome role in index.css; only its
+   labelled padding is set here. */
+.ph-header-link {
+  padding: 8px 12px;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+/* The page you are on */
+.ph-header-link.active {
+  background: var(--ph-primary-soft);
+  color: var(--ph-primary-ink);
+}
+
+.ph-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* .ph-header-icon-btn uses the shared icon role in index.css. */
+
+/* Apps Grid Dropdown */
+.ph-apps-menu-wrapper {
+  position: relative;
+}
+
+.ph-apps-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-lg);
+  box-shadow: var(--ph-shadow-lg);
+  padding: 16px;
+  z-index: 100;
+}
+
+.ph-apps-header {
+  font-size: var(--ph-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ph-text-secondary);
+  margin-bottom: 12px;
+}
+
+.ph-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.ph-app-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: var(--ph-radius-md);
+  transition: background-color var(--ph-transition-fast);
+  text-decoration: none;
+  color: var(--ph-text);
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  text-align: center;
+}
+
+.ph-app-item:hover {
+  background: var(--ph-surface-hover);
+  color: var(--ph-text);
+}
+
+/* Flat tinted tiles — one accent per destination, ink on soft */
+.ph-app-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ph-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-app-icon.ai {
+  background: var(--ph-violet-soft);
+  color: var(--ph-violet-ink);
+}
+.ph-app-icon.history {
+  background: var(--ph-secondary-soft);
+  color: var(--ph-secondary-ink);
+}
+.ph-app-icon.admin {
+  background: var(--ph-bg-sunken);
+  color: var(--ph-text);
+}
+.ph-app-icon.settings {
+  background: var(--ph-primary-soft);
+  color: var(--ph-primary-ink);
+}
+
+/* User Avatar */
+.ph-user-avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: border-color var(--ph-transition-fast);
+}
+
+.ph-user-avatar-btn:hover {
+  border-color: var(--ph-primary);
+}
+
+.ph-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  color: var(--ph-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+/* Authenticated user avatar — the one place the header carries tangerine */
+.ph-avatar-logged-in {
+  background: var(--ph-primary);
+  border-color: var(--ph-primary);
+  color: var(--ph-on-primary);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.ph-avatar-large {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+
+/* User dropdown menu */
+.ph-user-dropdown {
+  min-width: 260px;
+  right: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ph-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ph-border-subtle);
+}
+
+.ph-user-info strong {
+  display: block;
+  font-size: 15px;
+  color: var(--ph-text);
+}
+
+.ph-user-email {
+  display: block;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.ph-admin-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--ph-secondary-soft);
+  color: var(--ph-secondary-ink);
+  padding: 1px 8px;
+  border-radius: var(--ph-radius-pill);
+  margin-top: 6px;
+}
+
+.ph-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  font-size: var(--ph-text-sm);
+  font-weight: 500;
+  color: var(--ph-danger);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--ph-transition-fast);
+}
+
+.ph-logout-btn:hover {
+  background: var(--ph-danger-soft);
+}
+
+@media (max-width: 768px) {
+  .ph-header-container {
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .ph-nav-text-mobile {
+    display: none;
+  }
+  .ph-header-link {
+    padding: 8px 10px;
+  }
+  .ph-header-search-wrap {
+    gap: 12px;
+  }
+}
+
+/* On phones the results header drops the wordmark and keeps the mark, so
+   the search field keeps a usable width. */
+@media (max-width: 600px) {
+  .ph-header-search-wrap .ph-logo-title {
+    display: none;
+  }
+  .ph-header-right {
+    gap: 0;
+  }
+  .ph-header-sticky .ph-header-right .ph-header-link {
+    display: none;
+  }
+}
+
+/* Narrowest phones: the mark alone keeps the header on one line. */
+@media (max-width: 400px) {
+  .ph-header-left .ph-logo-title {
+    display: none;
+  }
+}

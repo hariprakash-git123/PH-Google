@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch makes the first run pointless; cancel it
+# rather than queueing behind it.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — lint, test, audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ph-google-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ph-google-backend/package-lock.json
+
+      # mongodb-memory-server downloads a MongoDB binary on first use. Without
+      # this the download runs on every CI job and adds about a minute.
+      - name: Cache MongoDB binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      # OpenSearch refuses to allocate its memory maps under the runner's
+      # default vm.max_map_count. This has to happen before the container
+      # starts, which is why the cluster is started as a step rather than as
+      # a `services:` container — those start before any step runs.
+      - name: Raise vm.max_map_count
+        run: sudo sysctl -w vm.max_map_count=262144
+
+      # Started from the committed compose file, so CI exercises the same
+      # configuration developers run locally rather than a parallel copy that
+      # can drift out of step with it.
+      - name: Start OpenSearch and Redis
+        working-directory: .
+        run: docker compose up -d --wait opensearch redis
+
+      - name: Show service logs on failure
+        if: failure()
+        working-directory: .
+        run: docker compose logs opensearch redis
+
+      - name: Test
+        env:
+          # Turn "the dependency is unreachable" from a skipped suite into a
+          # failed build. Without these, a service that failed to start would
+          # quietly shorten the run to the tests that need neither, and still
+          # go green.
+          OPENSEARCH_REQUIRED: 'true'
+          OPENSEARCH_NODE: http://localhost:9200
+          REDIS_REQUIRED: 'true'
+          REDIS_URL: redis://127.0.0.1:6379
+        run: npm test
+
+      - name: Audit dependencies
+        # Last, so a new upstream advisory does not hide a real test failure.
+        run: npm audit --audit-level=high
+
+      - name: Stop services
+        if: always()
+        working-directory: .
+        run: docker compose down -v
+
+  frontend:
+    name: Frontend — lint, build, audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ph-google
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ph-google/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Builds only — nothing is pushed anywhere. This catches a Dockerfile
+      # that broke while the source still compiles on the host, which is
+      # otherwise only discovered at deploy time.
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ph-google-backend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ph-google
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

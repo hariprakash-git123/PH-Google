@@ -1,0 +1,356 @@
+/* AI answer — presented as an editorial note above the results, not a glowing
+   AI panel. A plain sheet with a violet rule on the leading edge: violet is
+   the sparing accent reserved for PH AI. It sits in the results column and
+   is deliberately no louder than a result card. */
+.ph-ai-answer-card {
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-left: 3px solid var(--ph-violet);
+  border-radius: var(--ph-radius-md);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  /* A long word or an unbroken string must wrap, never widen the page. */
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* The states with nothing to show (no sources, unavailable) stay small. */
+.ph-ai-answer-card-quiet {
+  padding: 14px 20px;
+}
+
+.ph-ai-answer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ph-ai-answer-card-quiet .ph-ai-answer-header {
+  margin-bottom: 8px;
+}
+
+.ph-ai-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ph-ai-badge-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--ph-radius-md);
+  background: var(--ph-violet-soft);
+  color: var(--ph-violet-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-ai-answer-card-quiet .ph-ai-badge-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.ph-ai-tag {
+  font-size: var(--ph-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ph-violet-ink);
+}
+
+.ph-ai-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ph-text);
+}
+
+.ph-ai-answer-card-quiet .ph-ai-heading {
+  font-size: var(--ph-text-base);
+}
+
+/* ---- Answer ---- */
+.ph-ai-answer-text {
+  font-size: 15.5px;
+  color: var(--ph-text);
+  line-height: 1.65;
+  max-width: 72ch;
+}
+
+.ph-ai-answer-body-collapsed .ph-ai-answer-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
+}
+
+.ph-ai-subheading {
+  font-size: var(--ph-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ph-text-secondary);
+  margin-bottom: 8px;
+}
+
+.ph-ai-points {
+  margin-top: 14px;
+}
+
+.ph-ai-points-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ph-text);
+  max-width: 72ch;
+}
+
+/* Citation marker: a small numbered link to the source it stands for. */
+.ph-ai-cite-wrap {
+  line-height: 0;
+  margin-left: 2px;
+}
+
+.ph-ai-cite {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ph-violet-ink);
+  background: var(--ph-violet-soft);
+  border-radius: var(--ph-radius-xs);
+}
+
+.ph-ai-cite:hover {
+  background: var(--ph-violet);
+  color: #fff;
+}
+
+.ph-ai-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 4px 0;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+  color: var(--ph-primary-ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ph-ai-expand:hover {
+  color: var(--ph-primary-ink-hover);
+}
+
+/* ---- Sources ---- */
+.ph-ai-sources {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ph-border-subtle);
+}
+
+.ph-ai-sources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.ph-ai-source {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ph-ai-source-index {
+  flex-shrink: 0;
+  min-width: 20px;
+  padding: 2px 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--ph-violet-ink);
+  background: var(--ph-violet-soft);
+  border-radius: var(--ph-radius-xs);
+}
+
+.ph-ai-source-link {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.ph-ai-source-title {
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ph-primary-ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.ph-ai-source-link:hover .ph-ai-source-title {
+  text-decoration: underline;
+  color: var(--ph-primary-ink-hover);
+}
+
+.ph-ai-source-domain {
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
+/* ---- Footer: disclaimer and controls ---- */
+.ph-ai-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.ph-ai-disclaimer {
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-muted);
+}
+
+.ph-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ph-ai-feedback {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ph-ai-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: var(--ph-text-xs);
+  font-weight: 600;
+  color: var(--ph-text-secondary);
+  background: var(--ph-bg);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-sm);
+  cursor: pointer;
+}
+
+.ph-ai-action:hover {
+  background: var(--ph-surface-hover);
+  color: var(--ph-text);
+}
+
+.ph-ai-action-icon {
+  padding: 4px 8px;
+}
+
+.ph-ai-action.is-active {
+  color: var(--ph-violet-ink);
+  background: var(--ph-violet-soft);
+  border-color: var(--ph-violet);
+}
+
+.ph-ai-feedback-thanks {
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
+.ph-ai-answer-card :is(a, button):focus-visible {
+  outline: 2px solid var(--ph-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Quiet states ---- */
+.ph-ai-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+  line-height: 1.5;
+}
+
+.ph-ai-note svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.ph-ai-answer-card-quiet .ph-ai-actions {
+  margin-top: 10px;
+}
+
+/* ---- Loading ---- */
+.ph-ai-loading-label {
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+  margin-bottom: 12px;
+}
+
+.ph-ai-skeleton {
+  display: grid;
+  gap: 10px;
+}
+
+.ph-ai-skeleton-line {
+  height: 12px;
+  width: 100%;
+  background: var(--ph-bg-sunken);
+  border-radius: var(--ph-radius-xs);
+}
+
+.ph-ai-skeleton-line-short {
+  width: 62%;
+}
+
+/* ---- Small screens: one column, controls under the disclaimer ---- */
+@media (max-width: 640px) {
+  .ph-ai-answer-card {
+    padding: 16px;
+  }
+
+  .ph-ai-answer-card-quiet {
+    padding: 12px 16px;
+  }
+
+  .ph-ai-sources-list {
+    grid-template-columns: 1fr;
+  }
+
+  .ph-ai-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ph-ai-action {
+    min-height: 36px;
+  }
+}

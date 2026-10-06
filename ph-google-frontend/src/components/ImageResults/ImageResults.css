@@ -1,0 +1,221 @@
+/* ---------------------------------------------------------------
+   Image search results — a masonry-ish grid of real crawled images
+   --------------------------------------------------------------- */
+
+.ph-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ph-image-tile {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: zoom-in;
+  padding: 0;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.ph-image-tile:hover {
+  border-color: var(--ph-primary);
+}
+
+.ph-image-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-surface-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ph-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ph-image-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 10px;
+  min-width: 0;
+}
+
+.ph-image-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  /* Two-line clamp keeps every tile the same height */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+.ph-image-source {
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Lightbox ------------------------------------------------- */
+
+.ph-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(23, 23, 23, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: ph-fade-in 0.15s ease-out;
+}
+
+@keyframes ph-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ph-lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  max-width: min(1000px, 92vw);
+  max-height: 88vh;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  cursor: default;
+}
+
+.ph-lightbox-inner img {
+  max-width: 100%;
+  max-height: 62vh;
+  object-fit: contain;
+  background: var(--ph-media-bg);
+  display: block;
+}
+
+.ph-lightbox-info {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+}
+
+.ph-lightbox-info h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.ph-lightbox-caption {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ph-lightbox-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ph-lightbox-facts span {
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-hover);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ph-lightbox-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.ph-lightbox-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.ph-lightbox-links a:hover {
+  text-decoration: underline;
+}
+
+.ph-lightbox-close,
+.ph-lightbox-nav {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.ph-lightbox-close:hover,
+.ph-lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.ph-lightbox-close {
+  top: 18px;
+  right: 18px;
+}
+.ph-lightbox-prev {
+  left: 18px;
+}
+.ph-lightbox-next {
+  right: 18px;
+}
+
+@media (max-width: 640px) {
+  .ph-image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .ph-lightbox {
+    padding: 12px;
+  }
+  .ph-lightbox-inner img {
+    max-height: 48vh;
+  }
+  .ph-lightbox-nav {
+    width: 34px;
+    height: 34px;
+  }
+}

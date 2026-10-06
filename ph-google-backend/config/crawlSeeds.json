@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "description": "Seed catalog for topic crawls. See the 'Crawling by topic' section of ph-google-backend/README.md for how to add a topic or a source.",
+
+  "defaultExcludePatterns": [
+    "[?&](action|oldid|diff|printable|curid|veaction|redlink|share|replytocom)=",
+    "/(login|logout|signin|sign-in|signup|sign-up|register|cart|checkout)(/|\\?|$)"
+  ],
+
+  "sources": {
+    "wikipedia": {
+      "allowedDomains": ["en.wikipedia.org"],
+      "excludePatterns": [
+        "/wiki/(Special|Talk|User|User_talk|Wikipedia|Wikipedia_talk|WP|Project|File|File_talk|Image|MediaWiki|MediaWiki_talk|Template|Template_talk|Help|Help_talk|Category|Category_talk|Portal|Portal_talk|Draft|Draft_talk|Module|Module_talk|TimedText|TimedText_talk|Book|Gadget|Topic)(:|%3A)",
+        "/wiki/Main_Page$",
+        "_\\(disambiguation\\)$",
+        "^https?://[^/]+/w/"
+      ]
+    },
+    "wikivoyage": {
+      "allowedDomains": ["en.wikivoyage.org"],
+      "excludePatterns": [
+        "/wiki/(Special|Talk|User|User_talk|Wikivoyage|Wikivoyage_talk|File|File_talk|Template|Template_talk|Help|Help_talk|Category|Category_talk|Module|Module_talk|MediaWiki)(:|%3A)",
+        "/wiki/Main_Page$",
+        "^https?://[^/]+/w/"
+      ]
+    },
+    "mdn": {
+      "allowedDomains": ["developer.mozilla.org"],
+      "excludePatterns": [
+        "^https?://developer\\.mozilla\\.org/(?!en-US/)",
+        "/en-US/(plus|play|observatory)(/|$)"
+      ]
+    },
+    "medlineplus": {
+      "allowedDomains": ["medlineplus.gov"],
+      "excludePatterns": ["/spanish/"]
+    },
+    "who": {
+      "allowedDomains": ["www.who.int"],
+      "excludePatterns": [
+        "^https?://(?!www\\.)[^/]*who\\.int/",
+        "^https?://[^/]+/(ar|zh|fr|ru|es|pt)/"
+      ]
+    },
+    "epa": {
+      "allowedDomains": ["www.epa.gov"],
+      "excludePatterns": [
+        "^https?://(?!www\\.)[^/]*epa\\.gov/",
+        "^https?://[^/]+/es(/|$)",
+        "^https?://[^/]+/lep/"
+      ]
+    },
+    "nasa-science": {
+      "allowedDomains": ["science.nasa.gov"],
+      "excludePatterns": ["/wp-(content|json|admin)/", "[?&](s|search)="]
+    },
+    "gutenberg": {
+      "allowedDomains": ["www.gutenberg.org"],
+      "excludePatterns": [
+        "^https?://(?!www\\.)[^/]*gutenberg\\.org/",
+        "/(cache|files|dirs)/",
+        "/ebooks/\\d+\\.",
+        "/ebooks/(search|results)",
+        "[?&](sort_order|start_index)="
+      ]
+    }
+  },
+
+  "topics": [
+    {
+      "id": "technology",
+      "label": "Technology",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Computer_science", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/JavaScript", "source": "wikipedia" },
+        { "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development", "source": "mdn" }
+      ]
+    },
+    {
+      "id": "science",
+      "label": "Science",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Physics", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Biology", "source": "wikipedia" },
+        { "url": "https://science.nasa.gov/solar-system", "source": "nasa-science" }
+      ]
+    },
+    {
+      "id": "mathematics",
+      "label": "Mathematics",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Mathematics", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Algebra", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Education", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Higher_education", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "history",
+      "label": "History",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/History", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/World_War_II", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "geography",
+      "label": "Geography",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Geography", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Asia", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "health",
+      "label": "Health",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Nutrition", "source": "wikipedia" },
+        { "url": "https://medlineplus.gov/nutrition.html", "source": "medlineplus" },
+        { "url": "https://www.who.int/news-room/fact-sheets", "source": "who" }
+      ]
+    },
+    {
+      "id": "business",
+      "label": "Business",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Business", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Management", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "finance",
+      "label": "Finance",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Finance", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Stock_market", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "sports",
+      "label": "Sports",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Cricket", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Association_football", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Olympic_Games", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "arts",
+      "label": "Arts",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/The_arts", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Painting", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "music",
+      "label": "Music",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Music", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Jazz", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "literature",
+      "label": "Literature",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Literature", "source": "wikipedia" },
+        {
+          "url": "https://www.gutenberg.org/ebooks/bookshelf/",
+          "source": "gutenberg",
+          "maxDepth": 1
+        }
+      ]
+    },
+    {
+      "id": "film",
+      "label": "Film",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Film", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Academy_Awards", "source": "wikipedia" }
+      ]
+    },
+    {
+      "id": "travel",
+      "label": "Travel",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Tourism", "source": "wikipedia" },
+        { "url": "https://en.wikivoyage.org/wiki/Europe", "source": "wikivoyage" }
+      ]
+    },
+    {
+      "id": "environment",
+      "label": "Environment",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Climate_change", "source": "wikipedia" },
+        { "url": "https://www.epa.gov/environmental-topics", "source": "epa" }
+      ]
+    },
+    {
+      "id": "reference",
+      "label": "Reference",
+      "seeds": [
+        { "url": "https://en.wikipedia.org/wiki/Encyclopedia", "source": "wikipedia" },
+        { "url": "https://en.wikipedia.org/wiki/Dictionary", "source": "wikipedia" }
+      ]
+    }
+  ]
+}

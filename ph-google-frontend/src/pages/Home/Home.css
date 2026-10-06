@@ -1,0 +1,257 @@
+.ph-home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ph-home-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 40px;
+  padding-bottom: 64px;
+}
+
+.ph-home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 720px;
+  width: 100%;
+  /* Clear separation between the search interface and the card grid. */
+  margin: 0 auto 72px auto;
+}
+
+.ph-hero-description {
+  font-size: 18px;
+  color: var(--ph-text-secondary);
+  margin-top: 14px;
+  margin-bottom: 36px;
+  max-width: 520px;
+  line-height: 1.55;
+}
+
+.ph-hero-search-wrapper {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.ph-hero-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  /* Tighter than the gaps above it, so the language row reads as part of
+     the search interface rather than floating between two sections. */
+  margin-bottom: 20px;
+}
+
+/* Size only — colour and shape come from the button roles in index.css */
+.ph-home-btn {
+  height: 44px;
+  padding: 0 22px;
+}
+
+.ph-hero-language-region {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+}
+
+.ph-lang-icon {
+  color: var(--ph-text-secondary);
+}
+
+.ph-lang-active {
+  color: var(--ph-text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--ph-border-strong);
+  text-underline-offset: 3px;
+}
+
+.ph-lang-active:hover {
+  color: var(--ph-primary-ink);
+  text-decoration-color: currentColor;
+}
+
+/* ---- Feature cards: editorial columns ------------------------------ */
+.ph-home-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1040px;
+}
+
+.ph-feature-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+}
+
+.ph-feature-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* Flat tinted icon tiles — each card takes one supporting accent */
+.ph-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ph-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-feature-icon.ai-spark {
+  background: var(--ph-violet-soft);
+  color: var(--ph-violet-ink);
+}
+
+.ph-feature-icon.activity-icon {
+  background: var(--ph-secondary-soft);
+  color: var(--ph-secondary-ink);
+}
+
+.ph-feature-icon.explore-icon {
+  background: var(--ph-highlight-soft);
+  color: var(--ph-highlight-ink);
+}
+
+.ph-feature-tag {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ph-text-secondary);
+  background: var(--ph-bg-sunken);
+  padding: 2px 8px;
+  border-radius: var(--ph-radius-pill);
+}
+
+.ph-feature-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ph-feature-desc {
+  font-size: 15px;
+  color: var(--ph-text-secondary);
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+
+/* .ph-feature-link-btn and .ph-chip-btn are styled by the button roles
+   in index.css; only layout that is specific to this page lives here. */
+
+.ph-feature-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ph-home-footer {
+  width: 100%;
+  border-top: 1px solid var(--ph-border);
+  padding: 20px 0;
+  background: var(--ph-bg);
+}
+
+.ph-footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+}
+
+.ph-footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.ph-footer-links a {
+  color: var(--ph-text-secondary);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+
+.ph-footer-links a:hover {
+  color: var(--ph-text);
+  text-decoration-color: currentColor;
+}
+
+@media (max-width: 992px) {
+  .ph-home-features-grid {
+    grid-template-columns: 1fr;
+    max-width: 640px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ph-home-main {
+    justify-content: flex-start;
+    padding-top: 32px;
+    padding-bottom: 40px;
+  }
+
+  .ph-home-hero {
+    max-width: 100%;
+    margin-bottom: 40px;
+  }
+
+  .ph-hero-description {
+    font-size: 16px;
+    margin-top: 12px;
+    margin-bottom: 28px;
+    padding: 0 8px;
+  }
+
+  .ph-hero-buttons {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .ph-hero-language-region {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ph-home-features-grid {
+    gap: 14px;
+  }
+
+  .ph-home-footer {
+    margin-top: auto;
+  }
+
+  .ph-footer-content {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 430px) {
+  .ph-home-main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .ph-feature-card {
+    padding: 18px;
+  }
+}
