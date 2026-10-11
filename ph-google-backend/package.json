@@ -20,6 +20,7 @@
     "crawl": "node scripts/dev/testCrawler.js",
     "crawl:topics": "node scripts/crawlTopics.js",
     "verify": "node scripts/verifyApi.js",
+    "mail:check": "node scripts/checkEmail.js",
     "reindex": "node scripts/reindexVerticals.js",
     "seed-index": "node scripts/seedIndex.js",
     "search:reindex": "node scripts/reindexOpenSearch.js",
@@ -76,6 +77,7 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.1",
+    "nodemailer": "10.1.0",
     "robots-parser": "^3.0.1"
   },
   "devDependencies": {

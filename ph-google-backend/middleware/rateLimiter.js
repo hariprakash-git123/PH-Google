@@ -72,7 +72,26 @@ const embedLimiter = build({
   message: 'Too many pages opened. Please slow down.'
 });
 
+// Password recovery. Asking for a code sends an email, so it is the tightest;
+// entering a code or a new password is limited more loosely (each code also
+// allows only a few guesses — see passwordResetService).
+const recoveryRequestLimiter = build({
+  name: 'recovery-request',
+  windowMs: config.rateLimit.recoveryWindowMs,
+  max: config.rateLimit.recoveryRequestMax,
+  message: 'Too many password reset requests. Please try again later.'
+});
+
+const recoveryVerifyLimiter = build({
+  name: 'recovery-verify',
+  windowMs: config.rateLimit.recoveryWindowMs,
+  max: config.rateLimit.recoveryVerifyMax,
+  message: 'Too many attempts. Please try again later.'
+});
+
 module.exports = {
+  recoveryRequestLimiter,
+  recoveryVerifyLimiter,
   authLimiter,
   searchLimiter,
   crawlerLimiter,

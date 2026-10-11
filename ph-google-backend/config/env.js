@@ -94,6 +94,36 @@ const config = {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   },
 
+  // --- Outgoing email (password-reset codes) -------------------------------
+  // Plain SMTP, so any provider works (Amazon SES, SendGrid, Mailgun, Postmark,
+  // Microsoft 365, Gmail/Workspace with an app password...). Email is "configured"
+  // only when a host and a sender address are both set; without them the
+  // forgot-password endpoint answers 503 instead of pretending to send.
+  mail: {
+    host: (process.env.MAIL_SMTP_HOST || '').trim(),
+    port: toInt(process.env.MAIL_SMTP_PORT, 587),
+    // true = TLS from the first byte (usually port 465); false = STARTTLS,
+    // which is then required (requireTLS) so credentials never go in clear.
+    secure: process.env.MAIL_SMTP_SECURE === 'true',
+    user: (process.env.MAIL_SMTP_USER || '').trim(),
+    pass: process.env.MAIL_SMTP_PASS || '',
+    fromAddress: (process.env.MAIL_FROM_ADDRESS || '').trim(),
+    fromName: (process.env.MAIL_FROM_NAME || 'PH Spectrum').trim(),
+    timeoutMs: Math.max(1000, toInt(process.env.MAIL_SMTP_TIMEOUT_MS, 15000))
+  },
+
+  // --- Password reset by emailed code ------------------------------------
+  passwordReset: {
+    // How long an emailed code works, and how many wrong guesses it takes.
+    otpTtlMs: 10 * 60 * 1000,
+    maxAttempts: 5,
+    // A new code at most once a minute, and at most this many per hour.
+    resendCooldownMs: toInt(process.env.PASSWORD_RESET_RESEND_COOLDOWN_MS, 60 * 1000),
+    maxSendsPerHour: Math.max(1, toInt(process.env.PASSWORD_RESET_MAX_SENDS_PER_HOUR, 5)),
+    // After the code is accepted: how long the user has to choose a password.
+    resetTokenTtlMs: 15 * 60 * 1000
+  },
+
   trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
 
   // CORS: explicit allow-list in production, localhost dev servers otherwise.
@@ -287,6 +317,11 @@ const config = {
     imageMax: toInt(process.env.RATE_LIMIT_IMAGE_MAX, 30),
     embedWindowMs: toInt(process.env.RATE_LIMIT_EMBED_WINDOW_MS, 60 * 1000),
     embedMax: toInt(process.env.RATE_LIMIT_EMBED_MAX, 60),
+    // Password recovery, per client IP (on top of the per-account limits in
+    // passwordReset): requesting codes, and entering codes / new passwords.
+    recoveryWindowMs: toInt(process.env.RATE_LIMIT_RECOVERY_WINDOW_MS, 15 * 60 * 1000),
+    recoveryRequestMax: toInt(process.env.RATE_LIMIT_RECOVERY_REQUEST_MAX, 5),
+    recoveryVerifyMax: toInt(process.env.RATE_LIMIT_RECOVERY_VERIFY_MAX, 20),
     disabled: process.env.DISABLE_RATE_LIMIT === 'true' || isTest
   },
 

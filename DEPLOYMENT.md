@@ -79,6 +79,7 @@ value is missing.
 | `PARALLEL_API_KEY`, `PARALLEL_ENABLED=true`, `EXTERNAL_SEARCH_PROVIDER=parallel` | for external results | Web results beyond the index, and the Images/Videos/Maps tabs (`PARALLEL_VERTICALS_ENABLED=true`). |
 | `PARALLEL_DAILY_LIMIT` | recommended | Requests per UTC day per backend process (default 100). Set it to your Parallel plan. |
 | `MAPS_OSM_ENABLED`, `NOMINATIM_USER_AGENT` | for Maps | Nominatim's policy requires an identifying user agent with a contact URL. |
+| `MAIL_SMTP_HOST`, `MAIL_SMTP_PORT`, `MAIL_SMTP_SECURE`, `MAIL_SMTP_USER`, `MAIL_SMTP_PASS`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | for password reset | SMTP for "Forgot password" codes — see [§6c](#6-initialisation-once). Without `MAIL_SMTP_HOST` and `MAIL_FROM_ADDRESS`, Forgot password tells users it is unavailable. |
 | `SERPAPI_ENABLED` | — | Keep `false` (SerpApi is not used; its code is retained). |
 | `CRAWLER_CONTACT_URL` | if the crawler is ever enabled | Public page describing the bot. |
 
@@ -159,7 +160,36 @@ $COMPOSE exec -e ADMIN_EMAIL=ops@example.com -e ADMIN_PASSWORD='<long password>'
 
 Additive: creates the user or promotes an existing one; never deletes data.
 
-**c. Seeding content — needs separate approval.** `npm run seed-index`
+**c. Outgoing email (Forgot password).** Users reset a forgotten password
+with a 6-digit code sent by email. Configure any SMTP provider (Amazon SES,
+SendGrid, Mailgun, Postmark, Microsoft 365, Google Workspace with an app
+password) in `ph-google-backend/.env`:
+
+```
+MAIL_SMTP_HOST=smtp.your-provider.example
+MAIL_SMTP_PORT=587            # STARTTLS (required automatically); or 465 + MAIL_SMTP_SECURE=true
+MAIL_SMTP_USER=...
+MAIL_SMTP_PASS=...            # secret
+MAIL_FROM_ADDRESS=noreply@your-domain.example
+MAIL_FROM_NAME=PH Spectrum
+```
+
+The sender address must be verified with the provider, and its domain needs
+SPF and DKIM records (and preferably DMARC), or codes will be rejected or go
+to spam. Then check it — first the login, then a real delivery to an inbox
+you control:
+
+```bash
+$COMPOSE exec backend npm run mail:check
+$COMPOSE exec backend npm run mail:check -- --to you@your-domain.example
+```
+
+Finally run the flow once from the site (Sign in → Forgot password) with a
+real account. Codes expire after 10 minutes and allow 5 guesses; an account
+gets a new code at most once a minute and 5 times an hour; requests are also
+rate-limited per IP. A successful reset signs the user out on every device.
+
+**d. Seeding content — needs separate approval.** `npm run seed-index`
 fetches a curated list of public pages (robots.txt honoured). It is the
 crawler's fetcher run once per URL, so it falls under the crawler decision
 in [§11](#11-crawler-and-worker-disabled). Do not run it without that
@@ -268,5 +298,7 @@ production: `-v` deletes the index and queue volumes.
 | `/api/*` returns 502 | Backend not running or unhealthy: `$COMPOSE logs backend`. |
 | Search finds nothing from the index | Index not built yet (§6a). |
 | Images/Videos/Maps say "unavailable" | Parallel key/limits (§7): `$COMPOSE logs backend | grep -i parallel`. |
+| Forgot password says "not available right now" | Email not configured (§6c): `$COMPOSE exec backend npm run mail:check`. |
+| Users never receive reset codes | Sender not verified with the provider, or missing SPF/DKIM (check spam); `mail:check -- --to` and the provider's delivery logs. Logs show "Password reset code could not be sent" with the provider's error code. |
 | Everyone shares one rate limit | A load balancer is in front without nginx `real_ip` (§4). |
 | OpenSearch read-only / index blocked | Disk above 95%: free space; the block lifts automatically when usage drops. |

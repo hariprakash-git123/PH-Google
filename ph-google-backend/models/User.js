@@ -26,6 +26,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['user', 'admin'],
       default: 'user'
+    },
+    // When the password last changed, to the second. A session token issued
+    // before it is refused (authMiddleware), so changing or resetting the
+    // password signs out every other session.
+    passwordChangedAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }
@@ -38,6 +45,13 @@ userSchema.pre('save', async function () {
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+
+  // A changed password ends earlier sessions. Whole seconds, because a
+  // token's issue time (iat) is in whole seconds: a token issued in the same
+  // second as the change — the one returned with it — stays valid.
+  if (!this.isNew) {
+    this.passwordChangedAt = new Date(Math.floor(Date.now() / 1000) * 1000);
+  }
 });
 
 // Method to compare entered password with hashed password in DB

@@ -170,3 +170,121 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* --- Password field toggle, field messages, links ---------------- */
+
+.ph-form-input.ph-form-input-with-toggle {
+  padding-right: 44px;
+}
+
+.ph-password-toggle {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ph-password-toggle:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--ph-surface-hover);
+}
+
+.ph-password-toggle:focus-visible,
+.ph-login-text-link:focus-visible {
+  outline: 2px solid var(--ph-primary);
+  outline-offset: 2px;
+}
+
+.ph-form-input[aria-invalid='true'] {
+  border-color: var(--ph-danger, #b3261e);
+}
+
+.ph-field-error,
+.ph-field-hint {
+  margin: 6px 0 0;
+  font-size: var(--ph-text-xs);
+}
+
+.ph-field-error {
+  color: var(--ph-danger, #b3261e);
+}
+
+.ph-field-hint {
+  color: var(--text-muted);
+}
+
+.ph-login-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.ph-login-row-split {
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.ph-login-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ph-primary-ink);
+  font: inherit;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ph-login-text-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.ph-login-text-link:disabled {
+  color: var(--text-muted);
+  font-weight: 500;
+  cursor: default;
+}
+
+.ph-login-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--ph-success-soft, #e7f4ea);
+  color: var(--ph-text);
+  font-size: var(--ph-text-sm);
+}
+
+.ph-login-info svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ph-success, #1e7b34);
+}
+
+.ph-otp-input {
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  letter-spacing: 0.4em;
+}
+
+.ph-login-link-btn {
+  margin-top: 16px;
+  text-decoration: none;
+  justify-content: center;
+}

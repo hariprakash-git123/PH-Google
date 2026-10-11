@@ -4,6 +4,7 @@ const { config } = require('../config/env');
 const { sendSuccess, asyncHandler, ApiError } = require('../utils/apiResponse');
 const { parseEmail, parsePassword, parseName } = require('../utils/validators');
 const logger = require('../utils/logger');
+const passwordReset = require('../services/passwordResetService');
 
 /**
  * Authentication.
@@ -125,4 +126,84 @@ const changePassword = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { register, login, getMe, changePassword, generateToken, publicUser };
+// ---------------------------------------------------------------------------
+// Password recovery: an emailed six-digit code, then a one-time reset token.
+// The rules (expiry, guesses, resend limits, single use) live in
+// passwordResetService; these handlers only read input and shape answers.
+// ---------------------------------------------------------------------------
+
+/** The one answer to every forgot-password request that is not a 503. */
+const RESET_REQUESTED =
+  'If an account exists for that email address, we have sent it a 6-digit code. ' +
+  'The code expires in 10 minutes.';
+
+/** Turns the service's generic failures into API errors with the same text. */
+async function recovery(task) {
+  try {
+    return await task();
+  } catch (error) {
+    if (error instanceof passwordReset.PasswordResetError) {
+      throw new ApiError(error.message, error.status);
+    }
+    throw error;
+  }
+}
+
+/**
+ * POST /api/auth/forgot-password  { email }
+ *
+ * Always the same answer (200), whether or not the address has an account,
+ * whether a code was sent or held back by the resend limits. 503 only when
+ * email is not configured — which is true for every address alike.
+ */
+const forgotPassword = asyncHandler(async (req, res) => {
+  const email = parseEmail(req.body.email);
+  await recovery(() => passwordReset.requestReset(email));
+  return sendSuccess(res, { message: RESET_REQUESTED });
+});
+
+/**
+ * POST /api/auth/verify-reset-code  { email, code }
+ *
+ * A correct code is used up and exchanged for a short-lived reset token.
+ * Every failure — wrong, expired, used or locked code, unknown address —
+ * gets the same 400 message.
+ */
+const verifyResetCode = asyncHandler(async (req, res) => {
+  const email = parseEmail(req.body.email);
+  const code = typeof req.body.code === 'string' ? req.body.code.trim() : '';
+  const result = await recovery(() => passwordReset.verifyCode(email, code));
+  return sendSuccess(res, result);
+});
+
+/**
+ * POST /api/auth/reset-password  { resetToken, password, confirmPassword }
+ *
+ * Sets the new password once, under the same password policy as sign-up.
+ * Every session issued before it stops working. No session is issued: the
+ * user signs in with the new password.
+ */
+const resetPassword = asyncHandler(async (req, res) => {
+  const resetToken = typeof req.body.resetToken === 'string' ? req.body.resetToken : '';
+  if (!resetToken) throw ApiError.badRequest('The reset token is missing. Please start again.');
+  const password = parsePassword(req.body.password);
+  if (req.body.confirmPassword !== password) {
+    throw ApiError.badRequest('The passwords do not match.');
+  }
+  await recovery(() => passwordReset.resetPassword(resetToken, password));
+  return sendSuccess(res, {
+    message: 'Your password has been reset. Sign in with your new password.'
+  });
+});
+
+module.exports = {
+  register,
+  login,
+  getMe,
+  changePassword,
+  forgotPassword,
+  verifyResetCode,
+  resetPassword,
+  generateToken,
+  publicUser
+};

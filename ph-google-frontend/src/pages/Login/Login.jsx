@@ -3,8 +3,12 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header/Header';
 import Logo from '../../components/Logo/Logo';
-import { Mail, Lock, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import PasswordField from '../../components/PasswordField/PasswordField';
+import { Mail, AlertCircle, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import './Login.css';
+
+/** The same shape the API accepts (utils/validators.parseEmail). */
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,9 +17,14 @@ export default function Login() {
   const from = location.state?.from;
   const returnTo =
     typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/';
+  // Shown after a password reset sends the user back here.
+  const notice = typeof location.state?.notice === 'string' ? location.state.notice : '';
   const { login, isAuthenticated } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(
+    typeof location.state?.email === 'string' ? location.state.email : ''
+  );
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,13 +57,24 @@ export default function Login() {
     );
   }
 
+  const validate = () => {
+    const next = {};
+    const address = email.trim();
+    if (!address) next.email = 'Enter your email address.';
+    else if (!EMAIL_PATTERN.test(address)) next.email = 'Enter a valid email address.';
+    if (!password) next.password = 'Enter your password.';
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+    if (!validate()) return;
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err.message);
@@ -73,11 +93,17 @@ export default function Login() {
             <Logo size="medium" clickable={true} />
             <h2>Sign in to PH Spectrum</h2>
             <p className="ph-login-subtitle">
-              Sign in to sync history, preferences and saved results.
+              Sign in to sync your search history and preferences.
             </p>
           </div>
 
-          {/* Error Message */}
+          {notice && !error && (
+            <div className="ph-login-info" role="status">
+              <CheckCircle2 size={16} aria-hidden="true" />
+              <span>{notice}</span>
+            </div>
+          )}
+
           {error && (
             <div className="ph-login-error" role="alert">
               <AlertCircle size={16} />
@@ -85,11 +111,11 @@ export default function Login() {
             </div>
           )}
 
-          <form className="ph-login-form" onSubmit={handleSubmit}>
+          <form className="ph-login-form" onSubmit={handleSubmit} noValidate>
             <div className="ph-form-group">
               <label htmlFor="email">Email address</label>
               <div className="ph-input-wrap">
-                <Mail size={16} className="ph-input-icon" />
+                <Mail size={16} className="ph-input-icon" aria-hidden="true" />
                 <input
                   id="email"
                   type="email"
@@ -97,35 +123,46 @@ export default function Login() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  required
+                  autoComplete="email"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   disabled={isLoading}
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                 />
               </div>
+              {fieldErrors.email && (
+                <p id="email-error" className="ph-field-error">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
-            <div className="ph-form-group">
-              <label htmlFor="password">Password</label>
-              <div className="ph-input-wrap">
-                <Lock size={16} className="ph-input-icon" />
-                <input
-                  id="password"
-                  type="password"
-                  className="ph-form-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  minLength={6}   
-                />
-              </div>
+            <PasswordField
+              id="password"
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+              disabled={isLoading}
+              error={fieldErrors.password}
+            />
+
+            <div className="ph-login-row">
+              <Link
+                to="/forgot-password"
+                state={{ email: email.trim() }}
+                className="ph-login-text-link"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             <button type="submit" className="ph-login-submit-btn" disabled={isLoading}>
-              <span>{isLoading ? 'Signing in...' : 'Continue'}</span>
+              <span>{isLoading ? 'Signing in…' : 'Sign in'}</span>
               {!isLoading && <ArrowRight size={16} />}
             </button>
-          </form>  
+          </form>
 
           <div className="ph-login-footer">
             <span>Don't have an account? </span>

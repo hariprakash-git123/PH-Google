@@ -25,6 +25,17 @@ async function resolveUser(token) {
     err.code = 'USER_GONE';
     throw err;
   }
+  // Issued before the password last changed (or was reset): no longer valid.
+  // Reported like an expired session, so the client asks the user to sign in.
+  if (
+    user.passwordChangedAt &&
+    Number.isFinite(decoded.iat) &&
+    decoded.iat * 1000 < user.passwordChangedAt.getTime()
+  ) {
+    const err = new Error('Session ended by a password change.');
+    err.name = 'TokenExpiredError';
+    throw err;
+  }
   return user;
 }
 
