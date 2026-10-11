@@ -31,6 +31,7 @@ describe('serpApiMapper — one result', () => {
       snippet: 'Learn python.',
       publishedAt: null,
       publishedAgo: 'Unknown',
+      dateLabel: null,
       crawledAt: null,
       language: '',
       category: 'Google Web',
@@ -90,12 +91,24 @@ describe('serpApiMapper — dates', () => {
   });
 
   it('shows relative wording as written, with no invented date', () => {
-    expect(readDate('3 days ago')).toEqual({ publishedAt: null, publishedAgo: '3 days ago' });
+    expect(readDate('3 days ago')).toEqual({
+      publishedAt: null,
+      publishedAgo: '3 days ago',
+      dateLabel: { kind: 'published', at: null, text: 'Published 3 days ago' }
+    });
   });
 
   it('ignores anything else', () => {
-    expect(readDate('sometime')).toEqual({ publishedAt: null, publishedAgo: 'Unknown' });
-    expect(readDate(undefined)).toEqual({ publishedAt: null, publishedAgo: 'Unknown' });
+    expect(readDate('sometime')).toEqual({
+      publishedAt: null,
+      publishedAgo: 'Unknown',
+      dateLabel: null
+    });
+    expect(readDate(undefined)).toEqual({
+      publishedAt: null,
+      publishedAgo: 'Unknown',
+      dateLabel: null
+    });
     expect(readDate('Jan 1, 2999').publishedAt).toBeNull();
   });
 });

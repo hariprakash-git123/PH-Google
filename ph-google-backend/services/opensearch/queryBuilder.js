@@ -1,5 +1,6 @@
 const { dateWindowToCutoff } = require('../../utils/validators');
 const { isTimeSensitive } = require('../ranking/queryIntent');
+const { wantedScript, languagesOutside } = require('../ranking/languageScript');
 
 /**
  * Builds the OpenSearch query.
@@ -115,21 +116,10 @@ function buildFilters({ domain, dateWindow, language, isArticle, ids }) {
 
   const cutoff = dateWindowToCutoff(dateWindow);
   if (cutoff) {
-    // Prefer the publication date; fall back to when the page was crawled.
-    filters.push({
-      bool: {
-        should: [
-          { range: { publishedAt: { gte: cutoff.toISOString() } } },
-          {
-            bool: {
-              must_not: { exists: { field: 'publishedAt' } },
-              must: { range: { crawledAt: { gte: cutoff.toISOString() } } }
-            }
-          }
-        ],
-        minimum_should_match: 1
-      }
-    });
+    // Published inside the window. A page with no publication date is not
+    // in any window: when it was crawled says nothing about when it was
+    // written, so it is not used in its place.
+    filters.push({ range: { publishedAt: { gte: cutoff.toISOString() } } });
   }
 
   // A page that did not return 200 is not a useful result.
@@ -529,13 +519,27 @@ function buildOperatorClauses(parsed) {
 }
 
 /**
- * Bounded quality and freshness multipliers.
- *
- * Both are deliberately narrow. Quality moves a score by at most ±25% and
- * freshness by at most −15%, so neither can promote an irrelevant document
- * above a relevant one.
+ * A page recorded in a language written in another script than the query's
+ * scores this share of what it otherwise would: an English query for
+ * "python" is not answered first by the Japanese article because its title
+ * is the same word. Strong enough to put it after relevant pages in the
+ * query's script, not so strong that it disappears when nothing else
+ * matches. A page whose language is not recorded is left alone.
  */
-function buildScoreFunctions({ boostFreshness }) {
+const OTHER_SCRIPT_WEIGHT = 0.2;
+
+/**
+ * Bounded quality and freshness multipliers, and the language weight.
+ *
+ * Quality and freshness are deliberately narrow. Quality moves a score by at
+ * most ±25% and freshness by at most −15%, so neither can promote an
+ * irrelevant document above a relevant one.
+ *
+ * @param {{boostFreshness: boolean, otherLanguages?: string[]}} options
+ *        `otherLanguages`: the language codes written in another script than
+ *        the query (languageScript.languagesOutside)
+ */
+function buildScoreFunctions({ boostFreshness, otherLanguages = [] }) {
   const functions = [
     {
       // qualityScore is 0.05..1 -> multiplier 0.775..1.25
@@ -566,6 +570,13 @@ function buildScoreFunctions({ boostFreshness }) {
       { filter: { range: { publishedAt: { gte: 'now-14d', lt: 'now-2d' } } }, weight: 1.1 },
       { filter: { range: { publishedAt: { gte: 'now-90d', lt: 'now-14d' } } }, weight: 1.05 }
     );
+  }
+
+  if (otherLanguages.length > 0) {
+    functions.push({
+      filter: { terms: { language: otherLanguages } },
+      weight: OTHER_SCRIPT_WEIGHT
+    });
   }
 
   return functions;
@@ -651,7 +662,11 @@ function buildSearchBody(parsed, options = {}) {
   const query = {
     function_score: {
       query: boolQuery,
-      functions: buildScoreFunctions({ boostFreshness: !sortingByDate && wantsRecent }),
+      functions: buildScoreFunctions({
+        boostFreshness: !sortingByDate && wantsRecent,
+        // Not when a language was asked for (the filter, lang:): it decides.
+        otherLanguages: languagesOutside(wantedScript(parsed, { language }))
+      }),
       score_mode: 'multiply',
       boost_mode: 'multiply'
     }
@@ -692,8 +707,9 @@ function buildSearchBody(parsed, options = {}) {
   if (sortingByDate) {
     const order = sort === 'newest' ? 'desc' : 'asc';
     body.sort = [
-      // Pages with no publication date sort last rather than first.
-      { publishedAt: { order, missing: order === 'desc' ? '_last' : '_first' } },
+      // Pages with no publication date sort last rather than first — in both
+      // directions: an unknown date is not the oldest one.
+      { publishedAt: { order, missing: '_last' } },
       { crawledAt: { order } },
       '_score',
       tieBreaker
@@ -837,5 +853,6 @@ module.exports = {
   exactFields,
   FIELD_BOOSTS,
   CLAUSE_BOOSTS,
-  PHRASE_SLOP
+  PHRASE_SLOP,
+  OTHER_SCRIPT_WEIGHT
 };

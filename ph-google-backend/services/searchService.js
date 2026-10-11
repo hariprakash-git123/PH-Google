@@ -3,6 +3,8 @@ const Page = require('../models/Page');
 const { tokenizeText } = require('../utils/textProcessor');
 const { calculateScore } = require('./rankingService');
 const { dateWindowToCutoff, maxPageFor } = require('../utils/validators');
+// One date rule for both engines (see dateLabelFor).
+const { getTimeAgo, dateLabelFor } = require('./opensearch/searchService');
 
 /**
  * Phase 7 search pipeline.
@@ -83,7 +85,9 @@ function buildPageFilter(candidateIds, { domain, dateWindow, language }) {
 
   const cutoff = dateWindowToCutoff(dateWindow);
   if (cutoff) {
-    filter.lastCrawledAt = { $gte: cutoff };
+    // Published inside the window, as on the OpenSearch engine: an undated
+    // page is in no window, whenever it was crawled.
+    filter.publishedAt = { $gte: cutoff };
   }
 
   if (language) {
@@ -141,7 +145,7 @@ async function performSearch({
   const pageFilter = buildPageFilter(candidateIds, { domain, dateWindow, language });
 
   const lightPages = await Page.find(pageFilter)
-    .select('_id url domain title description language lastCrawledAt')
+    .select('_id url domain title description language isArticle publishedAt lastCrawledAt')
     .lean();
 
   if (lightPages.length === 0) return empty();
@@ -204,12 +208,19 @@ async function performSearch({
 
 function sortRanked(ranked, sort) {
   if (sort === 'newest' || sort === 'oldest') {
+    // By publication date, as on the OpenSearch engine: undated pages after
+    // every dated one in both directions, then by when they were crawled.
     const direction = sort === 'newest' ? -1 : 1;
+    const time = value => (value ? new Date(value).getTime() : null);
     ranked.sort((a, b) => {
-      const at = a.page.lastCrawledAt ? new Date(a.page.lastCrawledAt).getTime() : 0;
-      const bt = b.page.lastCrawledAt ? new Date(b.page.lastCrawledAt).getTime() : 0;
-      if (at === bt) return b.score - a.score; // relevance breaks date ties
-      return (at - bt) * direction;
+      const at = time(a.page.publishedAt);
+      const bt = time(b.page.publishedAt);
+      if ((at === null) !== (bt === null)) return at === null ? 1 : -1;
+      if (at !== bt) return (at - bt) * direction;
+      const ac = time(a.page.lastCrawledAt) || 0;
+      const bc = time(b.page.lastCrawledAt) || 0;
+      if (ac !== bc) return (ac - bc) * direction;
+      return b.score - a.score; // relevance breaks date ties
     });
     return ranked;
   }
@@ -242,7 +253,14 @@ function formatResult({ page, score, frequencySum, matchedTerms }, searchTerms, 
     id: page._id.toString(),
     domain,
     favicon: '\u{1F310}',
-    publishedAgo: page.lastCrawledAt ? getTimeAgo(page.lastCrawledAt) : 'Unknown',
+    // Publication age for articles only; a crawl date is labelled as one.
+    publishedAgo: page.isArticle && page.publishedAt ? getTimeAgo(page.publishedAt) : null,
+    publishedAt: page.publishedAt || null,
+    dateLabel: dateLabelFor({
+      publishedAt: page.publishedAt,
+      crawledAt: page.lastCrawledAt,
+      isArticle: Boolean(page.isArticle)
+    }),
     title: page.title || page.url,
     url: page.url,
     snippet,
@@ -283,22 +301,6 @@ function generateSnippet(content, searchTerms) {
     }
   }
   return truncate(cleanText, 150);
-}
-
-function getTimeAgo(date) {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
-  if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
-
-  const days = Math.floor(seconds / 86400);
-  if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
-
-  const months = Math.floor(days / 30);
-  if (months < 12) return months + (months === 1 ? ' month ago' : ' months ago');
-
-  const years = Math.floor(months / 12);
-  return years + (years === 1 ? ' year ago' : ' years ago');
 }
 
 /**

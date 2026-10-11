@@ -196,8 +196,44 @@ describe('GET /api/search?category=images', () => {
   });
 
   it('filters images by domain', async () => {
+    const all = await search({ q: 'tower', category: 'images' });
     const res = await search({ q: 'tower', category: 'images', domain: 'travel.example.org' });
+    // Something on that site, nothing from any other, and fewer than unfiltered.
+    expect(res.body.data.results.length).toBeGreaterThan(0);
     expect(res.body.data.results.every(r => r.domain === 'travel.example.org')).toBe(true);
+    expect(res.body.data.total).toBeLessThan(all.body.data.total);
+  });
+
+  it('filters images by the language of their page', async () => {
+    const en = await search({ q: 'tower', category: 'images', language: 'en' });
+    expect(en.body.data.results.length).toBeGreaterThan(0);
+    const fr = await search({ q: 'tower', category: 'images', language: 'fr' });
+    expect(fr.body.data.results).toEqual([]);
+  });
+
+  it('a date window holds no crawled picture: none states a publication date', async () => {
+    // Crawled seconds ago — which is not when they were published.
+    const any = await search({ q: 'tower', category: 'images' });
+    expect(any.body.data.results.length).toBeGreaterThan(0);
+    for (const date of ['hour', 'week', 'year']) {
+      const res = await search({ q: 'tower', category: 'images', date });
+      expect(res.status).toBe(200);
+      expect(res.body.data.results).toEqual([]);
+      expect(res.body.data.ignoredFilters).toEqual([]); // applied, not ignored
+    }
+  });
+
+  it('newest/oldest is not applied, and the answer says so', async () => {
+    const relevance = await search({ q: 'tower', category: 'images' });
+    for (const sort of ['newest', 'oldest']) {
+      const res = await search({ q: 'tower', category: 'images', sort });
+      expect(res.body.data.ignoredFilters).toEqual(['sort']);
+      expect(res.body.data.appliedSort).toBe('relevance');
+      expect(res.body.data.sort).toBe(sort); // the request's own value, echoed
+      expect(res.body.data.results.map(r => r.url)).toEqual(
+        relevance.body.data.results.map(r => r.url)
+      );
+    }
   });
 
   it('paginates', async () => {
@@ -246,6 +282,16 @@ describe('GET /api/search?category=videos', () => {
     const res = await search({ q: 'tower', category: 'videos' });
     expect(res.body.data.results.every(r => r.type === 'video')).toBe(true);
   });
+
+  it('newest/oldest is not applied, a date window holds no crawled video', async () => {
+    const sorted = await search({ q: 'paris walking tour', category: 'videos', sort: 'newest' });
+    expect(sorted.body.data.ignoredFilters).toEqual(['sort']);
+    expect(sorted.body.data.appliedSort).toBe('relevance');
+    expect(sorted.body.data.results.length).toBeGreaterThan(0);
+
+    const dated = await search({ q: 'paris walking tour', category: 'videos', date: 'month' });
+    expect(dated.body.data.results).toEqual([]);
+  });
 });
 
 describe('GET /api/search?category=news', () => {
@@ -279,7 +325,14 @@ describe('GET /api/search?category=news', () => {
   it('defaults to newest first', async () => {
     const res = await search({ q: 'paris', category: 'news' });
     expect(res.body.data.sort).toBe('relevance'); // the request's own sort value
+    expect(res.body.data.appliedSort).toBe('newest'); // the order the results are in
+    expect(res.body.data.ignoredFilters).toEqual([]);
     expect(res.body.data.results).toHaveLength(1);
+  });
+
+  it('an explicit date sort is the order applied', async () => {
+    const res = await search({ q: 'paris', category: 'news', sort: 'oldest' });
+    expect(res.body.data.appliedSort).toBe('oldest');
   });
 });
 

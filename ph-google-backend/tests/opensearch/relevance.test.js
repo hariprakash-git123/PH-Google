@@ -612,8 +612,13 @@ describeLive('OpenSearch search quality', () => {
           domain: expect.any(String),
           title: expect.any(String),
           snippet: expect.any(String),
-          publishedAgo: expect.any(String),
-          score: expect.any(Number)
+          score: expect.any(Number),
+          // The date shown, and which kind it is (never a crawl date as a
+          // publication date).
+          dateLabel: expect.objectContaining({
+            kind: expect.stringMatching(/^(published|crawled)$/),
+            text: expect.stringMatching(/^(Published|Crawled) /)
+          })
         })
       );
     });

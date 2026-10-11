@@ -393,11 +393,16 @@ function valueEntry(name, value, negated) {
  * cannot hold ("intitle:the", "intitle:*", "inurl:&") could match nothing;
  * and "lang:any" asks for no restriction at all.
  *
- * @returns {{entries: Array, ignored: string[]}}
+ * Either way the operator is listed in `unusable`, so the user can be told
+ * it did not restrict the search ("lang:any", which asks for no restriction,
+ * is not).
+ *
+ * @returns {{entries: Array, ignored: string[], unusable: string[]}}
  */
 function scan(cleaned) {
   const entries = [];
   const ignored = [];
+  const unusable = [];
   const text = dropUnmatchedQuote(cleaned.replace(/[“”]/g, '"'));
 
   const addWords = (word, negated) => {
@@ -436,6 +441,7 @@ function scan(cleaned) {
       // not a domain, a lang: that is not a language code, or
       // intitle:/inurl: with nothing in the quotes.
       if (operator && (valued === null || !value)) {
+        unusable.push(token);
         if (negated) {
           ignored.push(token);
           continue;
@@ -483,10 +489,12 @@ function scan(cleaned) {
         }
         if (words.length > 0) {
           ignored.push(token);
+          unusable.push(token);
           continue;
         }
       }
 
+      unusable.push(token);
       if (negated) {
         ignored.push(token);
         continue;
@@ -496,7 +504,7 @@ function scan(cleaned) {
     addWords(body, negated);
   }
 
-  return { entries, ignored };
+  return { entries, ignored, unusable };
 }
 
 const isOperand = entry => Boolean(entry) && !entry.op && entry.type !== 'blank';
@@ -680,6 +688,9 @@ function dropUnmatchableStopWords(entries, hasGroups) {
  * @property {boolean}  hasOperators   any of the above is in use
  * @property {string[]} ignoredOperators  operators dropped because they had
  *                                     no usable value, as typed ("-site:")
+ * @property {string[]} unusedOperators  every operator that restricted nothing
+ *                                     because its value was unusable, dropped
+ *                                     or read as words ("site:foo", "-site:")
  * @property {string[]} ignoredWords   stop words and symbol-only words
  *                                     dropped from beside an OR group, a
  *                                     quoted phrase or an operator, as typed
@@ -812,6 +823,7 @@ function parseQuery(raw) {
     ...operators,
     hasOperators,
     ignoredOperators: scanned.ignored,
+    unusedOperators: scanned.unusable,
     ignoredWords: [...booleans.dropped, ...kept.dropped]
   };
 }

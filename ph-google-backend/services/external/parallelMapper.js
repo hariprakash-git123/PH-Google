@@ -1,6 +1,6 @@
 const { normalizeUrl, canonicalKey, hostnameOf } = require('../../utils/urlNormalizer');
 const { sha1 } = require('../opensearch/documentMapper');
-const { toDisplayUrl, getTimeAgo } = require('../opensearch/searchService');
+const { toDisplayUrl, getTimeAgo, dateLabelFor } = require('../opensearch/searchService');
 const { respectsQuery } = require('./serpApiMapper');
 
 /**
@@ -56,14 +56,19 @@ function excerptsOf(raw) {
  */
 function readDate(raw) {
   const text = typeof raw === 'string' ? raw.trim() : '';
-  const none = { publishedAt: null, publishedAgo: 'Unknown' };
+  // No date given: none shown (dateLabel null), never one made up.
+  const none = { publishedAt: null, publishedAgo: 'Unknown', dateLabel: null };
   if (!/^\d{4}-\d{2}-\d{2}/.test(text)) return none;
   const at = Date.parse(text.slice(0, 10));
   const plausible =
     Number.isFinite(at) && at > Date.UTC(1990, 0, 1) && at < Date.now() + 24 * 3600 * 1000;
   if (!plausible) return none;
   const iso = new Date(at).toISOString();
-  return { publishedAt: iso, publishedAgo: getTimeAgo(iso) };
+  return {
+    publishedAt: iso,
+    publishedAgo: getTimeAgo(iso),
+    dateLabel: dateLabelFor({ publishedAt: iso, fromIndex: false })
+  };
 }
 
 /**

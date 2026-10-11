@@ -149,3 +149,15 @@
   line-height: 1.5;
   color: var(--ph-text-secondary);
 }
+
+/* A site value that is not a domain: said beside the field, not searched */
+.ph-filter-error {
+  margin: 0;
+  font-size: var(--ph-text-xs);
+  font-weight: 600;
+  color: var(--ph-danger);
+}
+
+.ph-filter-input[aria-invalid='true'] {
+  border-color: var(--ph-danger);
+}

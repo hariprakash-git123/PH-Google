@@ -200,9 +200,11 @@ describe('END TO END: crawl -> index -> rank -> search -> analytics', () => {
       .query({ q: 'fixture', language: 'en' });
     expect(byLanguage.body.data.total).toBeGreaterThan(0);
 
-    const staleOnly = await request(app).get('/api/search').query({ q: 'fixture', date: 'hour' });
-    // Everything was crawled seconds ago, so an hour window keeps it all.
-    expect(staleOnly.body.data.total).toBeGreaterThan(0);
+    const lastHour = await request(app).get('/api/search').query({ q: 'fixture', date: 'hour' });
+    // The fixture pages state no publication date. Crawled seconds ago or
+    // not, an undated page is in no date window.
+    expect(lastHour.status).toBe(200);
+    expect(lastHour.body.data.total).toBe(0);
 
     // ---------------------------------------------------------------
     // 11. PAGINATION

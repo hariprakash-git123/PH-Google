@@ -105,7 +105,11 @@ describe('parallelMapper — text and dates', () => {
     ['a date before the web', '1850-01-01'],
     ['a date in the future', '2999-01-01']
   ])('treats %s as no date', (_label, value) => {
-    expect(readDate(value)).toEqual({ publishedAt: null, publishedAgo: 'Unknown' });
+    expect(readDate(value)).toEqual({
+      publishedAt: null,
+      publishedAgo: 'Unknown',
+      dateLabel: null
+    });
   });
 });
 

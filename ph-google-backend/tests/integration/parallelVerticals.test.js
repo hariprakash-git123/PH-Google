@@ -359,6 +359,53 @@ describe('category=videos', () => {
 });
 
 // ------------------------------------------------------------------ images
+describe('a date window', () => {
+  const daysAgo = n => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  it('is sent to Parallel and checked again: an older or undated page is not shown', async () => {
+    parallelSearch.mockResolvedValue({
+      results: [
+        found(yt('aaaaaaaaaa1'), 'Electric cars this week', 'Electric cars.', daysAgo(5)),
+        // Answers Parallel should not have given for "past month": kept out.
+        found(yt('aaaaaaaaaa2'), 'Electric cars long ago', 'Electric cars.', daysAgo(200)),
+        found(yt('aaaaaaaaaa3'), 'Electric cars, undated', 'Electric cars.', null)
+      ]
+    });
+    lookup.mockImplementation(async video => {
+      const id = video.videoUrl.slice(-11);
+      return confirmed(`Electric cars ${id}`, 'Car Channel', id);
+    });
+
+    const res = await search({ q: 'electric cars', category: 'videos', date: 'month' });
+    expect(res.status).toBe(200);
+    expect(parallelSearch.mock.calls[0][0].sourcePolicy.after_date).toBe(daysAgo(30));
+    expect(res.body.data.results.map(r => r.videoUrl)).toEqual([yt('aaaaaaaaaa1')]);
+    expect(res.body.data.results[0].publishedAt.slice(0, 10)).toBe(daysAgo(5));
+    expect(res.body.data.ignoredFilters).toEqual([]);
+  });
+
+  it('without one, an undated page is a result like any other', async () => {
+    parallelSearch.mockResolvedValue({
+      results: [found(yt('aaaaaaaaaa3'), 'Electric cars, undated', 'Electric cars.', null)]
+    });
+    lookup.mockResolvedValue(confirmed('Electric cars explained', 'Car Channel', 'aaaaaaaaaa3'));
+    const res = await search({ q: 'electric cars', category: 'videos' });
+    expect(res.body.data.results.map(r => r.videoUrl)).toEqual([yt('aaaaaaaaaa3')]);
+  });
+
+  it('newest/oldest is not applied on Images and Videos: Parallel is asked, by relevance', async () => {
+    parallelSearch.mockResolvedValue({
+      results: [found(yt('aaaaaaaaaa1'), 'Electric cars explained', 'Electric cars.')]
+    });
+    lookup.mockResolvedValue(confirmed('Electric cars explained', 'Car Channel', 'aaaaaaaaaa1'));
+    const res = await search({ q: 'electric cars', category: 'videos', sort: 'oldest' });
+    expect(parallelSearch).toHaveBeenCalled();
+    expect(res.body.data.results).toHaveLength(1);
+    expect(res.body.data.ignoredFilters).toEqual(['sort']);
+    expect(res.body.data.appliedSort).toBe('relevance');
+  });
+});
+
 describe('category=images', () => {
   const PAGE = 'https://cars.example/electric-cars';
 

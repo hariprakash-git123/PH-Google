@@ -21,7 +21,7 @@ import ImageRefinements from '../../components/ExternalVerticals/ImageRefinement
 import RelatedSearches from '../../components/RelatedSearches/RelatedSearches';
 import { searchApi } from '../../services/searchApi';
 import { loadPreferences } from '../../services/preferences';
-import { SlidersHorizontal, AlertCircle, Link2 } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Link2, Info } from 'lucide-react';
 import './SearchResults.css';
 
 /** Each vertical shows the number of results that suits its layout. */
@@ -84,8 +84,55 @@ const EMPTY_STATE = {
   hasMore: false,
   nextCursor: null,
   loadingMore: false,
-  loadMoreError: null
+  loadMoreError: null,
+  appliedSort: null,
+  ignoredFilters: [],
+  unusedOperators: []
 };
+
+const FILTER_NAMES = { date: 'date range', language: 'language', sort: 'sort order' };
+const TAB_NAMES = { images: 'Images', videos: 'Videos', news: 'News', maps: 'Maps' };
+/** Why a tab cannot apply a filter (the API lists which: `ignoredFilters`). */
+const IGNORED_BECAUSE = {
+  maps: 'Places have no date, language or publication order',
+  images: 'Pictures cannot be ordered by publication date',
+  videos: 'Videos cannot be ordered by publication date'
+};
+/** Why a source was not asked that comes from the filters chosen. */
+const FILTER_SKIP_REASONS = new Set(['date_sort', 'unsupported_filter', 'conflicting_filters']);
+
+/**
+ * What the results on screen do not reflect of the filters chosen, said
+ * plainly — or null when they reflect all of them. A filter is never shown
+ * as applied when it was not.
+ */
+function filterNotice({ ignoredFilters, external }, tab) {
+  if (ignoredFilters && ignoredFilters.length > 0) {
+    const names = ignoredFilters.map(name => FILTER_NAMES[name] || name);
+    const list =
+      names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
+    const why = IGNORED_BECAUSE[tab] || 'This tab cannot apply them';
+    return `${why}, so the ${list} ${names.length > 1 ? 'filters are' : 'filter is'} not applied on ${
+      TAB_NAMES[tab] || 'this tab'
+    }.`;
+  }
+  if (external && external.status === 'skipped' && FILTER_SKIP_REASONS.has(external.reason)) {
+    return 'Web sources outside PH’s own index cannot apply the selected filters, so they were not searched. Clear a filter to see more results.';
+  }
+  return null;
+}
+
+/** Operators typed with a value they cannot use: they restricted nothing. */
+function operatorNotice({ unusedOperators }) {
+  if (!unusedOperators || unusedOperators.length === 0) return null;
+  const list = unusedOperators.map(op => `“${op}”`).join(', ');
+  const many = unusedOperators.length > 1;
+  return `${list} ${many ? 'are not valid operators' : 'is not a valid operator'}, so ${
+    many ? 'they did' : 'it did'
+  } not narrow the search. Use a value such as site:example.com, lang:ta or intitle:word.`;
+}
+
+const SORT_LABELS = { newest: 'Newest', oldest: 'Oldest', relevance: 'Relevance' };
 
 /** Every tab the page knows; anything else in the URL means "all". */
 const TABS = new Set(Object.keys(PAGE_SIZE_BY_TAB));
@@ -187,6 +234,9 @@ export default function SearchResults() {
           external: data.external || null,
           hasMore: Boolean(data.hasMore) && Boolean(data.nextCursor),
           nextCursor: data.nextCursor || null,
+          appliedSort: data.appliedSort || null,
+          ignoredFilters: Array.isArray(data.ignoredFilters) ? data.ignoredFilters : [],
+          unusedOperators: Array.isArray(data.unusedOperators) ? data.unusedOperators : [],
           loading: false
         };
         // A failed search is not kept: coming back to the tab tries again.
@@ -317,6 +367,12 @@ export default function SearchResults() {
   const showingFrom =
     pagination && searchData.results.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
   const showingTo = pagination ? showingFrom + searchData.results.length - 1 : 0;
+  const settled = query && !searchData.loading && !searchData.error;
+  const notices = settled
+    ? [operatorNotice(searchData), filterNotice(searchData, activeTab)].filter(Boolean)
+    : [];
+  // The order the results are really in (News is newest first by default).
+  const shownSort = (!searchData.loading && searchData.appliedSort) || filters.sort;
 
   return (
     <div className="ph-results-page">
@@ -363,6 +419,13 @@ export default function SearchResults() {
             </button>
           )}
         </div>
+
+        {notices.map(text => (
+          <p key={text} className="ph-filter-notice" role="status">
+            <Info size={16} aria-hidden="true" />
+            <span>{text}</span>
+          </p>
+        ))}
 
         {/* Image and map verticals need the full width; the sidebar is
             hidden for them rather than squeezing the grid. */}
@@ -490,11 +553,7 @@ export default function SearchResults() {
                       <span>Sort</span>
                     </div>
                     <span className="ph-control-badge">
-                      {filters.sort === 'newest'
-                        ? 'Newest'
-                        : filters.sort === 'oldest'
-                          ? 'Oldest'
-                          : 'Relevance'}
+                      {SORT_LABELS[shownSort] || SORT_LABELS.relevance}
                     </span>
                   </div>
                 </div>

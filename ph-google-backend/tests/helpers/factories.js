@@ -51,7 +51,9 @@ async function seedPage({
   text = '',
   language = 'en',
   status = 'indexed',
-  lastCrawledAt = new Date()
+  lastCrawledAt = new Date(),
+  // When the page says it was published; none by default, as for most pages.
+  publishedAt = null
 }) {
   const domain = new URL(url).hostname.toLowerCase();
 
@@ -69,7 +71,8 @@ async function seedPage({
     content: text,
     language,
     status,
-    lastCrawledAt
+    lastCrawledAt,
+    publishedAt
   });
 
   // Index the title and body together, mirroring how the crawler indexes.

@@ -18,7 +18,8 @@ const indexResult = (overrides = {}) => ({
   favicon: '🌐',
   title: 'A video on YouTube',
   snippet: 'Watch it on YouTube.',
-  publishedAgo: '2 days ago',
+  publishedAgo: null,
+  dateLabel: { kind: 'crawled', at: '2026-10-09T10:00:00.000Z', text: 'Crawled 2 days ago' },
   category: 'Web Result',
   saved: false,
   score: 3.2,
@@ -35,7 +36,9 @@ const externalResult = (overrides = {}) => ({
   favicon: '🌐',
   title: 'nodejs/node',
   snippet: 'Node.js JavaScript runtime.',
-  publishedAgo: 'Unknown',
+  publishedAgo: '1 day ago',
+  publishedAt: '2026-10-10T00:00:00.000Z',
+  dateLabel: { kind: 'published', at: '2026-10-10T00:00:00.000Z', text: 'Published 1 day ago' },
   category: 'Web',
   score: null,
   source: 'serpapi',
@@ -177,6 +180,56 @@ describe('the icon on a result card', () => {
   });
 });
 
+describe('the date a result shows', () => {
+  const dateOf = container => container.querySelector('.ph-result-date');
+
+  it('says what kind of date it is, exactly as the API labels it', () => {
+    const { container } = render(
+      <SearchResult
+        result={indexResult({
+          dateLabel: { kind: 'crawled', at: '2026-10-11T11:59:50.000Z', text: 'Crawled just now' }
+        })}
+      />
+    );
+    expect(dateOf(container)).toHaveTextContent(/^Crawled just now$/);
+  });
+
+  it('an old publication date reads as the date itself', () => {
+    const { container } = render(
+      <SearchResult
+        result={externalResult({
+          publishedAt: '2003-02-11T00:00:00.000Z',
+          publishedAgo: '23 years ago',
+          dateLabel: { kind: 'published', at: '2003-02-11T00:00:00.000Z', text: 'Published Feb 11, 2003' }
+        })}
+      />
+    );
+    expect(dateOf(container)).toHaveTextContent(/^Published Feb 11, 2003$/);
+  });
+
+  it('no date given: none shown — not "Unknown", not "Recently updated"', () => {
+    const { container } = render(
+      <SearchResult result={externalResult({ publishedAgo: 'Unknown', publishedAt: null, dateLabel: null })} />
+    );
+    expect(dateOf(container)).toBeNull();
+    expect(container).not.toHaveTextContent(/Unknown|Recently updated/);
+    // No dangling separator either.
+    expect(container.querySelector('.ph-result-dot')).toBeNull();
+  });
+
+  it('a crawl date is never shown as a bare age that reads like a publication date', () => {
+    const { container } = render(
+      <SearchResult
+        result={indexResult({
+          publishedAgo: null,
+          dateLabel: { kind: 'crawled', at: '2026-09-18T09:42:37.018Z', text: 'Crawled 23 days ago' }
+        })}
+      />
+    );
+    expect(dateOf(container)).toHaveTextContent(/^Crawled 23 days ago$/);
+  });
+});
+
 describe('the rest of the card is unchanged', () => {
   it.each([
     ['an index result', indexResult()],
@@ -193,7 +246,9 @@ describe('the rest of the card is unchanged', () => {
       'ph-result-category-badge'
     ]);
     expect(within(header).getByText(result.domain)).toBeInTheDocument();
-    expect(within(header).getByText(result.publishedAgo)).toBeInTheDocument();
+    const date = within(header).getByText(result.dateLabel.text);
+    expect(date.tagName).toBe('TIME');
+    expect(date).toHaveAttribute('datetime', result.dateLabel.at);
     expect(within(header).getByText(result.category)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: result.title })).toHaveAttribute('href', result.url);
     expect(card.querySelector('.ph-result-url')).toHaveTextContent(result.url);

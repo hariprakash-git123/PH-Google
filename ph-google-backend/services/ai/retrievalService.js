@@ -4,6 +4,8 @@ const { getClient } = require('../opensearch/client');
 const Page = require('../../models/Page');
 const { config } = require('../../config/env');
 const logger = require('../../utils/logger');
+const { parseQuery } = require('../opensearch/queryParser');
+const { languageCompatible, wantedScript } = require('../ranking/unifiedRanker');
 
 /**
  * Retrieval for AI answers.
@@ -114,7 +116,13 @@ async function retrieve({ query, domain = '', language = '', dateWindow = 'any',
     r =>
       r && typeof r === 'object' && r.id !== undefined && r.id !== null && typeof r.url === 'string'
   );
-  const relevant = keepRelevant(results, config.ai.minRelativeScore);
+  // An answer to a question asked in one language is written from pages in
+  // a compatible one: a Japanese article is not evidence for an English
+  // question, however well it matches its words. Unless a language was asked
+  // for (the filter, lang:), which the search has already applied.
+  const script = wantedScript(parseQuery(query), { language });
+  const readable = results.filter(r => languageCompatible(r, script));
+  const relevant = keepRelevant(readable, config.ai.minRelativeScore);
   const texts = await loadTexts(relevant.map(r => String(r.id)));
 
   const documents = relevant.map(result => {

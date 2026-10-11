@@ -1,4 +1,5 @@
 const { parseQuery } = require('../../services/opensearch/queryParser');
+const { languagesOutside } = require('../../services/ranking/languageScript');
 const {
   buildSearchBody,
   buildMustClause,
@@ -41,6 +42,7 @@ const NO_OPERATORS = {
   languages: [],
   excludedLanguages: [],
   ignoredOperators: [],
+  unusedOperators: [],
   ignoredWords: [],
   hasOperators: false
 };
@@ -978,8 +980,10 @@ describe('operator query building', () => {
     });
 
     it('applies the same quality multiplier to every operator query; recency only when asked for', () => {
-      // None of these asks for anything recent: quality alone, as for any query.
-      const expected = buildScoreFunctions({ boostFreshness: false });
+      // None of these asks for anything recent: quality alone, as for any query
+      // — and, typed in Latin script, the same language weight as any query.
+      const otherLanguages = languagesOutside('latin');
+      const expected = buildScoreFunctions({ boostFreshness: false, otherLanguages });
       for (const query of [
         'site:wikipedia.org physics',
         'python -java',
@@ -996,7 +1000,7 @@ describe('operator query building', () => {
       }
       // The same operators on a time-sensitive query keep the freshness lift.
       expect(bodyOf('site:github.blog latest copilot news').query.function_score.functions).toEqual(
-        buildScoreFunctions({ boostFreshness: true })
+        buildScoreFunctions({ boostFreshness: true, otherLanguages })
       );
     });
 
@@ -1052,6 +1056,7 @@ describe('operator regressions', () => {
       raw: _raw,
       cleaned: _cleaned,
       ignoredOperators: _operators,
+      unusedOperators: _unused,
       ignoredWords: _words,
       ...rest
     } = parseQuery(query);
@@ -1103,6 +1108,38 @@ describe('operator regressions', () => {
       ]);
       expect(parseQuery('python').ignoredOperators).toEqual([]);
       expect(parseQuery('python -site:example.com').ignoredOperators).toEqual([]);
+    });
+
+    it('lists every operator that restricted nothing, dropped or read as words', () => {
+      // Read as the words typed (as always), and listed so the user is told.
+      expect(parseQuery('python site:notadomain').unusedOperators).toEqual(['site:notadomain']);
+      expect(parseQuery('python lang:english').unusedOperators).toEqual(['lang:english']);
+      expect(parseQuery('python site:').unusedOperators).toEqual(['site:']);
+      expect(parseQuery('python intitle:""').unusedOperators).toEqual(['intitle:']);
+      // Dropped (a negation never turns into an exclusion of a word): listed too.
+      expect(parseQuery('python -site: -lang:xx9').unusedOperators).toEqual([
+        '-site:',
+        '-lang:xx9'
+      ]);
+      expect(parseQuery('python intitle:the').unusedOperators).toEqual(['intitle:the']);
+      // Usable operators, and lang:any (no restriction asked), are not.
+      for (const query of [
+        'python',
+        'python site:example.com -site:wikipedia.org',
+        'python lang:ta -lang:en',
+        'python intitle:guide inurl:docs',
+        '"exact phrase" -word cats OR dogs',
+        'python lang:any'
+      ]) {
+        expect(parseQuery(query).unusedOperators).toEqual([]);
+      }
+    });
+
+    it('listing them changes nothing about how the query is searched', () => {
+      // site:notadomain is searched as its words, exactly as before.
+      const parsed = parseQuery('python site:notadomain');
+      expect(parsed.sites).toEqual([]);
+      expect(parsed.terms).toEqual(expect.arrayContaining(['python', 'site', 'notadomain']));
     });
 
     it('leaves nothing to search for when it is the whole query', () => {
@@ -1644,6 +1681,7 @@ describe('symbol-only words', () => {
       raw: _raw,
       cleaned: _cleaned,
       ignoredOperators: _operators,
+      unusedOperators: _unused,
       ignoredWords: _words,
       ...rest
     } = parseQuery(query);
@@ -1963,9 +2001,16 @@ describe('lang: operator', () => {
     });
 
     it('is a filter, not a scoring clause', () => {
-      expect(scoring('lang:en python')).toEqual(scoring('python'));
-      expect(scoring('python tutorial lang:fr')).toEqual(scoring('python tutorial'));
-      expect(scoring('"machine learning" lang:en')).toEqual(scoring('"machine learning"'));
+      // Scored exactly as the language parameter is: naming a language also
+      // sets aside the query-script preference (languageScript), both ways.
+      expect(scoring('lang:en python')).toEqual(scoring('python', { language: 'en' }));
+      expect(scoring('python tutorial lang:fr')).toEqual(
+        scoring('python tutorial', { language: 'fr' })
+      );
+      expect(scoring('"machine learning" lang:en')).toEqual(
+        scoring('"machine learning"', { language: 'en' })
+      );
+      // Excluding a language names none wanted: the preference stays.
       expect(scoring('python -lang:en')).toEqual(scoring('python'));
     });
 
@@ -2012,7 +2057,7 @@ describe('lang: operator', () => {
       expect(bool.must_not).toHaveLength(2);
       expect(bool.must_not).toEqual(expect.arrayContaining([{ term: { language: 'fr' } }]));
       expect(scoring('lang:en site:wikipedia.org python -java -lang:fr')).toEqual(
-        scoring('python')
+        scoring('python', { language: 'en' })
       );
     });
 

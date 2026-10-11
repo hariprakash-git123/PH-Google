@@ -1171,4 +1171,57 @@ describe('places OpenStreetMap knows itself', () => {
     expect(searchOsm).toHaveBeenCalledTimes(1);
     expect(parallelSearch).toHaveBeenCalledTimes(2);
   });
+
+  it('are left out under a site filter: they come from no page on that site', async () => {
+    parallelSearch.mockResolvedValue({
+      results: [found(ANNA, 'Annapoorna Coimbatore restaurant')]
+    });
+    page(ANNA, 'Annapoorna', restaurant('Sree Annapoorna'));
+    searchOsm.mockResolvedValue({ ok: true, places: [osm(1), osm(2)], cached: false });
+
+    const { data } = (await maps('Coimbatore restaurants', { domain: 'annapoorna.example' })).body;
+    expect(parallelSearch.mock.calls[0][0].sourcePolicy).toEqual({
+      include_domains: ['annapoorna.example']
+    });
+    expect(searchOsm).not.toHaveBeenCalled();
+    expect(data.results.map(r => [r.source, r.sourceDomain])).toEqual([
+      ['parallel', 'annapoorna.example']
+    ]);
+    expect(data.filters.domain).toBe('annapoorna.example');
+    expect(data.ignoredFilters).toEqual([]);
+  });
+});
+
+describe('filters a place cannot have', () => {
+  it('date, language and sort are not applied on Maps, and the answer says so', async () => {
+    parallelSearch.mockResolvedValue({
+      results: [found(ANNA, 'Annapoorna Coimbatore restaurant')]
+    });
+    page(ANNA, 'Annapoorna', restaurant('Sree Annapoorna'));
+
+    const res = await maps('Coimbatore restaurants', {
+      date: 'week',
+      language: 'ta',
+      sort: 'newest'
+    });
+    expect(res.status).toBe(200);
+    const { data } = res.body;
+    // Not used to narrow the search: Parallel is asked without them, rather
+    // than skipped, and no publication-date cut is sent for places.
+    expect(parallelSearch).toHaveBeenCalled();
+    expect(parallelSearch.mock.calls[0][0].sourcePolicy).toEqual({});
+    expect(data.results.map(r => r.title)).toEqual(['Sree Annapoorna']);
+    // And not claimed: the request is echoed, and what was ignored is listed.
+    expect(data.filters).toMatchObject({ date: 'week', language: 'ta', sort: 'newest' });
+    expect(data.ignoredFilters).toEqual(['date', 'language', 'sort']);
+    expect(data.appliedSort).toBe('relevance');
+  });
+
+  it('only the filters actually set are listed as ignored', async () => {
+    const { data } = (await maps('Coimbatore restaurants', { date: 'month' })).body;
+    expect(data.ignoredFilters).toEqual(['date']);
+    const plain = (await maps('Coimbatore restaurants')).body.data;
+    expect(plain.ignoredFilters).toEqual([]);
+    expect(plain.appliedSort).toBe('relevance');
+  });
 });

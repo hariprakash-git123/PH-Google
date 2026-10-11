@@ -56,6 +56,8 @@ const page = (id, url, title, content, extra = {}) => ({
 
 const PAGES = [
   // --- "python" in four languages, at five ages -------------------------
+  // py-en (crawled an hour ago) and py-unknown state no publication date;
+  // the others do. A date window holds only pages published inside it.
   page(
     'py-en',
     'https://python.example.com/about',
@@ -67,21 +69,21 @@ const PAGES = [
     'https://archive.example.org/python-history',
     'Python History',
     'The history of python begins in the late 1980s with its first release.',
-    { lastCrawledAt: ago(2 * 365 * DAY) }
+    { lastCrawledAt: ago(2 * 365 * DAY), publishedAt: ago(2 * 365 * DAY) }
   ),
   page(
     'py-fr',
     'https://fr.example.com/python',
     'Python en français',
     'Python est un langage de programmation interprété.',
-    { language: 'fr', lastCrawledAt: ago(3 * DAY) }
+    { language: 'fr', lastCrawledAt: ago(3 * DAY), publishedAt: ago(3 * DAY) }
   ),
   page(
     'py-de',
     'https://de.example.net/python',
     'Python auf Deutsch',
     'Python ist eine universelle Programmiersprache.',
-    { language: 'de', lastCrawledAt: ago(10 * DAY) }
+    { language: 'de', lastCrawledAt: ago(10 * DAY), publishedAt: ago(10 * DAY) }
   ),
   page(
     'py-unknown',
@@ -255,16 +257,26 @@ describeLive('search API on the OpenSearch engine', () => {
     });
 
     it.each([
-      ['day', ['py-en']],
-      ['week', ['py-en', 'py-fr', 'py-news']],
-      ['month', ['py-de', 'py-en', 'py-fr', 'py-news', 'py-unknown']],
-      ['year', ['py-de', 'py-en', 'py-fr', 'py-news', 'py-unknown']],
+      // py-en was crawled an hour ago but states no publication date: it is
+      // in no window. Neither is py-unknown.
+      ['hour', []],
+      ['day', []],
+      ['week', ['py-fr', 'py-news']],
+      ['month', ['py-de', 'py-fr', 'py-news']],
+      ['year', ['py-de', 'py-fr', 'py-news']],
       ['any', [...PYTHON_IDS].sort()]
-    ])('date=%s: keeps the pages inside the window', async (date, ids) => {
+    ])('date=%s: keeps the pages published inside the window', async (date, ids) => {
       const res = await get({ q: 'python', date });
       expect(res.status).toBe(200);
       expect(urlsOf(res).map(idOf).sort()).toEqual(ids);
       expect(res.body.data.filters.date).toBe(date);
+      // Every result shows a publication date inside the window.
+      if (date !== 'any') {
+        const cutoff = Date.now() - { hour: HOUR, day: DAY, week: 7 * DAY, month: 30 * DAY, year: 365 * DAY }[date];
+        for (const result of res.body.data.results) {
+          expect(Date.parse(result.publishedAt)).toBeGreaterThanOrEqual(cutoff);
+        }
+      }
     });
 
     it.each([
@@ -286,7 +298,8 @@ describeLive('search API on the OpenSearch engine', () => {
 
     it('applies domain, date and language together', async () => {
       const res = await get({ q: 'python', domain: 'example.com', date: 'week', language: 'en' });
-      expect(urlsOf(res).map(idOf).sort()).toEqual(['py-en', 'py-news']);
+      // py-en is on example.com and in English, but states no publication date.
+      expect(urlsOf(res).map(idOf).sort()).toEqual(['py-news']);
 
       const none = await get({ q: 'python', domain: 'example.com', language: 'de' });
       expect(none.body.data.total).toBe(0);
@@ -328,28 +341,31 @@ describeLive('search API on the OpenSearch engine', () => {
 
   // ------------------------------------------------------------------
   describe('sorting and categories', () => {
-    it('sort=newest: dated pages first, then by crawl date', async () => {
+    it('sort=newest: dated pages newest first, then undated pages by crawl date', async () => {
       const res = await get({ q: 'python', sort: 'newest' });
       expect(urlsOf(res).map(idOf)).toEqual([
         'py-news',
-        'py-en',
         'py-fr',
         'py-de',
-        'py-unknown',
-        'py-old'
+        'py-old',
+        'py-en',
+        'py-unknown'
       ]);
     });
 
-    it('sort=oldest: the reverse, undated pages first', async () => {
+    it('sort=oldest: dated pages oldest first; undated pages never lead', async () => {
       const res = await get({ q: 'python', sort: 'oldest' });
       expect(urlsOf(res).map(idOf)).toEqual([
         'py-old',
-        'py-unknown',
         'py-de',
         'py-fr',
-        'py-en',
-        'py-news'
+        'py-news',
+        'py-unknown',
+        'py-en'
       ]);
+      // An unknown date is not the oldest one: every dated page comes first.
+      const dated = res.body.data.results.map(r => Boolean(r.publishedAt));
+      expect(dated).toEqual([true, true, true, true, false, false]);
     });
 
     it('category=news: only articles', async () => {
@@ -513,6 +529,19 @@ describeLive('search API on the OpenSearch engine', () => {
       expect(urlsOf(operator)).toEqual([urlOf('py-fr')]);
       expect(operator.body.data.results).toEqual(parameter.body.data.results);
       expect(operator.body.data.total).toBe(1);
+    });
+
+    it('one with a value it cannot use restricts nothing, and the answer says so', async () => {
+      const bad = await get({ q: 'python lang:english' });
+      expect(bad.status).toBe(200);
+      expect(bad.body.data.unusedOperators).toEqual(['lang:english']);
+      // Read as its words, as always: no page holds "lang" and "english".
+      expect(bad.body.data.results).toEqual([]);
+
+      const good = await get({ q: 'python lang:fr' });
+      expect(good.body.data.unusedOperators).toEqual([]);
+      expect(urlsOf(good).map(idOf)).toEqual(['py-fr']);
+      expect(good.body.data.results.every(r => r.language === 'fr')).toBe(true);
     });
 
     it('works anywhere in the query and in any case', async () => {

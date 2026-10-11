@@ -330,3 +330,24 @@
 .ph-results-layout-wide {
   grid-template-columns: 1fr;
 }
+
+/* A filter this tab, or one of its sources, could not apply */
+.ph-filter-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: var(--ph-radius-sm);
+  border: 1px solid var(--ph-warning);
+  background: var(--ph-warning-soft);
+  color: var(--ph-text);
+  font-size: var(--ph-text-sm);
+  line-height: 1.45;
+}
+
+.ph-filter-notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ph-warning);
+}

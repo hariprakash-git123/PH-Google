@@ -1,6 +1,6 @@
 const { normalizeUrl, canonicalKey, hostnameOf } = require('../../utils/urlNormalizer');
 const { sha1 } = require('../opensearch/documentMapper');
-const { toDisplayUrl, getTimeAgo } = require('../opensearch/searchService');
+const { toDisplayUrl, getTimeAgo, dateLabelFor } = require('../opensearch/searchService');
 
 /**
  * Turns SerpApi `organic_results` into the result objects the search page
@@ -29,15 +29,28 @@ function clean(text, max) {
  */
 function readDate(raw) {
   const text = clean(raw, 40);
-  if (!text) return { publishedAt: null, publishedAgo: 'Unknown' };
+  if (!text) return { publishedAt: null, publishedAgo: 'Unknown', dateLabel: null };
   const at = Date.parse(text);
   const plausible =
     Number.isFinite(at) && at > Date.UTC(1990, 0, 1) && at < Date.now() + 24 * 3600 * 1000;
   if (plausible) {
     const iso = new Date(at).toISOString();
-    return { publishedAt: iso, publishedAgo: getTimeAgo(iso) };
+    return {
+      publishedAt: iso,
+      publishedAgo: getTimeAgo(iso),
+      dateLabel: dateLabelFor({ publishedAt: iso, fromIndex: false })
+    };
   }
-  return { publishedAt: null, publishedAgo: /\bago$/i.test(text) ? text : 'Unknown' };
+  // "3 days ago" is Google's own statement of when it was published, kept as
+  // written; it has no exact date to carry.
+  if (/\bago$/i.test(text)) {
+    return {
+      publishedAt: null,
+      publishedAgo: text,
+      dateLabel: { kind: 'published', at: null, text: `Published ${text}` }
+    };
+  }
+  return { publishedAt: null, publishedAgo: 'Unknown', dateLabel: null };
 }
 
 /** The deduplication key — the same one that makes an index document's _id. */

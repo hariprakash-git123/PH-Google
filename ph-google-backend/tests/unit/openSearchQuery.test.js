@@ -12,8 +12,13 @@ const {
   buildFuzzyClause,
   minimumShouldMatch,
   FIELD_BOOSTS,
-  CLAUSE_BOOSTS
+  CLAUSE_BOOSTS,
+  OTHER_SCRIPT_WEIGHT
 } = require('../../services/opensearch/queryBuilder');
+
+/** The freshness functions: weights scoped to a publication-date range. */
+const freshnessOf = fns =>
+  fns.filter(f => f.weight && f.filter && f.filter.range && f.filter.range.publishedAt);
 const {
   toSearchDocument,
   buildDocumentId,
@@ -538,7 +543,7 @@ describe('query building', () => {
       'battle of 1066'
     ])('leaves recency out when the query does not ask for it: %s', query => {
       const fns = buildSearchBody(parseQuery(query), {}).query.function_score.functions;
-      expect(fns.some(f => f.weight)).toBe(false);
+      expect(freshnessOf(fns)).toEqual([]);
       expect(fns.some(f => f.script_score)).toBe(true); // quality still applies
     });
 
@@ -551,28 +556,34 @@ describe('query building', () => {
       // No unbounded decay curve.
       expect(fns.some(f => f.gauss || f.exp || f.linear)).toBe(false);
 
-      // Every freshness function is a capped, filtered weight.
-      const weights = fns.filter(f => f.weight).map(f => f.weight);
+      // Every freshness function is a capped weight scoped to a date range,
+      // so undated pages are untouched.
+      const weights = freshnessOf(fns).map(f => f.weight);
       expect(weights.length).toBeGreaterThan(0);
       for (const w of weights) {
         expect(w).toBeGreaterThanOrEqual(1); // never demotes
         expect(w).toBeLessThanOrEqual(1.25); // never dominates
       }
-      // Each one is scoped to a date range, so undated pages are untouched.
-      expect(fns.filter(f => f.weight).every(f => f.filter && f.filter.range.publishedAt)).toBe(
-        true
-      );
+      // The only other weight is the language one (languageRanking.test.js):
+      // nothing else multiplies a score.
+      const others = fns.filter(f => f.weight && !freshnessOf([f]).length);
+      expect(others).toEqual([
+        { filter: { terms: { language: expect.any(Array) } }, weight: OTHER_SCRIPT_WEIGHT }
+      ]);
     });
 
     it('drops the freshness multiplier when sorting by date explicitly', () => {
       const body = buildSearchBody(parseQuery('python'), { sort: 'newest' });
-      expect(body.query.function_score.functions.some(f => f.weight)).toBe(false);
+      expect(freshnessOf(body.query.function_score.functions)).toEqual([]);
       expect(body.sort[0].publishedAt.order).toBe('desc');
     });
 
-    it('sorts oldest-first with missing dates placed first', () => {
+    it('sorts oldest-first with missing dates placed last, as newest-first does', () => {
+      // An unknown date is not the oldest one: undated pages never lead.
       const body = buildSearchBody(parseQuery('python'), { sort: 'oldest' });
-      expect(body.sort[0].publishedAt.order).toBe('asc');
+      expect(body.sort[0].publishedAt).toEqual({ order: 'asc', missing: '_last' });
+      const newest = buildSearchBody(parseQuery('python'), { sort: 'newest' });
+      expect(newest.sort[0].publishedAt).toEqual({ order: 'desc', missing: '_last' });
     });
 
     it('sorts relevance by score, with the url hash only breaking ties', () => {

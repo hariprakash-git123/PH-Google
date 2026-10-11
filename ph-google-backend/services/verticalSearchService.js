@@ -108,13 +108,14 @@ async function searchMedia(
   });
 
   if (searchTerms.length === 0) return empty();
+  // A picture or video carries no publication date — only when it was
+  // crawled, which is not when it was published — so none is inside a date
+  // window.
+  if (dateWindowToCutoff(dateWindow)) return empty();
 
   const filter = { type, terms: { $in: searchTerms } };
   if (domain) filter.domain = domainClause(domain);
   if (language) filter.language = language;
-
-  const cutoff = dateWindowToCutoff(dateWindow);
-  if (cutoff) filter.lastCrawledAt = { $gte: cutoff };
 
   // Fetch a bounded candidate set; ranking happens in process.
   const candidates = await Media.find(filter)
@@ -275,13 +276,8 @@ async function searchNews({
   if (language) filter.language = language;
 
   const cutoff = dateWindowToCutoff(dateWindow);
-  if (cutoff) {
-    // Prefer the publication date; fall back to when we crawled it.
-    filter.$or = [
-      { publishedAt: { $gte: cutoff } },
-      { publishedAt: null, lastCrawledAt: { $gte: cutoff } }
-    ];
-  }
+  // Published inside the window; an undated article is in no window.
+  if (cutoff) filter.publishedAt = { $gte: cutoff };
 
   const pages = await Page.find(filter)
     .select(
@@ -321,10 +317,16 @@ async function searchNews({
       (a, b) => b.score - a.score || String(a.page.url).localeCompare(String(b.page.url))
     );
   } else {
+    // By publication date; undated articles after every dated one, either way.
     const direction = sort === 'oldest' ? 1 : -1;
+    const dateOf = p => (p.publishedAt ? new Date(p.publishedAt).getTime() : null);
     ranked.sort((a, b) => {
-      const at = new Date(a.page.publishedAt || a.page.lastCrawledAt || 0).getTime();
-      const bt = new Date(b.page.publishedAt || b.page.lastCrawledAt || 0).getTime();
+      const at = dateOf(a.page);
+      const bt = dateOf(b.page);
+      if (at === null || bt === null) {
+        if (at !== bt) return at === null ? 1 : -1;
+        return b.score - a.score;
+      }
       if (at === bt) return b.score - a.score;
       return (at - bt) * direction;
     });

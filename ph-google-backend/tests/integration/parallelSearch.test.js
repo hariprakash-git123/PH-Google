@@ -168,6 +168,43 @@ describe('EXTERNAL_SEARCH_PROVIDER=parallel', () => {
     expect(data.external.count).toBe(1);
   });
 
+  it('a site filter holds after the merge: an off-site Parallel answer is not shown', async () => {
+    // Parallel was asked for docs.example.com only; a stray answer from
+    // elsewhere must not reach the page.
+    parallel.state.results = [
+      ...results(1, { host: 'docs.example.com', start: 10 }),
+      ...results(1, { host: 'parallel.example', start: 20 }),
+      ...results(1, { host: 'api.docs.example.com', start: 30 })
+    ];
+    const { data } = (await search({ q: 'python', domain: 'docs.example.com' })).body;
+    expect(parallel.state.requests[0].body.advanced_settings.source_policy).toEqual({
+      include_domains: ['docs.example.com']
+    });
+    expect(data.results.length).toBeGreaterThan(1);
+    expect(data.results.some(r => r.source === 'parallel')).toBe(true);
+    for (const result of data.results) {
+      expect(result.domain === 'docs.example.com' || result.domain.endsWith('.docs.example.com')).toBe(
+        true
+      );
+    }
+  });
+
+  it('an excluded site stays excluded after the merge', async () => {
+    parallel.state.results = [
+      ...results(1, { host: 'python.org', start: 10 }),
+      ...results(1, { host: 'parallel.example', start: 20 })
+    ];
+    const { data } = (await search({ q: 'python -site:python.org' })).body;
+    expect(parallel.state.requests[0].body.advanced_settings.source_policy).toEqual({
+      exclude_domains: ['python.org']
+    });
+    // Parallel's own python.org answer is dropped. (This suite runs the
+    // legacy MongoDB engine, which has no operators: its python.org page is
+    // not the merge's to remove. -site: on the index: tests/opensearch.)
+    const external = data.results.filter(r => r.source === 'parallel');
+    expect(external.map(r => r.domain)).toEqual(['parallel.example']);
+  });
+
   it('page 2 asks no provider and is exactly the index page', async () => {
     await seedManyPages(25, { keyword: 'pagination' });
     const res = await search({ q: 'pagination', page: 2 });

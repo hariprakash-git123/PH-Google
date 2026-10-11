@@ -5,6 +5,12 @@ const {
 } = require('../external/resultRelevance');
 const { getSynonyms } = require('../opensearch/synonyms');
 const { resultIdentityKey } = require('../../utils/urlNormalizer');
+const {
+  dominantScript,
+  scriptOfLanguage,
+  languageCompatible,
+  wantedScript
+} = require('./languageScript');
 
 /**
  * One ranking for web results from every source.
@@ -38,8 +44,19 @@ const { resultIdentityKey } = require('../../utils/urlNormalizer');
  * address in another form, or the same title on the same site — goes after
  * every result of its tier that is not one (and loses 0.15 among repeats).
  *
+ * Within the first tier, a result in another language than the query's comes
+ * after those in a compatible one (languageCompatible): an English search
+ * for "python" is not answered first by the Japanese article, however well
+ * its title matches. Unless a language was asked for (lang:, the language
+ * filter), which decides instead.
+ *
  * Ties are broken by source rank, then index before provider, then address,
  * so equal inputs always give the same order.
+ *
+ * Last, no site fills the list (hostCrowding): from the third result of one
+ * site on, its results wait until every other site's result of the same
+ * tier has had its place, as a results page shows a site twice and then
+ * other sites. Nothing is removed, and a list from one site keeps its order.
  *
  * Results from a single source keep that source's own order within each tier:
  * its ranking already used more evidence (the whole page, its headings, its
@@ -147,6 +164,62 @@ function hostOf(url) {
   }
 }
 
+/** At most this many results of one site before every other site's of the same tier. */
+const PER_HOST = 2;
+
+/**
+ * Host crowding: within each run of results of the same tier, a site's
+ * third and later results move after the other sites' results of that run
+ * that are about the query as well (`answers`: the title is), keeping their
+ * own order — never behind a page that only mentions the query in passing,
+ * unless they only mention it too. A run from a single site is unchanged.
+ *
+ * Only a provider's results are moved. The index's keep their place: its
+ * order is the one "Load more" and every page continue from.
+ *
+ * @param {Array<{result: Object, tier: string, answers: boolean}>} entries
+ *        in rank order
+ */
+function crowdHosts(entries) {
+  const out = [];
+  let i = 0;
+  while (i < entries.length) {
+    let j = i;
+    while (j < entries.length && entries[j].tier === entries[i].tier) j += 1;
+    const seen = new Map();
+    const first = [];
+    const later = [];
+    for (const entry of entries.slice(i, j)) {
+      const host = hostOf(entry.result.url);
+      const count = seen.get(host) || 0;
+      seen.set(host, count + 1);
+      const movable = (entry.result.source || 'index') !== 'index';
+      (host && movable && count >= PER_HOST ? later : first).push(entry);
+    }
+    // Deferred pages about the query go after the run's last other page
+    // about it; deferred pages that only mention it, at the run's end.
+    let cut = 0;
+    first.forEach((entry, k) => {
+      if (entry.answers) cut = k + 1;
+    });
+    out.push(
+      ...first.slice(0, cut),
+      ...later.filter(entry => entry.answers),
+      ...first.slice(cut),
+      ...later.filter(entry => !entry.answers)
+    );
+    i = j;
+  }
+  return out;
+}
+
+/** Whether a result's title is about the query (as countAnswering judges it). */
+function answersQuery(features, query) {
+  return (
+    query.termCount === 0 || Math.round(features.titleCoverage * query.termCount) >= query.required
+  );
+}
+
 /**
  * The evidence for one result.
  *
@@ -208,6 +281,7 @@ const SOURCE_ORDER = result => (result.source === 'index' ? 0 : 1);
 function compare(a, b) {
   return (
     Number(b.covers) - Number(a.covers) ||
+    Number(b.compatible) - Number(a.compatible) ||
     Number(Boolean(a.repeat)) - Number(Boolean(b.repeat)) ||
     b.score - a.score ||
     a.rank - b.rank ||
@@ -222,19 +296,25 @@ function compare(a, b) {
  * @param {Array<Object>} results  each with title, snippet, url, source and
  *        sourceRank (its place in its own source's ranking, from 1)
  * @param {Object} parsed  the parsed query (queryParser)
- * @param {{timeSensitive?: boolean, now?: number, explain?: boolean}} [options]
+ * @param {{timeSensitive?: boolean, now?: number, explain?: boolean,
+ *          language?: string}} [options]  `language`: the language filter, if set
  * @returns {Array<Object>} the same results, best first; with `explain`, each
- *          carries `ranking: { score, covers, features }`
+ *          carries `ranking: { score, covers, compatible, features }`
  */
 function rankResults(results, parsed, options = {}) {
   const list = Array.isArray(results) ? results : [];
   if (list.length < 2 && !options.explain) return list.slice();
   const query = prepareQuery(parsed);
-  const singleSource = new Set(list.map(result => result.source || 'index')).size === 1;
-  if (singleSource && !options.explain) {
-    // One source: those that cover the query first, each tier in the
-    // source's own order (its rank; then the address, for equal ranks).
-    const rankOf = result => (Number.isInteger(result.sourceRank) ? result.sourceRank : 1e6);
+  const queryScript = wantedScript(parsed, options);
+  const tierOf = entry => `${entry.covers}|${entry.compatible}|${Boolean(entry.repeat)}`;
+  const sources = new Set(list.map(result => result.source || 'index'));
+  const singleSource = sources.size === 1;
+  const rankOf = result => (Number.isInteger(result.sourceRank) ? result.sourceRank : 1e6);
+  if (singleSource && sources.has('index') && !options.explain) {
+    // The index alone: those that cover the query first, each tier in the
+    // index's own order. Nothing more moves: its order is pageable — one
+    // page of 40 is two pages of 20 — and the index weighs language itself
+    // (queryBuilder), the same on every page.
     return list
       .map(result => ({ result, covers: featuresOf(result, query, options).covers }))
       .sort(
@@ -245,12 +325,38 @@ function rankResults(results, parsed, options = {}) {
       )
       .map(entry => entry.result);
   }
+  if (singleSource && !options.explain) {
+    // One provider: those that cover the query first, then those in a
+    // compatible language, each tier in the provider's own order (its rank;
+    // then the address, for equal ranks), with no site filling the list.
+    const sorted = list
+      .map(result => {
+        const features = featuresOf(result, query, options);
+        return {
+          result,
+          covers: features.covers,
+          answers: answersQuery(features, query),
+          compatible: languageCompatible(result, queryScript)
+        };
+      })
+      .sort(
+        (a, b) =>
+          Number(b.covers) - Number(a.covers) ||
+          Number(b.compatible) - Number(a.compatible) ||
+          rankOf(a.result) - rankOf(b.result) ||
+          String(a.result.url).localeCompare(String(b.result.url))
+      )
+      .map(entry => ({ ...entry, tier: tierOf(entry) }));
+    return crowdHosts(sorted).map(entry => entry.result);
+  }
   const scored = list.map(result => {
     const features = featuresOf(result, query, options);
     return {
       result,
       features,
       covers: features.covers,
+      answers: answersQuery(features, query),
+      compatible: languageCompatible(result, queryScript),
       score: scoreOf(features),
       rank: Number.isInteger(result.sourceRank) ? result.sourceRank : 1e6
     };
@@ -275,14 +381,16 @@ function rankResults(results, parsed, options = {}) {
     seenTitles.add(titleKey);
   }
   scored.sort(compare);
+  const crowded = crowdHosts(scored.map(entry => ({ ...entry, tier: tierOf(entry) })));
 
-  return scored.map(entry =>
+  return crowded.map(entry =>
     options.explain
       ? {
           ...entry.result,
           ranking: {
             score: Number(entry.score.toFixed(4)),
             covers: entry.covers,
+            compatible: entry.compatible,
             features: entry.features
           }
         }
@@ -320,5 +428,10 @@ module.exports = {
   featuresOf,
   prepareQuery,
   titleCore,
+  languageCompatible,
+  wantedScript,
+  dominantScript,
+  scriptOfLanguage,
+  PER_HOST,
   WEIGHTS
 };

@@ -54,8 +54,16 @@ export default function SearchResult({ result }) {
         </span>
         <div className="ph-result-domain-wrap">
           <span className="ph-result-domain">{result.domain}</span>
-          <span className="ph-result-dot">•</span>
-          <span className="ph-result-date">{result.publishedAgo || 'Recently updated'}</span>
+          {/* The date the API labels ("Published …" or "Crawled …"); none
+              when the page states none — nothing is made up here. */}
+          {result.dateLabel && result.dateLabel.text && (
+            <>
+              <span className="ph-result-dot">•</span>
+              <time className="ph-result-date" dateTime={result.dateLabel.at}>
+                {result.dateLabel.text}
+              </time>
+            </>
+          )}
         </div>
         {result.category && <span className="ph-result-category-badge">{result.category}</span>}
       </div>

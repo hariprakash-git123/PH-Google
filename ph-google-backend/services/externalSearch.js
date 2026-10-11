@@ -575,10 +575,14 @@ function indexQuality(internal, parsed) {
  * The index's and the provider's results as one list, best first
  * (unifiedRanker): neither source's block is put before the other's.
  * A search sorted by date keeps its dates' order: that sort is the point.
+ * `language` is the language filter: with one set, it decides the language.
  */
-function ranked(results, parsed, intent, sort = 'relevance') {
+function ranked(results, parsed, intent, sort = 'relevance', language = '') {
   if (sort && sort !== 'relevance') return results;
-  return rankResults(results, parsed, { timeSensitive: Boolean(intent && intent.timeSensitive) });
+  return rankResults(results, parsed, {
+    timeSensitive: Boolean(intent && intent.timeSensitive),
+    language
+  });
 }
 
 /**
@@ -642,7 +646,13 @@ async function searchWithExternal(params, runInternal, options = {}) {
   // does not lead pages that are about the query.
   const withStatus = (internal, external) => ({
     ...internal,
-    results: ranked(labelIndexResults(internal.results || [], params), parsed, intent, params.sort),
+    results: ranked(
+      labelIndexResults(internal.results || [], params),
+      parsed,
+      intent,
+      params.sort,
+      params.language
+    ),
     external,
     continuation: noContinuation
   });
@@ -752,7 +762,7 @@ async function searchWithExternal(params, runInternal, options = {}) {
 
   return {
     ...internal,
-    results: ranked(merged.results, parsed, intent, params.sort),
+    results: ranked(merged.results, parsed, intent, params.sort, params.language),
     continuation: {
       externalOffset: merged.added,
       externalMore: merged.available > merged.added,

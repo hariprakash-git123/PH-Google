@@ -23,9 +23,57 @@ const {
 } = require('../utils/validators');
 const { config } = require('../config/env');
 const { encodeCursor, decodeCursor } = require('../utils/searchCursor');
+const { parseQuery } = require('../services/opensearch/queryParser');
+const { dateLabelFor } = require('../services/opensearch/searchService');
 
 /** The largest page of the Images tab: its first screen of pictures. */
 const IMAGES_MAX_LIMIT = 60;
+
+/**
+ * Filters a tab cannot apply, which are therefore not applied — and the
+ * response says so (`ignoredFilters`) rather than presenting the results as
+ * filtered:
+ *
+ *   maps            a place has no publication date, language or order
+ *   images, videos  no source can order them by publication date (crawled
+ *                   media have none; a picture's page date is not its own)
+ */
+const UNSUPPORTED_FILTERS = {
+  maps: ['date', 'language', 'sort'],
+  images: ['sort'],
+  videos: ['sort']
+};
+
+/** The filters this request set that its tab cannot apply. */
+function ignoredFiltersFor(category, { sort, dateWindow, language }) {
+  const unsupported = UNSUPPORTED_FILTERS[category] || [];
+  const set = {
+    date: dateWindow !== 'any',
+    language: Boolean(language),
+    sort: sort !== 'relevance'
+  };
+  return unsupported.filter(name => set[name]);
+}
+
+/**
+ * A web result with the date it shows (`dateLabel`). The index's carry one
+ * already; a provider's result shows its own stated publication date, or
+ * none — never a date it does not give.
+ */
+function withDateLabel(result) {
+  if (result.dateLabel !== undefined) return result;
+  return {
+    ...result,
+    dateLabel: dateLabelFor({ publishedAt: result.publishedAt, fromIndex: false })
+  };
+}
+
+/** The order a tab's results are really in: News is newest first unless asked otherwise. */
+function appliedSortFor(category, sort, ignored) {
+  if (ignored.includes('sort')) return 'relevance';
+  if (category === 'news' && sort === 'relevance') return 'newest';
+  return sort;
+}
 const externalSearch = require('../services/externalSearch');
 const logger = require('../utils/logger');
 
@@ -128,6 +176,9 @@ const search = asyncHandler(async (req, res) => {
   // filters — and is refused for any other. Without one, `page` works as
   // it always has.
   const identity = { query, category, sort, domain, dateWindow, language };
+  // Operators typed with a value they cannot use ("site:foo", "lang:xx9"):
+  // they restricted nothing, which the page says rather than implying they did.
+  const unusedOperators = parseQuery(query).unusedOperators || [];
   const cursor =
     req.query.cursor !== undefined && req.query.cursor !== ''
       ? decodeCursor(String(req.query.cursor), identity)
@@ -152,14 +203,15 @@ const search = asyncHandler(async (req, res) => {
   //    videos and maps come from Google Images/Videos/Maps instead (see
   //    services/externalVerticals.js); news always stays the crawler's.
   if (category !== 'all') {
+    const ignoredFilters = ignoredFiltersFor(category, { sort, dateWindow, language });
     const verticalParams = {
       query,
       page,
       limit,
-      sort,
+      sort: ignoredFilters.includes('sort') ? 'relevance' : sort,
       domain,
-      dateWindow,
-      language,
+      dateWindow: ignoredFilters.includes('date') ? 'any' : dateWindow,
+      language: ignoredFilters.includes('language') ? '' : language,
       ...(cursor ? { offset: start, rounds: cursor.rounds || 1 } : {})
     };
     const outcome = externalVerticals.handles(category)
@@ -206,6 +258,11 @@ const search = asyncHandler(async (req, res) => {
       category,
       sort,
       filters: appliedFilters,
+      // What was really done with them: the order the results are in, and
+      // the filters this tab could not apply (not applied, and not claimed).
+      appliedSort: appliedSortFor(category, sort, ignoredFilters),
+      ignoredFilters,
+      unusedOperators,
       results: outcome.results,
       // `items` mirrors `results` for the category-grid components.
       items: outcome.results,
@@ -285,7 +342,10 @@ const search = asyncHandler(async (req, res) => {
     category,
     sort,
     filters: appliedFilters,
-    results: outcome.results,
+    appliedSort: sort,
+    ignoredFilters: [],
+    unusedOperators,
+    results: outcome.results.map(withDateLabel),
     searchTerms: outcome.searchTerms,
     // `total` is the real number of matching documents in the index, plus
     // the external results shown so far — never a provider's estimate.

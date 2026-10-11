@@ -525,11 +525,13 @@ function samePlace(a, b) {
  * @param {string[]} terms
  * @returns {Promise<{results: Array<Object>, stats: Object}>}
  */
-async function findPlaces(raw, terms, { query = '' } = {}) {
-  // OpenStreetMap is asked once, alongside the pages being read (when it is on).
-  const fromMap = nominatimClient.available().ok
-    ? nominatimClient.searchPlaces(query)
-    : Promise.resolve({ ok: false, reason: 'disabled' });
+async function findPlaces(raw, terms, { query = '', siteRestricted = false } = {}) {
+  // OpenStreetMap is asked once, alongside the pages being read (when it is
+  // on). Not under a site filter: its places are from no page on that site.
+  const fromMap =
+    nominatimClient.available().ok && !siteRestricted
+      ? nominatimClient.searchPlaces(query)
+      : Promise.resolve({ ok: false, reason: siteRestricted ? 'site_filter' : 'disabled' });
 
   const stats = {
     found: raw.length,
@@ -744,6 +746,14 @@ async function crawlerResults(category, params, terms) {
   }
 }
 
+/** Whether a Parallel result is dated on or after `afterDate` (YYYY-MM-DD); true without one. */
+function publishedSince(entry, afterDate) {
+  if (!afterDate) return true;
+  const raw = entry && typeof entry === 'object' ? String(entry.publish_date || '') : '';
+  const day = raw.slice(0, 10);
+  return Number.isFinite(Date.parse(day)) && day >= afterDate;
+}
+
 /**
  * One round of Parallel requests for a vertical, verified, through the shared
  * cache and daily limit (each round has its own words, so its own cache entry).
@@ -755,9 +765,18 @@ function fetchRound(category, request, terms) {
     category,
     { objective, searchQueries, sourcePolicy, mode, maxResults: RESULTS_PER_REQUEST },
     async () => {
-      const list = await askEveryWay({ objective, searchQueries, sourcePolicy });
+      // Parallel is asked for pages published on or after `after_date`; it is
+      // checked again here, as for web results (parallelMapper.withinDate),
+      // so a page with no date, or an earlier one, is not presented as inside
+      // the window.
+      const list = (await askEveryWay({ objective, searchQueries, sourcePolicy })).filter(entry =>
+        publishedSince(entry, sourcePolicy && sourcePolicy.after_date)
+      );
       const verify = { images: findImages, videos: confirmVideos, maps: findPlaces }[category];
-      const { results, stats } = await verify(list, terms, { query: searchQueries[0] });
+      const { results, stats } = await verify(list, terms, {
+        query: searchQueries[0],
+        siteRestricted: Boolean(sourcePolicy && sourcePolicy.include_domains)
+      });
       logger.debug('Parallel vertical search verified', {
         category,
         query: searchQueries[0],

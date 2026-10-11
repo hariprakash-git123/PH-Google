@@ -138,7 +138,8 @@ async function webSearchMore(params, state) {
     [...indexResults, ...externalResults],
     parseQuery(params.query),
     queryIntent.classify(params.query),
-    params.sort
+    params.sort,
+    params.language
   );
 
   const pageable = Math.min(

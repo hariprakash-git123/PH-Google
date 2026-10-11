@@ -246,6 +246,7 @@ describe('bingSearchMapper', () => {
       snippet: "Inspiring the world's athletes.",
       publishedAt: null,
       publishedAgo: 'Unknown',
+      dateLabel: null,
       crawledAt: null,
       language: '',
       category: 'Bing Web',

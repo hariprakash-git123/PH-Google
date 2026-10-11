@@ -49,6 +49,8 @@ function mapBingItem(raw, index = 0) {
     snippet: clean(raw.description, SNIPPET_MAX) || NO_DESCRIPTION,
     publishedAt: null,
     publishedAgo: 'Unknown',
+    // Bing gives no date, so none is shown.
+    dateLabel: null,
     crawledAt: null,
     language: '',
     category: 'Bing Web',

@@ -67,7 +67,9 @@ describe('GET /api/search — core behaviour', () => {
         domain: expect.any(String),
         snippet: expect.any(String),
         score: expect.any(Number),
-        publishedAgo: expect.any(String)
+        // Not an article: no publication age, and the crawl date labelled as one.
+        publishedAgo: null,
+        dateLabel: { kind: 'crawled', at: expect.any(String), text: 'Crawled just now' }
       })
     );
   });
@@ -276,7 +278,8 @@ describe('GET /api/search — filters', () => {
       description: 'Get python here.',
       text: 'python download release',
       language: 'en',
-      lastCrawledAt: new Date()
+      lastCrawledAt: new Date(),
+      publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
     });
     await seedPage({
       url: 'https://realpython.com/tutorial',
@@ -284,7 +287,8 @@ describe('GET /api/search — filters', () => {
       description: 'Learn python.',
       text: 'python tutorial learn',
       language: 'es',
-      lastCrawledAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000)
+      lastCrawledAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000),
+      publishedAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000)
     });
   });
 
@@ -332,6 +336,56 @@ describe('GET /api/search — filters', () => {
     it('includes the older page within a year window', async () => {
       const res = await search({ q: 'python', date: 'year' });
       expect(res.body.data.total).toBe(2);
+    });
+
+    it('an undated page is in no window, however recently it was crawled', async () => {
+      await seedPage({
+        url: 'https://docs.example.org/python',
+        title: 'Python Notes',
+        text: 'python notes',
+        language: 'en',
+        lastCrawledAt: new Date()
+      });
+      const week = await search({ q: 'python', date: 'week' });
+      expect(week.body.data.results.map(r => r.url)).toEqual(['https://python.org/downloads']);
+      // Without a date filter it is a result like any other.
+      const any = await search({ q: 'python' });
+      expect(any.body.data.results.map(r => r.url)).toContain('https://docs.example.org/python');
+    });
+
+    it('newest and oldest sort by publication date, undated pages last both ways', async () => {
+      await seedPage({
+        url: 'https://docs.example.org/python',
+        title: 'Python Notes',
+        text: 'python notes',
+        language: 'en',
+        lastCrawledAt: new Date()
+      });
+      const urls = async sort => (await search({ q: 'python', sort })).body.data.results.map(r => r.url);
+      expect(await urls('newest')).toEqual([
+        'https://python.org/downloads',
+        'https://realpython.com/tutorial',
+        'https://docs.example.org/python'
+      ]);
+      expect(await urls('oldest')).toEqual([
+        'https://realpython.com/tutorial',
+        'https://python.org/downloads',
+        'https://docs.example.org/python'
+      ]);
+    });
+
+    it('an operator with an unusable value is reported, not presented as applied', async () => {
+      // The report only; what operators do to results is tested against
+      // OpenSearch (tests/opensearch) — this suite runs the legacy engine.
+      const bad = await search({ q: 'python site:notadomain' });
+      expect(bad.status).toBe(200);
+      expect(bad.body.data.unusedOperators).toEqual(['site:notadomain']);
+
+      const good = await search({ q: 'python site:python.org' });
+      expect(good.body.data.unusedOperators).toEqual([]);
+
+      const vertical = await search({ q: 'python lang:english', category: 'news' });
+      expect(vertical.body.data.unusedOperators).toEqual(['lang:english']);
     });
 
     it('rejects an unknown date window', async () => {

@@ -189,20 +189,89 @@ function buildSnippet(hit) {
   return 'No description available.';
 }
 
-function getTimeAgo(date) {
+/**
+ * Whole calendar months from one date to another (UTC): 11 Feb 2003 to
+ * 11 Oct 2026 is 284 months — 23 years 8 months, not the 24 years that
+ * counting 30-day months twelve to a year (360-day years) gives.
+ */
+function calendarMonthsBetween(from, to) {
+  let months =
+    (to.getUTCFullYear() - from.getUTCFullYear()) * 12 + (to.getUTCMonth() - from.getUTCMonth());
+  // The month is not complete until its day (and time) is reached.
+  const dayOfMonth = d =>
+    d.getUTCDate() * 86400000 +
+    (d.getTime() - Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  if (dayOfMonth(to) < dayOfMonth(from)) months -= 1;
+  return Math.max(0, months);
+}
+
+function getTimeAgo(date, now = Date.now()) {
   if (!date) return 'Unknown';
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 0) return 'Just now';
+  const at = new Date(date);
+  if (!Number.isFinite(at.getTime())) return 'Unknown';
+  const seconds = Math.floor((now - at.getTime()) / 1000);
   if (seconds < 60) return 'Just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
 
   const days = Math.floor(seconds / 86400);
-  if (days < 30) return days === 1 ? '1 day ago' : `${days} days ago`;
-  const months = Math.floor(days / 30);
+  const months = calendarMonthsBetween(at, new Date(now));
+  if (months < 1) return days === 1 ? '1 day ago' : `${days} days ago`;
   if (months < 12) return months === 1 ? '1 month ago' : `${months} months ago`;
   const years = Math.floor(months / 12);
   return years === 1 ? '1 year ago' : `${years} years ago`;
+}
+
+const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC'
+});
+
+/**
+ * The date a result shows, and what kind of date it is — or null for none.
+ *
+ *   published  the page's own publication date: an article's (index), or
+ *              the date a provider gives as its publish date
+ *   crawled    when PH last crawled the page: index pages that are not
+ *              articles, or articles that state no date. A reference page's
+ *              declared datePublished is when it was created (a wiki
+ *              article from 2001, edited last week), so it is not shown as
+ *              if it were the page's age; when PH read it is, said as such.
+ *
+ * A crawl date is never presented as a publication date, and no date is
+ * made up: a provider's result without one shows none. Under a year old the
+ * date reads relative ("3 days ago"); older, as the date itself.
+ *
+ * @param {{publishedAt?: string|null, crawledAt?: string|null,
+ *          isArticle?: boolean, fromIndex?: boolean}} fields
+ * @returns {{kind: 'published'|'crawled', at: string, text: string}|null}
+ */
+function dateLabelFor(
+  { publishedAt, crawledAt, isArticle = false, fromIndex = true },
+  now = Date.now()
+) {
+  const valid = value => value && Number.isFinite(new Date(value).getTime());
+  let kind = null;
+  let at = null;
+  if (valid(publishedAt) && (!fromIndex || isArticle)) {
+    kind = 'published';
+    at = new Date(publishedAt);
+  } else if (fromIndex && valid(crawledAt)) {
+    kind = 'crawled';
+    at = new Date(crawledAt);
+  }
+  if (!kind) return null;
+  // A date in the future is not trusted as a publication date.
+  if (kind === 'published' && at.getTime() > now + 86400000) return null;
+  const when =
+    calendarMonthsBetween(at, new Date(now)) >= 12 ? DATE_FORMAT.format(at) : getTimeAgo(at, now);
+  return {
+    kind,
+    at: at.toISOString(),
+    text: `${kind === 'published' ? 'Published' : 'Crawled'} ${when === 'Just now' ? 'just now' : when}`
+  };
 }
 
 /**
@@ -269,16 +338,16 @@ function formatHit(hit, { includeDebug }) {
     favicon: '\u{1F310}',
     title: source.title || source.url,
     snippet: buildSnippet(hit),
-    // Show the publication date only for articles, where it is the point.
-    // A reference page's declared datePublished is its creation date — a
-    // wiki article created in 2001 and edited yesterday would otherwise
-    // read "25 years ago". For those, when we last crawled it is both more
-    // useful and more honest.
-    publishedAgo: getTimeAgo(
-      source.isArticle ? source.publishedAt || source.crawledAt : source.crawledAt
-    ),
+    // How long ago it was published: articles only, from their own date —
+    // never from when it was crawled. What the result shows is `dateLabel`.
+    publishedAgo: source.isArticle && source.publishedAt ? getTimeAgo(source.publishedAt) : null,
     publishedAt: source.publishedAt || null,
     crawledAt: source.crawledAt || null,
+    dateLabel: dateLabelFor({
+      publishedAt: source.publishedAt,
+      crawledAt: source.crawledAt,
+      isArticle: Boolean(source.isArticle)
+    }),
     language: source.language || '',
     category: 'Web Result',
     saved: false,
@@ -583,6 +652,8 @@ module.exports = {
   buildSnippet,
   toDisplayUrl,
   getTimeAgo,
+  dateLabelFor,
+  calendarMonthsBetween,
   assertAvailable,
   DEDUPE_OVERFETCH,
   MAX_RESULT_WINDOW,
