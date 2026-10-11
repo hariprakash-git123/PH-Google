@@ -275,6 +275,24 @@ function dateLabelFor(
 }
 
 /**
+ * When the source says the page last changed — its own Last-Modified date,
+ * shown beside the date above and labelled as what it is ("Modified …").
+ * Null when the source gave none, or one that cannot be right (in the
+ * future): no date is ever put in its place.
+ *
+ * @param {string|Date|null} modifiedAt
+ * @returns {{at: string, text: string}|null}
+ */
+function modifiedLabelFor(modifiedAt, now = Date.now()) {
+  if (!modifiedAt) return null;
+  const at = new Date(modifiedAt);
+  if (!Number.isFinite(at.getTime()) || at.getTime() > now + 60 * 1000) return null;
+  const when =
+    calendarMonthsBetween(at, new Date(now)) >= 12 ? DATE_FORMAT.format(at) : getTimeAgo(at, now);
+  return { at: at.toISOString(), text: `Modified ${when === 'Just now' ? 'just now' : when}` };
+}
+
+/**
  * Collapses near-duplicates.
  *
  * The index already de-duplicates by canonical URL (the document _id), so
@@ -348,6 +366,9 @@ function formatHit(hit, { includeDebug }) {
       crawledAt: source.crawledAt,
       isArticle: Boolean(source.isArticle)
     }),
+    // The source's own Last-Modified date, when it gave one.
+    modifiedAt: source.modifiedAt || null,
+    modifiedLabel: modifiedLabelFor(source.modifiedAt),
     language: source.language || '',
     category: 'Web Result',
     saved: false,
@@ -390,6 +411,10 @@ function formatHit(hit, { includeDebug }) {
  *        words instead of every partial match (see buildTopicalFilter). Off
  *        unless asked for: the results page and the News tab ask, AI answers
  *        do not. With `isArticle`, "no page" means no article.
+ * @param {boolean} [params.topicalAlways]  return only pages that mention the
+ *        query's meaningful words whatever the index holds (the News tab)
+ * @param {boolean} [params.freshness]  the bounded lift for recent pages,
+ *        whatever the query's words (the News tab: news is about time)
  * @param {boolean} [params.debug]      include scoring detail (dev only)
  * @returns {Promise<Object>}
  */
@@ -404,6 +429,8 @@ async function search({
   language = '',
   isArticle,
   topicalWhenWeak = false,
+  topicalAlways = false,
+  freshness = false,
   debug = false
 }) {
   const startedAt = Date.now();
@@ -433,7 +460,7 @@ async function search({
 
   await assertAvailable();
 
-  const options = { sort, domain, dateWindow, language, isArticle };
+  const options = { sort, domain, dateWindow, language, isArticle, freshness };
 
   // 1. Rank. Walk the ranked list from the top, collapsing duplicates, until
   //    this page and every page before it are filled. Collapsing the whole
@@ -460,8 +487,13 @@ async function search({
   const qualityFilters = buildQualityFilters(parsed);
   let quality = null;
   // Set once the index has been found to hold no page about the query: the
-  // words a page must then mention to be shown (see below).
+  // words a page must then mention to be shown (see below). From the start,
+  // when every result has to be on the subject (topicalAlways).
   let topical = null;
+  if (topicalAlways) {
+    const words = meaningfulWords(parsed);
+    if (words.length > 0) topical = { words, required: requiredMentions(words.length) };
+  }
   // Archived copies of pages that are themselves among the matches.
   let excludeIds = [];
   let archiveChecked = false;
@@ -653,6 +685,7 @@ module.exports = {
   toDisplayUrl,
   getTimeAgo,
   dateLabelFor,
+  modifiedLabelFor,
   calendarMonthsBetween,
   assertAvailable,
   DEDUPE_OVERFETCH,

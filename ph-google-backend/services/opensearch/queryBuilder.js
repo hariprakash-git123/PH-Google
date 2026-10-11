@@ -600,6 +600,7 @@ function buildScoreFunctions({ boostFreshness, otherLanguages = [] }) {
  * @param {{words: string[], required: number}} [options.topical]
  *        restrict to pages that mention this many of these words (see
  *        buildTopicalFilter)
+ * @param {boolean} [options.freshness]   lift recent pages whatever the query says
  * @param {boolean} [options.explain]     development scoring breakdown
  */
 function buildSearchBody(parsed, options = {}) {
@@ -614,6 +615,7 @@ function buildSearchBody(parsed, options = {}) {
     ids,
     excludeIds,
     topical,
+    freshness = false,
     explain = false
   } = options;
 
@@ -657,7 +659,8 @@ function buildSearchBody(parsed, options = {}) {
   // ("latest", "news", this year…): for "theory of relativity" a page
   // published this week is not a better answer for being new.
   const sortingByDate = sort === 'newest' || sort === 'oldest';
-  const wantsRecent = isTimeSensitive(parsed.raw || '');
+  // `freshness`: the caller knows the results are about time (the News tab).
+  const wantsRecent = freshness || isTimeSensitive(parsed.raw || '');
 
   const query = {
     function_score: {

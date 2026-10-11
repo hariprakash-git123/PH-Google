@@ -247,6 +247,8 @@ describe('bingSearchMapper', () => {
       publishedAt: null,
       publishedAgo: 'Unknown',
       dateLabel: null,
+      modifiedAt: null,
+      modifiedLabel: null,
       crawledAt: null,
       language: '',
       category: 'Bing Web',

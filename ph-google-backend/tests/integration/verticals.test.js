@@ -322,10 +322,10 @@ describe('GET /api/search?category=news', () => {
     expect(news.body.data.total).toBe(0);
   });
 
-  it('defaults to newest first', async () => {
+  it('ranks by relevance by default, and says so', async () => {
     const res = await search({ q: 'paris', category: 'news' });
     expect(res.body.data.sort).toBe('relevance'); // the request's own sort value
-    expect(res.body.data.appliedSort).toBe('newest'); // the order the results are in
+    expect(res.body.data.appliedSort).toBe('relevance'); // the order the results are in
     expect(res.body.data.ignoredFilters).toEqual([]);
     expect(res.body.data.results).toHaveLength(1);
   });

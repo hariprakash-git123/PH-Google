@@ -1,5 +1,5 @@
 const { getClient } = require('./client');
-const { buildIndexDefinition } = require('./indexSettings');
+const { buildIndexDefinition, MAPPINGS } = require('./indexSettings');
 const { config } = require('../../config/env');
 const logger = require('../../utils/logger');
 
@@ -21,11 +21,49 @@ async function indexExists(name = INDEX()) {
 }
 
 /**
- * Creates the index with its mappings if it is not already there.
+ * Fields added to the mapping after indexes were already created with it.
+ * Adding a field is safe on a live index — no reindex, no document touched:
+ * existing documents simply lack it, as documents without one always will.
+ * Nothing else about an existing mapping is ever changed here.
+ */
+const ADDITIVE_FIELDS = ['modifiedAt'];
+
+/**
+ * Adds any ADDITIVE_FIELDS an existing index's mapping lacks.
+ * @returns {Promise<string[]>} the fields added
+ */
+async function addMissingFields(name = INDEX()) {
+  const response = await getClient().indices.getMapping({ index: name });
+  const body = response?.body || {};
+  const mapping = (body[name] || Object.values(body)[0] || {}).mappings || {};
+  const present = mapping.properties || {};
+  const missing = ADDITIVE_FIELDS.filter(field => !present[field] && MAPPINGS.properties[field]);
+  if (missing.length === 0) return [];
+  await getClient().indices.putMapping({
+    index: name,
+    body: { properties: Object.fromEntries(missing.map(f => [f, MAPPINGS.properties[f]])) }
+  });
+  logger.info('OpenSearch mapping extended', { index: name, fields: missing });
+  return missing;
+}
+
+/**
+ * Creates the index with its mappings if it is not already there; on one
+ * that is, adds the fields introduced since (addMissingFields).
  * @returns {Promise<{created: boolean, index: string}>}
  */
 async function ensureIndex(name = INDEX()) {
   if (await indexExists(name)) {
+    try {
+      await addMissingFields(name);
+    } catch (error) {
+      // Documents without the new fields still index; only those carrying
+      // one would be refused, and that is reported where it happens.
+      logger.warn('OpenSearch mapping could not be extended', {
+        index: name,
+        message: error.message
+      });
+    }
     return { created: false, index: name };
   }
 
@@ -145,6 +183,8 @@ async function analyzeText(text, analyzer = 'ph_search', name = INDEX()) {
 module.exports = {
   indexExists,
   ensureIndex,
+  addMissingFields,
+  ADDITIVE_FIELDS,
   recreateIndex,
   refreshIndex,
   getIndexStats,

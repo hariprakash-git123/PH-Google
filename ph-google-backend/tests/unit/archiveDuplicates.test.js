@@ -217,20 +217,33 @@ describe('newsSearch', () => {
     jest.restoreAllMocks();
   });
 
-  it('asks the engine to be strict when no article is about the query', async () => {
+  it('asks the engine for articles on the topic, by relevance with recency lifted', async () => {
     config.externalSearch.relevanceGate = true;
     await searchDispatcher.newsSearch({
-      query: 'top beaches in goa',
+      query: 'top beaches in goa news',
       page: 1,
       limit: 10,
       sort: 'relevance'
     });
     expect(search).toHaveBeenCalledWith(
-      expect.objectContaining({ isArticle: true, topicalWhenWeak: true, sort: 'newest' })
+      expect.objectContaining({
+        // The topic, without the word that only asks for news.
+        query: 'top beaches in goa',
+        isArticle: true,
+        topicalAlways: true,
+        freshness: true,
+        sort: 'relevance'
+      })
     );
   });
 
-  it('does not when the relevance gate is off', async () => {
+  it('a chosen date sort is passed on as chosen', async () => {
+    config.externalSearch.relevanceGate = true;
+    await searchDispatcher.newsSearch({ query: 'goa beaches', page: 1, limit: 10, sort: 'newest' });
+    expect(search).toHaveBeenCalledWith(expect.objectContaining({ sort: 'newest' }));
+  });
+
+  it('does not require the topic when the relevance gate is off', async () => {
     config.externalSearch.relevanceGate = false;
     await searchDispatcher.newsSearch({
       query: 'top beaches in goa',
@@ -239,7 +252,7 @@ describe('newsSearch', () => {
       sort: 'relevance'
     });
     expect(search).toHaveBeenCalledWith(
-      expect.objectContaining({ isArticle: true, topicalWhenWeak: false })
+      expect.objectContaining({ isArticle: true, topicalAlways: false })
     );
   });
 });

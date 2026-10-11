@@ -330,10 +330,18 @@ describeLive('topical relevance of the News tab', () => {
       );
     });
 
-    it('News stays newest first', async () => {
-      const res = await news('latest AI news');
-      const dates = res.body.data.results.map(r => r.publishedAt);
+    it('News ranks by relevance, labelled so; Newest first is chronological when chosen', async () => {
+      const ranked = await news('latest AI news');
+      expect(ranked.body.data.appliedSort).toBe('relevance');
+      expect(ranked.body.data.results.length).toBeGreaterThan(1);
+
+      const newest = await news('latest AI news', { sort: 'newest' });
+      expect(newest.body.data.appliedSort).toBe('newest');
+      const dates = newest.body.data.results.map(r => r.publishedAt);
       expect(dates).toEqual([...dates].sort().reverse());
+      // The same articles either way: the order changes, not what matches.
+      const ids = res => res.body.data.results.map(r => r.url).sort();
+      expect(ids(newest)).toEqual(ids(ranked));
     });
   });
 

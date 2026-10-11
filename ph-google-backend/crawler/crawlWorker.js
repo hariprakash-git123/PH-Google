@@ -10,6 +10,7 @@ const { normalizeUrl, canonicalKey } = require('../utils/urlNormalizer');
 const sitemapDiscovery = require('../services/sitemapDiscoveryService');
 const { config } = require('../config/env');
 const logger = require('../utils/logger');
+const { parseLastModified } = require('../utils/httpDate');
 
 /**
  * The crawl worker's unit of work: one host, for one slice.
@@ -297,6 +298,9 @@ async function crawlOne(url, { respectRobots = true, scope = null, alreadyCrawle
 
   const metadata = extractMetadata(fetched.html);
   if (canonicalUrl) metadata.canonicalUrl = canonicalUrl;
+  // When the server says the page last changed, if it says so credibly
+  // (utils/httpDate.js); otherwise null — never the time of this crawl.
+  metadata.lastModified = parseLastModified((fetched.headers || {})['last-modified']);
 
   const indexed = await indexPage(contentUrl, fetched.html, metadata);
   if (!indexed.ok) {

@@ -31,6 +31,7 @@ const {
 } = require('../../services/opensearch/indexingService');
 const { buildDocumentId } = require('../../services/opensearch/documentMapper');
 const retrievalService = require('../../services/ai/retrievalService');
+const openSearch = require('../../services/opensearch/searchService');
 const aiAnswerService = require('../../services/ai/aiAnswerService');
 const llm = require('../../services/ai/llm');
 const { config } = require('../../config/env');
@@ -93,6 +94,21 @@ const PAGES = [
     'https://example.com/tomatoes',
     'Growing tomatoes',
     'Tomatoes need warmth, regular watering and plenty of sunlight to produce fruit in summer.'
+  ),
+
+  // --- a page that shares a question's generic words and outscores the
+  //     page on its subject ------------------------------------------------
+  page(
+    'garden-beginners',
+    'https://garden.example.com/tutorial-for-beginners',
+    'Tutorial for Beginners: Gardening Tutorial for Beginners',
+    'This tutorial for beginners covers soil, seeds and watering. A beginners tutorial: every tutorial step is written for beginners, and each tutorial ends with a checklist for beginners.'
+  ),
+  page(
+    'rust-book',
+    'https://doc.rust-lang.org/book/',
+    'The Rust Programming Language',
+    'Rust is a systems programming language focused on safety and speed. This book is a tutorial that teaches Rust to beginners and experienced programmers alike, starting with installing Rust and writing a first program. Rust ownership, borrowing and lifetimes are explained step by step.'
   )
 ];
 
@@ -196,6 +212,31 @@ describeLive('AI answers on OpenSearch', () => {
       const outcome = await retrievalService.retrieve({ query: 'xylophone zeppelin quasar' });
       expect(outcome.documents).toEqual([]);
       expect(outcome.totalResults).toBe(0);
+    });
+
+    it('a page that outscores the right one on generic words is neither evidence nor the bar', async () => {
+      const q = 'rust tutorial for beginners';
+      // The search ranks the gardening page first: it repeats "tutorial for
+      // beginners". It never mentions Rust.
+      const search = await openSearch.search({ query: q, limit: 10 });
+      const ranked = search.results.map(r => r.url);
+      expect(ranked[0]).toMatch(/garden\.example\.com/);
+      expect(ranked.some(url => url.includes('doc.rust-lang.org'))).toBe(true);
+
+      const outcome = await retrievalService.retrieve({ query: q });
+      // Only the Rust book — kept although it scores far below the gardening
+      // page, because the bar is set among the pages that cover the question.
+      expect(outcome.documents.map(d => d.url)).toEqual(['https://doc.rust-lang.org/book']);
+      expect(outcome.offTopic).toBeGreaterThan(0);
+
+      // The answer: source [1] is the Rust book; the gardening page is never
+      // shown to the model.
+      const res = await ask({ q });
+      expect(res.body.data.status).toBe('ok');
+      expect(res.body.data.sources.map(s => s.url)).toEqual(['https://doc.rust-lang.org/book']);
+      const prompt = generate.mock.calls[0][0];
+      expect(prompt.user).toMatch(/The Rust Programming Language/);
+      expect(prompt.user).not.toMatch(/Gardening/);
     });
   });
 

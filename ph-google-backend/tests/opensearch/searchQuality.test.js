@@ -135,6 +135,55 @@ const PAGES = [
     'Python community news roundup',
     'News from the Python community: conferences, release news and user groups.',
     { isArticle: true, description: 'Python community news.' }
+  ),
+
+  // --- News: articles on the subject, and recent ones that only share the
+  //     words "news", "latest" or "release" with the query ----------------
+  page(
+    'news-py-older',
+    'https://news.example.com/python-3-13-release-notes',
+    'Python 3.13 release brings a new interactive shell',
+    'Python 3.13 was released with a new interactive interpreter, an experimental JIT and improved error messages. The Python release is available for download.',
+    { isArticle: true, publishedAt: ago(60 * DAY), description: 'The Python 3.13 release.' }
+  ),
+  page(
+    'news-ai-recent',
+    'https://news.example.com/ai-model-release',
+    'Latest news: AI lab announces new model release',
+    'In the latest news from the AI industry, a lab announced the release of a new language model today. Release notes and news coverage followed.',
+    {
+      isArticle: true,
+      publishedAt: ago(2 * 60 * 60 * 1000),
+      description: 'Latest AI release news.'
+    }
+  ),
+  page(
+    'news-mars-old',
+    'https://space.example.org/mars-rover-finds-ancient-lakebed',
+    'Mars rover finds signs of an ancient lakebed',
+    'The Mars rover has found layered rocks that suggest an ancient lakebed in the crater. Scientists say the rover will drill samples next month.',
+    { isArticle: true, publishedAt: ago(90 * DAY), description: 'Mars rover discovery.' }
+  ),
+  page(
+    'news-mars-recent',
+    'https://space.example.org/mars-rover-drill-samples',
+    'Mars rover drills its first crater samples',
+    'The Mars rover drilled its first samples from the crater floor this week, after weeks of driving across the lakebed.',
+    { isArticle: true, publishedAt: ago(3 * DAY), description: 'Mars rover samples.' }
+  ),
+  page(
+    'news-markets-today',
+    'https://finance.example.net/markets-today',
+    'Breaking news: markets rally on rate cut hopes',
+    'Breaking news from the markets today: stocks rallied as traders priced in a rate cut. Latest news and analysis on the rally.',
+    { isArticle: true, publishedAt: ago(60 * 60 * 1000), description: 'Breaking markets news.' }
+  ),
+  page(
+    'news-monsoon',
+    'https://weather.example.in/kerala-monsoon-onset',
+    'Monsoon reaches Kerala three days early',
+    'The southwest monsoon reached Kerala three days ahead of its normal onset date, bringing heavy rain to coastal districts. Forecasters expect the monsoon to advance north next week.',
+    { isArticle: true, publishedAt: ago(20 * DAY), description: 'Kerala monsoon onset.' }
   )
 ];
 
@@ -240,11 +289,69 @@ describeLive('search quality on the OpenSearch engine', () => {
       expect(ids.filter(id => id.startsWith('py-') || id.startsWith('news-'))).toEqual([]);
     });
 
-    it('a news query on the News tab: dated articles, newest first, labelled "Published"', async () => {
+    it('a news query on the News tab: articles about it, by relevance, labelled so', async () => {
       const res = await get({ q: 'python release news', category: 'news' });
       const ids = res.body.data.results.map(r => idOf(r.url));
-      expect(ids[0]).toBe('news-release');
-      expect(res.body.data.appliedSort).toBe('newest');
+      expect(['news-release', 'news-py-older']).toContain(ids[0]);
+      expect(res.body.data.appliedSort).toBe('relevance');
+    });
+  });
+
+  describe('News: what an article is about decides, not how recent it is', () => {
+    const news = (q, extra = {}) => get({ q, category: 'news', limit: 20, ...extra });
+
+    it('"python release news": the Python release articles, not the newer AI release story', async () => {
+      const ids = idsOf(await news('python release news'));
+      // Both Python release articles lead, in their order of relevance (the
+      // freshness lift, at most +15%, does not overturn a clear difference) —
+      // never the 2-hour-old AI story, which only shares "release" and "news"
+      // with the query.
+      expect(ids.slice(0, 2).sort()).toEqual(['news-py-older', 'news-release']);
+      expect(ids).not.toContain('news-ai-recent');
+      expect(ids).not.toContain('news-markets-today');
+      // Every result is about Python.
+      for (const id of ids) expect(PAGES.find(p => p._id === id).content).toMatch(/python/i);
+    });
+
+    it('"mars rover news": both rover articles; breaking market news an hour old is not among them', async () => {
+      const ids = idsOf(await news('mars rover news'));
+      expect(ids.sort()).toEqual(['news-mars-old', 'news-mars-recent']);
+    });
+
+    it('"latest mars rover": two articles about as relevant — the recent one first', async () => {
+      const ids = idsOf(await news('latest mars rover'));
+      expect(ids).toEqual(['news-mars-recent', 'news-mars-old']);
+    });
+
+    it('"kerala monsoon news": the monsoon article alone', async () => {
+      const ids = idsOf(await news('kerala monsoon news'));
+      expect(ids).toEqual(['news-monsoon']);
+    });
+
+    it('chosen Newest first: the same articles, in date order', async () => {
+      const ranked = await news('python release news');
+      const newest = await news('python release news', { sort: 'newest' });
+      expect(newest.body.data.appliedSort).toBe('newest');
+      const dates = newest.body.data.results.map(r => r.publishedAt);
+      const dated = dates.filter(Boolean);
+      expect(dated).toEqual([...dated].sort().reverse());
+      // An undated article (it states none) comes after every dated one.
+      expect(dates).toEqual([...dated, ...dates.filter(d => !d)]);
+      expect(idsOf(newest).sort()).toEqual(idsOf(ranked).sort());
+    });
+
+    it('the date and site filters still apply', async () => {
+      const lastMonth = idsOf(await news('python release news', { date: 'month' }));
+      expect(lastMonth).toContain('news-release');
+      expect(lastMonth).not.toContain('news-py-older'); // 60 days old
+      const site = idsOf(await news('mars rover news', { domain: 'space.example.org' }));
+      expect(site.sort()).toEqual(['news-mars-old', 'news-mars-recent']);
+    });
+
+    it('a query that is only news words still lists the news', async () => {
+      const res = await news('news');
+      expect(res.status).toBe(200);
+      expect(res.body.data.results.length).toBeGreaterThan(0);
     });
   });
 
@@ -336,6 +443,35 @@ describeLive('search quality on the OpenSearch engine', () => {
       const prompt = JSON.stringify(generate.mock.calls[0]);
       expect(prompt).toContain('Python Tutorial for Beginners');
       expect(prompt).not.toContain('パイソン');
+    });
+
+    it('pages found, none covering the question: an honest refusal, and no model call', async () => {
+      // The Python tutorials for beginners match the search; none mentions pricing.
+      const res = await request(app).get('/api/ai-answer').query({ q: 'python beginners pricing' });
+      expect(res.status).toBe(200);
+      expect(res.body.data).toMatchObject({
+        status: 'insufficient_evidence',
+        reason: 'no_relevant_evidence',
+        generated: false,
+        answer: '',
+        sources: []
+      });
+      expect(generate).not.toHaveBeenCalled();
+    });
+
+    it('a model failure is reported as unavailable, with no answer and no sources', async () => {
+      const { LlmError } = require('../../services/ai/llm/llmError');
+      generate.mockRejectedValue(new LlmError('timeout', 'The AI provider timed out.'));
+      const res = await request(app)
+        .get('/api/ai-answer')
+        .query({ q: 'python tutorial for beginners' });
+      expect(res.status).toBe(200);
+      expect(res.body.data).toMatchObject({
+        status: 'unavailable',
+        generated: false,
+        answer: '',
+        sources: []
+      });
     });
   });
 });

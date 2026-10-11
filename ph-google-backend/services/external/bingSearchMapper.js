@@ -52,6 +52,9 @@ function mapBingItem(raw, index = 0) {
     // Bing gives no date, so none is shown.
     dateLabel: null,
     crawledAt: null,
+    // A provider result says nothing of when its page last changed.
+    modifiedAt: null,
+    modifiedLabel: null,
     language: '',
     category: 'Bing Web',
     saved: false,

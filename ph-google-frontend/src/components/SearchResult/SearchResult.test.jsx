@@ -200,7 +200,11 @@ describe('the date a result shows', () => {
         result={externalResult({
           publishedAt: '2003-02-11T00:00:00.000Z',
           publishedAgo: '23 years ago',
-          dateLabel: { kind: 'published', at: '2003-02-11T00:00:00.000Z', text: 'Published Feb 11, 2003' }
+          dateLabel: {
+            kind: 'published',
+            at: '2003-02-11T00:00:00.000Z',
+            text: 'Published Feb 11, 2003'
+          }
         })}
       />
     );
@@ -209,7 +213,9 @@ describe('the date a result shows', () => {
 
   it('no date given: none shown — not "Unknown", not "Recently updated"', () => {
     const { container } = render(
-      <SearchResult result={externalResult({ publishedAgo: 'Unknown', publishedAt: null, dateLabel: null })} />
+      <SearchResult
+        result={externalResult({ publishedAgo: 'Unknown', publishedAt: null, dateLabel: null })}
+      />
     );
     expect(dateOf(container)).toBeNull();
     expect(container).not.toHaveTextContent(/Unknown|Recently updated/);
@@ -217,12 +223,41 @@ describe('the date a result shows', () => {
     expect(container.querySelector('.ph-result-dot')).toBeNull();
   });
 
+  it('the source’s own last-modified date is shown beside the crawl date, labelled as such', () => {
+    const { container } = render(
+      <SearchResult
+        result={indexResult({
+          modifiedAt: '2026-10-08T12:00:00.000Z',
+          modifiedLabel: { at: '2026-10-08T12:00:00.000Z', text: 'Modified 3 days ago' }
+        })}
+      />
+    );
+    const dates = [...container.querySelectorAll('time.ph-result-date')];
+    expect(dates.map(d => d.textContent)).toEqual(['Crawled 2 days ago', 'Modified 3 days ago']);
+    const modified = container.querySelector('time.ph-result-modified');
+    expect(modified).toHaveAttribute('datetime', '2026-10-08T12:00:00.000Z');
+    expect(modified).toHaveAttribute('title', 'Last modified, as reported by the website');
+  });
+
+  it('no last-modified date from the source: nothing shown for it', () => {
+    for (const extra of [{}, { modifiedAt: null, modifiedLabel: null }]) {
+      const { container, unmount } = render(<SearchResult result={indexResult(extra)} />);
+      expect(container.querySelector('.ph-result-modified')).toBeNull();
+      expect(container).not.toHaveTextContent(/Modified/);
+      unmount();
+    }
+  });
+
   it('a crawl date is never shown as a bare age that reads like a publication date', () => {
     const { container } = render(
       <SearchResult
         result={indexResult({
           publishedAgo: null,
-          dateLabel: { kind: 'crawled', at: '2026-09-18T09:42:37.018Z', text: 'Crawled 23 days ago' }
+          dateLabel: {
+            kind: 'crawled',
+            at: '2026-09-18T09:42:37.018Z',
+            text: 'Crawled 23 days ago'
+          }
         })}
       />
     );

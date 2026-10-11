@@ -8,6 +8,7 @@ const { buildPagination } = require('./searchService');
 const navigational = require('./ranking/navigational');
 const queryIntent = require('./ranking/queryIntent');
 const { parseQuery } = require('./opensearch/queryParser');
+const { newsTopic } = require('./ranking/newsIntent');
 const logger = require('../utils/logger');
 
 /**
@@ -242,24 +243,35 @@ async function engineSearch(params) {
  * those documents are small, already have their own term arrays, and moving
  * them would add a second index without improving anything.
  *
- * With the relevance gate on, News is as strict as the results page: when no
- * article is about the query, only articles that mention its meaningful
- * words are returned — not every article sharing one word with it. No
- * article on the subject is then an empty tab, which is the honest answer.
+ * What News is about is the query without its news-intent words ("news",
+ * "latest" …: newsIntent.js), which say what kind of result is wanted and
+ * would otherwise match nearly every article.
+ *
+ * With the relevance gate on (EXTERNAL_RELEVANCE_GATE, its switch), an
+ * article is shown only when it mentions that topic (its meaningful words,
+ * as the results page requires of a weak index — here always): an article
+ * on another subject is not news about this one, however recent.
+ *
+ * The order is relevance with a bounded lift for recent articles (at most
+ * +15%: queryBuilder), so a recent article on the subject comes before an
+ * older one about as relevant, and never one that is clearly more relevant.
+ * Newest and oldest, when chosen, order those same articles by date.
+ * No article on the subject is an empty tab, which is the honest answer.
  */
 async function newsSearch(params) {
+  const query = newsTopic(params.query);
   if (usingOpenSearch()) {
     return openSearch.search({
       ...params,
+      query,
       isArticle: true,
-      topicalWhenWeak: config.externalSearch.relevanceGate,
-      // News is chronological unless the caller asks for relevance.
-      sort: params.sort === 'relevance' ? 'newest' : params.sort
+      topicalAlways: config.externalSearch.relevanceGate,
+      freshness: true
     });
   }
 
   const verticalSearchService = require('./verticalSearchService');
-  const outcome = await verticalSearchService.searchNews(params);
+  const outcome = await verticalSearchService.searchNews({ ...params, query });
   return { ...outcome, engine: 'mongo' };
 }
 

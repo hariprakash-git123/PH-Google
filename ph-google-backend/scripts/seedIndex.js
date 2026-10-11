@@ -4,6 +4,7 @@ const Page = require('../models/Page');
 const Media = require('../models/Media');
 const Place = require('../models/Place');
 const { fetchPageDetailed } = require('../crawler/pageFetcher');
+const { parseLastModified } = require('../utils/httpDate');
 const { isAllowed, getCrawlDelayMs } = require('../crawler/robotsChecker');
 const { extractMetadata } = require('../crawler/linkExtractor');
 const { indexPage } = require('../crawler/indexer');
@@ -207,6 +208,9 @@ async function run() {
     }
 
     const metadata = extractMetadata(fetched.html);
+    // The server's Last-Modified, as the crawler reads it (utils/httpDate.js):
+    // without it, re-indexing here would clear a date the page still has.
+    metadata.lastModified = parseLastModified((fetched.headers || {})['last-modified']);
     const result = await indexPage(fetched.finalUrl || url, fetched.html, metadata);
 
     if (result.ok) {

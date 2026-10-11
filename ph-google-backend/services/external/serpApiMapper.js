@@ -81,6 +81,9 @@ function mapOrganicResult(raw, index = 0) {
     snippet: clean(raw.snippet, SNIPPET_MAX) || NO_DESCRIPTION,
     ...readDate(raw.date),
     crawledAt: null,
+    // A provider result says nothing of when its page last changed.
+    modifiedAt: null,
+    modifiedLabel: null,
     language: '',
     category: 'Google Web',
     saved: false,

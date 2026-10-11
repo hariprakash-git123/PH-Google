@@ -68,10 +68,13 @@ function withDateLabel(result) {
   };
 }
 
-/** The order a tab's results are really in: News is newest first unless asked otherwise. */
+/**
+ * The order a tab's results are really in: the one asked for, or relevance
+ * where the tab cannot apply it. (News ranks by relevance, recent articles
+ * lifted a little; newest and oldest are chronological.)
+ */
 function appliedSortFor(category, sort, ignored) {
   if (ignored.includes('sort')) return 'relevance';
-  if (category === 'news' && sort === 'relevance') return 'newest';
   return sort;
 }
 const externalSearch = require('../services/externalSearch');

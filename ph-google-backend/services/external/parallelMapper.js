@@ -94,6 +94,9 @@ function mapResult(raw, index = 0) {
     snippet: clean(excerpts[0], SNIPPET_MAX) || NO_DESCRIPTION,
     ...readDate(raw.publish_date),
     crawledAt: null,
+    // A provider result says nothing of when its page last changed.
+    modifiedAt: null,
+    modifiedLabel: null,
     language: '',
     category: 'Web',
     saved: false,

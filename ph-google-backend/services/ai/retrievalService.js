@@ -6,6 +6,11 @@ const { config } = require('../../config/env');
 const logger = require('../../utils/logger');
 const { parseQuery } = require('../opensearch/queryParser');
 const { languageCompatible, wantedScript } = require('../ranking/unifiedRanker');
+const {
+  meaningfulTerms,
+  mentionedTerms,
+  requiredMentions
+} = require('../external/resultRelevance');
 
 /**
  * Retrieval for AI answers.
@@ -82,6 +87,37 @@ function keepRelevant(results, minRelativeScore) {
   return results.filter(r => (Number(r.score) || 0) >= floor);
 }
 
+/** How much of a page is read to decide whether it covers the question. */
+const COVERAGE_CHARS = 20000;
+
+/**
+ * How many of the question's meaningful words a page must mention to be
+ * evidence: all of them for a question of up to three (it has no words to
+ * spare — "python tutorial for beginners" is not answered by a page on HTML
+ * tutorials for beginners), the usual share for a longer one.
+ */
+function wordsRequired(termCount) {
+  return termCount <= 3 ? termCount : requiredMentions(termCount);
+}
+
+/**
+ * Whether a page's own text — title, description and body — covers the
+ * question. The search admits a page on its best fields (headings, keywords,
+ * the address); an answer can only be written from what the text says.
+ */
+function coversQuestion(page, terms) {
+  if (terms.length === 0) return true;
+  const text = [
+    page.title,
+    page.description,
+    page.snippet,
+    String(page.content || '').slice(0, COVERAGE_CHARS)
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return mentionedTerms(text, terms) >= wordsRequired(terms.length);
+}
+
 /**
  * @param {Object} params
  * @param {string} params.query
@@ -90,7 +126,10 @@ function keepRelevant(results, minRelativeScore) {
  * @param {string} [params.dateWindow]
  * @param {number} [params.count]  candidates to fetch
  * @returns {Promise<{documents: Array<Object>, totalResults: number,
- *                    retrieved: number, engine: string, responseTimeMs: number}>}
+ *                    retrieved: number, offTopic: number, engine: string,
+ *                    responseTimeMs: number}>}
+ *          offTopic: candidates left out because their text does not cover
+ *          the question
  */
 async function retrieve({ query, domain = '', language = '', dateWindow = 'any', count }) {
   const startedAt = Date.now();
@@ -120,15 +159,41 @@ async function retrieve({ query, domain = '', language = '', dateWindow = 'any',
   // a compatible one: a Japanese article is not evidence for an English
   // question, however well it matches its words. Unless a language was asked
   // for (the filter, lang:), which the search has already applied.
-  const script = wantedScript(parseQuery(query), { language });
+  const parsed = parseQuery(query);
+  const script = wantedScript(parsed, { language });
   const readable = results.filter(r => languageCompatible(r, script));
-  const relevant = keepRelevant(readable, config.ai.minRelativeScore);
-  const texts = await loadTexts(relevant.map(r => String(r.id)));
 
-  const documents = relevant.map(result => {
+  // Only pages whose text covers the question are evidence; the relevance
+  // floor is then measured among them — a page that matched on its headings
+  // alone neither answers nor sets the bar the others must reach.
+  const texts = await loadTexts(readable.map(r => String(r.id)));
+  const terms = meaningfulTerms(parsed);
+  const withText = readable.map(result => {
     const text = texts.get(String(result.id)) || {};
     // "No description available." is the search page's placeholder, not evidence.
     const snippet = result.snippet === 'No description available.' ? '' : result.snippet || '';
+    return { result, text, snippet };
+  });
+  const onTopic = withText.filter(({ result, text, snippet }) =>
+    coversQuestion(
+      {
+        title: result.title,
+        description: text.description,
+        snippet,
+        content: text.content || snippet
+      },
+      terms
+    )
+  );
+  const keptResults = new Set(
+    keepRelevant(
+      onTopic.map(entry => entry.result),
+      config.ai.minRelativeScore
+    )
+  );
+  const relevant = onTopic.filter(entry => keptResults.has(entry.result));
+
+  const documents = relevant.map(({ result, text, snippet }) => {
     return {
       id: result.id,
       url: result.url,
@@ -149,9 +214,10 @@ async function retrieve({ query, domain = '', language = '', dateWindow = 'any',
     documents,
     totalResults: (outcome && outcome.totalResults) || 0,
     retrieved: results.length,
+    offTopic: readable.length - onTopic.length,
     engine: (outcome && outcome.engine) || config.searchEngine,
     responseTimeMs: Date.now() - startedAt
   };
 }
 
-module.exports = { retrieve, keepRelevant };
+module.exports = { retrieve, keepRelevant, coversQuestion, wordsRequired };

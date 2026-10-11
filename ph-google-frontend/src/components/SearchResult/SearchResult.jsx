@@ -64,6 +64,21 @@ export default function SearchResult({ result }) {
               </time>
             </>
           )}
+          {/* When the source itself says the page last changed (its
+              Last-Modified header) — a separate date from the one above,
+              shown only when the source gives it. */}
+          {result.modifiedLabel && result.modifiedLabel.text && (
+            <>
+              <span className="ph-result-dot">•</span>
+              <time
+                className="ph-result-date ph-result-modified"
+                dateTime={result.modifiedLabel.at}
+                title="Last modified, as reported by the website"
+              >
+                {result.modifiedLabel.text}
+              </time>
+            </>
+          )}
         </div>
         {result.category && <span className="ph-result-category-badge">{result.category}</span>}
       </div>

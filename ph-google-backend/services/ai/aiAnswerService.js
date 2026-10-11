@@ -98,7 +98,7 @@ function baseResponse(query, intent) {
     provider: null,
     model: null,
     cached: false,
-    retrieval: { totalResults: 0, retrieved: 0, used: 0 },
+    retrieval: { totalResults: 0, retrieved: 0, offTopic: 0, used: 0 },
     timings: { retrievalMs: 0, generationMs: 0 },
     processingTimeMs: 0
   };
@@ -133,9 +133,17 @@ async function generate({ query, domain, language, dateWindow, maxSources }) {
   response.retrieval = {
     totalResults: retrieval.totalResults,
     retrieved: retrieval.retrieved,
+    offTopic: retrieval.offTopic || 0,
     used: 0
   };
-  if (retrieval.documents.length === 0) return finish(withStatus(response, 'no_results'));
+  if (retrieval.documents.length === 0) {
+    // Pages were found, but none whose text covers the question: not "no
+    // results", and nothing for a model to answer from.
+    if (retrieval.offTopic > 0) {
+      return finish(withStatus(response, 'insufficient_evidence', 'no_relevant_evidence'));
+    }
+    return finish(withStatus(response, 'no_results'));
+  }
 
   // 2. Context — cleaned, de-duplicated, numbered, within budget.
   const context = buildContext({

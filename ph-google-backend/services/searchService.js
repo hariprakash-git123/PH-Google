@@ -4,7 +4,7 @@ const { tokenizeText } = require('../utils/textProcessor');
 const { calculateScore } = require('./rankingService');
 const { dateWindowToCutoff, maxPageFor } = require('../utils/validators');
 // One date rule for both engines (see dateLabelFor).
-const { getTimeAgo, dateLabelFor } = require('./opensearch/searchService');
+const { getTimeAgo, dateLabelFor, modifiedLabelFor } = require('./opensearch/searchService');
 
 /**
  * Phase 7 search pipeline.
@@ -145,7 +145,9 @@ async function performSearch({
   const pageFilter = buildPageFilter(candidateIds, { domain, dateWindow, language });
 
   const lightPages = await Page.find(pageFilter)
-    .select('_id url domain title description language isArticle publishedAt lastCrawledAt')
+    .select(
+      '_id url domain title description language isArticle publishedAt modifiedAt lastCrawledAt'
+    )
     .lean();
 
   if (lightPages.length === 0) return empty();
@@ -261,6 +263,8 @@ function formatResult({ page, score, frequencySum, matchedTerms }, searchTerms, 
       crawledAt: page.lastCrawledAt,
       isArticle: Boolean(page.isArticle)
     }),
+    modifiedAt: page.modifiedAt || null,
+    modifiedLabel: modifiedLabelFor(page.modifiedAt),
     title: page.title || page.url,
     url: page.url,
     snippet,

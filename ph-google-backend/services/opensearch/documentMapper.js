@@ -197,6 +197,12 @@ function toSearchDocument(page, extra = {}) {
     imageUrl: String(page.imageUrl || '').slice(0, 2048)
   };
 
+  // The source's own Last-Modified date, only when there is one: a document
+  // without it simply lacks the field, so an index that predates the field
+  // (strict mapping, see indexManager.ensureIndex) still accepts it.
+  const modifiedAt = toDate(page.modifiedAt);
+  if (modifiedAt) document.modifiedAt = modifiedAt;
+
   document.qualityScore = computeQualityScore({
     wordCount,
     uniqueRatio,

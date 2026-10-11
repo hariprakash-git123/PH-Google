@@ -249,6 +249,9 @@ const MAPPINGS = {
     // --- Dates -----------------------------------------------------
     publishedAt: { type: 'date' },
     updatedAt: { type: 'date' },
+    // The source's own Last-Modified header, when it gave a credible one.
+    // Added to an existing index by ensureIndex (additive, no reindex).
+    modifiedAt: { type: 'date' },
     crawledAt: { type: 'date' },
 
     // --- Quality / ranking signals ---------------------------------

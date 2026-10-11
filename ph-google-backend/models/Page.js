@@ -62,6 +62,12 @@ const pageSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    // When the page's own server says it last changed (its Last-Modified
+    // header), if it gave a credible one; null otherwise — never a crawl time.
+    modifiedAt: {
+      type: Date,
+      default: null
+    },
 
     // --- News vertical -------------------------------------------------
     // Set when the crawled page carries article markup (og:type=article,

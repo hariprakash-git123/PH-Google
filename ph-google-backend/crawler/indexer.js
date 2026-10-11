@@ -104,6 +104,10 @@ async function indexPage(rawUrl, html, metadata = {}) {
       canonicalUrl: metadata.canonicalUrl || '',
       status: 'indexed',
       lastCrawledAt: new Date(),
+      // The server's Last-Modified, when it gave a credible one (crawlWorker).
+      // Replaced on every crawl — and cleared when the server stops giving
+      // one — so it is always what the source said last time it was read.
+      modifiedAt: metadata.lastModified || null,
 
       // News vertical
       isArticle: Boolean(vertical.article.isArticle),

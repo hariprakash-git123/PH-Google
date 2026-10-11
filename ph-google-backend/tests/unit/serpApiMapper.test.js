@@ -32,6 +32,8 @@ describe('serpApiMapper — one result', () => {
       publishedAt: null,
       publishedAgo: 'Unknown',
       dateLabel: null,
+      modifiedAt: null,
+      modifiedLabel: null,
       crawledAt: null,
       language: '',
       category: 'Google Web',
