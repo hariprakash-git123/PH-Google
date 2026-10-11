@@ -1,0 +1,263 @@
+/* Website shortcuts on the homepage: compact tiles, five to a row. */
+
+.ph-shortcuts {
+  width: 100%;
+  max-width: 560px;
+  margin: 4px auto 14px;
+}
+
+.ph-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ph-shortcut {
+  position: relative;
+  min-width: 0;
+}
+
+.ph-shortcut-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 6px 10px;
+  border: 0;
+  border-radius: var(--ph-radius-lg);
+  background: none;
+  color: var(--ph-text);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--ph-transition-fast);
+}
+
+.ph-shortcut-link:hover,
+.ph-shortcut:focus-within .ph-shortcut-link {
+  background: var(--ph-surface-hover);
+}
+
+.ph-shortcut-link:focus-visible,
+.ph-shortcut-menu-btn:focus-visible,
+.ph-shortcut-menu button:focus-visible {
+  outline: 2px solid var(--ph-primary);
+  outline-offset: 2px;
+}
+
+.ph-shortcut-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border-subtle);
+  color: var(--ph-text-secondary);
+}
+
+.ph-shortcut-icon img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.ph-shortcut-letter {
+  font-family: var(--ph-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ph-primary-ink);
+}
+
+.ph-shortcut-add .ph-shortcut-icon {
+  background: var(--ph-bg-sunken);
+}
+
+/* Many sites' icons are dark: in the dark theme they sit on a light circle,
+   so they stay visible. */
+:root[data-theme='dark'] .ph-shortcut-link:not(.ph-shortcut-add) .ph-shortcut-icon {
+  background: #ecebe7;
+  border-color: transparent;
+}
+
+.ph-shortcut-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ph-text-xs);
+  line-height: 1.3;
+}
+
+/* The edit/remove button shows on hover or focus; it is always reachable by keyboard. */
+.ph-shortcut-menu-wrap {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.ph-shortcut-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ph-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--ph-transition-fast);
+}
+
+.ph-shortcut:hover .ph-shortcut-menu-btn,
+.ph-shortcut:focus-within .ph-shortcut-menu-btn,
+.ph-shortcut-menu-btn[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.ph-shortcut-menu-btn:hover {
+  background: var(--ph-bg-sunken);
+}
+
+/* Touch screens have no hover: the button is always there. */
+@media (hover: none) {
+  .ph-shortcut-menu-btn {
+    opacity: 1;
+  }
+}
+
+.ph-shortcut-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.ph-shortcut-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--ph-radius-sm);
+  background: none;
+  color: var(--ph-text);
+  font: inherit;
+  font-size: var(--ph-text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ph-shortcut-menu button:hover {
+  background: var(--ph-surface-hover);
+}
+
+.ph-shortcuts-notice {
+  margin: 8px 0 0;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+  text-align: center;
+}
+
+/* --- Add / edit dialog ---------------------------------------- */
+
+.ph-shortcut-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ph-shortcut-dialog {
+  width: min(420px, 100%);
+  padding: 22px 22px 18px;
+  text-align: left;
+}
+
+.ph-shortcut-dialog h2 {
+  margin: 0 0 14px;
+  font-family: var(--ph-font-display);
+  font-size: var(--ph-text-lg);
+}
+
+.ph-shortcut-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ph-shortcut-dialog label {
+  margin-top: 6px;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+}
+
+.ph-shortcut-dialog input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-sm);
+  background: var(--ph-surface);
+  color: var(--ph-text);
+  font: inherit;
+}
+
+.ph-shortcut-dialog input:focus-visible {
+  outline: 2px solid var(--ph-primary);
+  outline-offset: 1px;
+}
+
+.ph-shortcut-dialog input[aria-invalid='true'] {
+  border-color: var(--ph-danger, #b3261e);
+}
+
+.ph-shortcut-error {
+  margin: 4px 0 0;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-danger, #b3261e);
+}
+
+.ph-shortcut-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ph-shortcut-dialog-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .ph-shortcuts-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ph-shortcut-icon {
+    width: 44px;
+    height: 44px;
+  }
+}

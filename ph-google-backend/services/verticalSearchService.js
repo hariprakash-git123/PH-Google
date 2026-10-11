@@ -69,9 +69,11 @@ function scoreMediaItem(item, searchTerms, query) {
   return { score, matched };
 }
 
-function paginate(rows, page, limit) {
-  const offset = (page - 1) * limit;
-  return rows.slice(offset, offset + limit);
+function paginate(rows, page, limit, offset) {
+  // An explicit offset ("Load more": the results after those already shown)
+  // wins over the page number.
+  const start = Number.isInteger(offset) && offset >= 0 ? offset : (page - 1) * limit;
+  return rows.slice(start, start + limit);
 }
 
 // ---------------------------------------------------------------------
@@ -88,6 +90,7 @@ async function searchMedia(
     query,
     page = 1,
     limit = 20,
+    offset,
     sort = 'relevance',
     domain = '',
     dateWindow = 'any',
@@ -142,7 +145,7 @@ async function searchMedia(
     );
   }
 
-  const slice = paginate(ranked, page, limit);
+  const slice = paginate(ranked, page, limit, offset);
 
   return {
     results: slice.map(({ item, score }) => formatMedia(item, score)),
@@ -225,6 +228,7 @@ async function searchNews({
   query,
   page = 1,
   limit = 10,
+  offset,
   sort = 'newest',
   domain = '',
   dateWindow = 'any',
@@ -326,7 +330,7 @@ async function searchNews({
     });
   }
 
-  const slice = paginate(ranked, page, limit);
+  const slice = paginate(ranked, page, limit, offset);
 
   return {
     results: slice.map(({ page: p, score }) => ({
@@ -368,7 +372,7 @@ function relativeTime(date) {
 // Maps / places
 // ---------------------------------------------------------------------
 
-async function searchPlaces({ query, page = 1, limit = 10, domain = '' }) {
+async function searchPlaces({ query, page = 1, limit = 10, offset, domain = '' }) {
   const startedAt = Date.now();
   const searchTerms = tokenizeText(query);
 
@@ -421,7 +425,7 @@ async function searchPlaces({ query, page = 1, limit = 10, domain = '' }) {
     deduped.push(row);
   }
 
-  const slice = paginate(deduped, page, limit);
+  const slice = paginate(deduped, page, limit, offset);
 
   return {
     results: slice.map(({ place, score }) => ({

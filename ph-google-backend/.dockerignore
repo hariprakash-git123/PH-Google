@@ -18,6 +18,15 @@ coverage
 logs
 *.log
 
+# One-off migration leftovers kept in the repository for reference. Nothing
+# at runtime reads them, and the .ps1/.py scripts target a developer's
+# machine (docker exec, localhost:9200), so they stay out of the image.
+migrate-opensearch.py
+migrate-opensearch.ps1
+create-index.json
+old-mapping.json
+old-settings.json
+
 # Build metadata
 .git
 .gitignore

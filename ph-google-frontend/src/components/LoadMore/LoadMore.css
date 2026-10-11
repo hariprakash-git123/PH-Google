@@ -1,0 +1,60 @@
+/* Sits where the page numbers did, and looks like their "Next" button. */
+.ph-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 32px 0;
+}
+
+.ph-load-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 200px;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: var(--ph-radius-md);
+  border: 1px solid var(--ph-border-strong);
+  background: var(--ph-surface);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ph-text);
+  cursor: pointer;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+}
+
+.ph-load-more-btn:hover:not(:disabled) {
+  background: var(--ph-bg-sunken);
+  border-color: var(--ph-primary);
+}
+
+.ph-load-more-btn:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.ph-load-more-note {
+  margin: 0;
+  font-size: var(--ph-text-sm);
+  color: var(--ph-text-secondary);
+}
+
+.ph-load-more-spin {
+  animation: ph-load-more-spin 0.9s linear infinite;
+}
+
+@keyframes ph-load-more-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-load-more-spin {
+    animation: none;
+  }
+}

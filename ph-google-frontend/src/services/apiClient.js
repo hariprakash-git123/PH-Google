@@ -10,15 +10,26 @@
  * carrying the server's message and status.
  */
 
-// Vite exposes build-time config on import.meta.env; fall back to localhost
-// so the app works with no extra setup in development.
-const DEFAULT_API_BASE_URLS = [
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
-    'http://localhost:5000/api',
-  'http://localhost:5001/api',
-  'http://localhost:5002/api',
-  'http://localhost:5003/api'
-].filter(Boolean);
+// Vite exposes build-time config on import.meta.env.
+//
+// Production: VITE_API_BASE_URL, or "/api" — the same origin as the page,
+// which nginx proxies to the backend (nginx.conf). Nothing else is tried.
+//
+// Development (`npm run dev`, tests): VITE_API_BASE_URL or
+// http://localhost:5000/api, then the next ports the backend moves to when
+// 5000 is taken. `import.meta.env.DEV` is written out literally so Vite
+// replaces it with a constant: a production bundle does not contain these
+// localhost addresses at all.
+const DEFAULT_API_BASE_URLS = (
+  import.meta.env.DEV
+    ? [
+        import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+        'http://localhost:5001/api',
+        'http://localhost:5002/api',
+        'http://localhost:5003/api'
+      ]
+    : [import.meta.env.VITE_API_BASE_URL || '/api']
+).filter(Boolean);
 
 const API_BASE_URLS = [...new Set(DEFAULT_API_BASE_URLS)];
 export const API_BASE_URL = API_BASE_URLS[0];

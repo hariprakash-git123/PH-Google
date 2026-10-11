@@ -1,5 +1,5 @@
 .ph-results-page {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--ph-shell-h, 0px));
   display: flex;
   flex-direction: column;
   background: var(--ph-bg);

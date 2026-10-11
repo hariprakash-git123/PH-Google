@@ -1,0 +1,2117 @@
+{
+  "recordedOn": "2026-10-11",
+  "note": "Page-1 results of the live All tab before the unified ranking, in the order it showed them, with each result’s place in its own source. Titles and addresses only; captured from the running stack for the relevance evaluation.",
+  "queries": {
+    "theory of relativity": {
+      "recordedOrder": [
+        {
+          "title": "Theory of relativity - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Theory_of_relativity",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Theory of computation - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Theory_of_computation",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Branches of physics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Branches_of_physics",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Gravitational lens - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Gravitational_lensing",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Quantum mechanics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Quantum_mechanics",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Physics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Physics",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Number theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Number_theory",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Philosophy of mathematics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Philosophy_of_mathematics",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Game theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Game_theory",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Computational complexity theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Computational_complexity_theory",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Classical mechanics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Classical_mechanics",
+          "source": "index"
+        },
+        {
+          "title": "Chronology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Chronology",
+          "source": "index"
+        },
+        {
+          "title": "Mathematics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Mathematics",
+          "source": "index"
+        },
+        {
+          "title": "Periodization - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Periodization",
+          "source": "index"
+        },
+        {
+          "title": "Electromagnetism - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Electromagnetism",
+          "source": "index"
+        },
+        {
+          "title": "Science - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Science",
+          "source": "index"
+        },
+        {
+          "title": "Wave - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Wave",
+          "source": "index"
+        },
+        {
+          "title": "Common Era - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Common_Era",
+          "source": "index"
+        },
+        {
+          "title": "Isaac Newton - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Isaac_Newton",
+          "source": "index"
+        },
+        {
+          "title": "History of biology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/History_of_biology",
+          "source": "index"
+        }
+      ]
+    },
+    "\"climate change\"": {
+      "recordedOrder": [
+        {
+          "title": "Climate change - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Climate_change",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Scientific consensus on climate change - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Scientific_consensus_on_climate_change",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Climate variability and change - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Climate_variability_and_change",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Biodiversity",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/biodiversity",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Archaeology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Archaeology",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Europe - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Europe",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Coal - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Coal",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "NASA - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/NASA",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Climate - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Climate",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Climate system - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Climate_system",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Fossil fuel - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Fossil_fuel",
+          "source": "index"
+        },
+        {
+          "title": "Global surface temperature - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Global_surface_temperature",
+          "source": "index"
+        },
+        {
+          "title": "Sea surface temperature - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Sea_surface_temperature",
+          "source": "index"
+        },
+        {
+          "title": "Arctic - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Arctic",
+          "source": "index"
+        },
+        {
+          "title": "Holocene - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Holocene",
+          "source": "index"
+        },
+        {
+          "title": "Drowning",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/drowning",
+          "source": "index"
+        },
+        {
+          "title": "A - Z Topic Index | US EPA",
+          "url": "https://www.epa.gov/topics-epa-web",
+          "source": "index"
+        },
+        {
+          "title": "South Asia - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/South_Asia",
+          "source": "index"
+        },
+        {
+          "title": "Atlantic hurricane - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Hurricane",
+          "source": "index"
+        },
+        {
+          "title": "Air Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics/air-topics",
+          "source": "index"
+        }
+      ]
+    },
+    "what is a web crawler": {
+      "recordedOrder": [
+        {
+          "title": "Web crawler - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Web_crawler",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Search engine - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Web_search_engine",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Exclusive: Multiple AI companies bypassing web standard to scrape publisher sites, licensing firm says | Reuters",
+          "url": "https://web.archive.org/web/20241110223415/https://www.reuters.com/technology/artificial-intelligence/multiple-ai-companies-bypassing-web-standard-scrape-publisher-sites-licensing-2024-06-21",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Search engine indexing - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Search_engine_indexing",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Reference work - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Reference_work",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "PageRank - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/PageRank",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "HTML: HyperText Markup Language | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTML",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "HTML guides - HTML | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Guides",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Ecology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Ecology",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "System of linear equations - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/System_of_linear_equations",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Human history - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Human_history",
+          "source": "index"
+        },
+        {
+          "title": "How to Stop Your Data From Being Used to Train AI | WIRED",
+          "url": "https://www.wired.com/story/how-to-stop-your-data-from-being-used-to-train-ai",
+          "source": "index"
+        },
+        {
+          "title": "Several AI companies said to be ignoring robots dot txt exclusion, scraping content without permission: report | Tom's Hardware",
+          "url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/several-ai-companies-said-to-be-ignoring-robots-dot-txt-exclusion-scraping-content-without-permission-report",
+          "source": "index"
+        },
+        {
+          "title": "Acrobatics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Acrobatics",
+          "source": "index"
+        },
+        {
+          "title": "List of circus skills - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/List_of_circus_skills",
+          "source": "index"
+        },
+        {
+          "title": "Business Hub - Stack Overflow",
+          "url": "https://stackoverflow.blog/business",
+          "source": "index"
+        },
+        {
+          "title": "Ernst Chladni - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Chladni_figure",
+          "source": "index"
+        },
+        {
+          "title": "South East England - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/South_East_England",
+          "source": "index"
+        },
+        {
+          "title": "Software design - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Software_design",
+          "source": "index"
+        },
+        {
+          "title": "Incantation - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Incantation",
+          "source": "index"
+        }
+      ]
+    },
+    "how does the immune system work": {
+      "recordedOrder": [
+        {
+          "title": "COVID-19 - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/COVID-19",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Vitamin D: MedlinePlus",
+          "url": "https://medlineplus.gov/vitamind.html",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Health Topics: MedlinePlus",
+          "url": "https://medlineplus.gov/healthtopics.html",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Outline of biology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Outline_of_biology",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Human nutrition - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Human_nutrition",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Glossary of biology - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Glossary_of_biology",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "MedlinePlus: Site Map",
+          "url": "https://medlineplus.gov/sitemap.html",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Healthy food trends - flaxseeds: MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/patientinstructions/000728.htm",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "MedlinePlus: RSS Feeds",
+          "url": "https://medlineplus.gov/rss.html",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Psychology of music - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Music_psychology",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Food Poisoning | Foodborne Illness | MedlinePlus",
+          "url": "https://medlineplus.gov/foodborneillness.html",
+          "source": "index"
+        },
+        {
+          "title": "Index of biology articles - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Index_of_biology_articles",
+          "source": "index"
+        },
+        {
+          "title": "Healthy food trends - Brussels sprouts: MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/patientinstructions/000725.htm",
+          "source": "index"
+        },
+        {
+          "title": "Healthy food trends - kale: MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/patientinstructions/000729.htm",
+          "source": "index"
+        },
+        {
+          "title": "Malnutrition - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Malnutrition",
+          "source": "index"
+        },
+        {
+          "title": "Antimicrobial resistance",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance",
+          "source": "index"
+        },
+        {
+          "title": "Theoretical computer science - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Theoretical_computer_science",
+          "source": "index"
+        },
+        {
+          "title": "Carbohydrate - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Carbohydrate",
+          "source": "index"
+        },
+        {
+          "title": "Biophysics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Biophysics",
+          "source": "index"
+        },
+        {
+          "title": "Bacteria - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Bacteria",
+          "source": "index"
+        }
+      ]
+    },
+    "node.js": {
+      "recordedOrder": [
+        {
+          "title": "Node.js - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Node.js",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Node.js — About Node.js®",
+          "url": "https://nodejs.org/en/about",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "JavaScript | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "JavaScript - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/JavaScript",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Extension modules - Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "ECMAScript - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/ECMAScript",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "ECMAScript - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/TC39",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Getting started modules - Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Changelog - Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Changelog",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Event-driven programming - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Event-driven_programming",
+          "source": "index",
+          "sourceRank": 10
+        },
+        {
+          "title": "Node.js — Run JavaScript Everywhere",
+          "url": "https://nodejs.org/zh-tw",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "Node.js — Introduction to Node.js",
+          "url": "https://nodejs.org/en/learn",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "Node.js — Node.js 24.21.0 (LTS)",
+          "url": "https://nodejs.org/en/blog/release/v24.21.0",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "Node.js — Run JavaScript Everywhere",
+          "url": "https://nodejs.org/en/download/archive/v11.13.0",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "Node.js — Node.js 24.21.0 (LTS)",
+          "url": "https://nodejs.org/es/blog/release/v24.21.0",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "Node.js 26.9.0 (Current)",
+          "url": "https://nodejs.org/en/blog/release/v26.9.0",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "Node.js — Run JavaScript Everywhere",
+          "url": "http://nodejs.org/en/download/archive/current",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "Node.js - Server-Side JavaScript Runtime",
+          "url": "http://nodejs.md",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "node.js",
+          "url": "https://nodejs.org/download/docs/v0.1.4",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "node.js",
+          "url": "https://nodejs.org/download/docs/v0.1.23",
+          "source": "parallel",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Resources for educators - Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Educators",
+          "source": "index"
+        },
+        {
+          "title": "Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development",
+          "source": "index"
+        },
+        {
+          "title": "Core learning modules - Learn web development | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core",
+          "source": "index"
+        },
+        {
+          "title": "Comparison of multi-paradigm programming languages - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Multi-paradigm",
+          "source": "index"
+        },
+        {
+          "title": "React (software) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/React_(software)",
+          "source": "index"
+        },
+        {
+          "title": "Brendan Eich - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Brendan_Eich",
+          "source": "index"
+        },
+        {
+          "title": "MongoDB - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/MongoDB",
+          "source": "index"
+        },
+        {
+          "title": "node.js",
+          "url": "https://nodejs.org/download/docs/v0.2.1",
+          "source": "parallel"
+        },
+        {
+          "title": "node.js",
+          "url": "https://nodejs.org/download/docs/v0.2.6",
+          "source": "parallel"
+        },
+        {
+          "title": "Node.js",
+          "url": "https://nodejs.org/en/blog/release/page/84",
+          "source": "parallel"
+        }
+      ]
+    },
+    "mongodb": {
+      "recordedOrder": [
+        {
+          "title": "MongoDB - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/MongoDB",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Christianity in Asia - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Christianity_in_Asia",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Node.js - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Node.js",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "History of cartography - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/History_of_cartography",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Human history - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Human_history",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Partnership - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Partnership",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Cartography of China - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Chinese_cartography",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "China - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/China",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Archaeological sites – Travel guide at Wikivoyage",
+          "url": "https://en.wikivoyage.org/wiki/Archaeological_sites",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Afghanistan - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Afghanistan",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Military strategy - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Military_strategy",
+          "source": "index"
+        },
+        {
+          "title": "Great Wall of China - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+          "source": "index"
+        },
+        {
+          "title": "Falconry - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Falconry",
+          "source": "index"
+        },
+        {
+          "title": "Age of Discovery - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Age_of_Discovery",
+          "source": "index"
+        },
+        {
+          "title": "List of time periods - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/List_of_time_periods",
+          "source": "index"
+        },
+        {
+          "title": "European history – Travel guide at Wikivoyage",
+          "url": "https://en.wikivoyage.org/wiki/European_history",
+          "source": "index"
+        },
+        {
+          "title": "Sun Tzu - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Sun_Tzu",
+          "source": "index"
+        },
+        {
+          "title": "Russia - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Russia",
+          "source": "index"
+        },
+        {
+          "title": "Asia – Travel guide at Wikivoyage",
+          "url": "https://en.wikivoyage.org/wiki/Asia",
+          "source": "index"
+        },
+        {
+          "title": "Bubonic plague - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Bubonic_plague",
+          "source": "index"
+        }
+      ]
+    },
+    "youtube": {
+      "recordedOrder": [
+        {
+          "title": "YouTube",
+          "url": "https://www.youtube.com/;",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "YouTube",
+          "url": "https://www.youtube.com/YouTube",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "YouTube",
+          "url": "https://www.youtube.com/index?app=desktop&desktop_uri=%2F",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "YouTube - YouTube",
+          "url": "https://www.youtube.com/YouTube/en",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "YouTube - Apps on Google Play",
+          "url": "https://play.google.com/store/apps/details?id=com.google.android.youtube",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "Youtube – Wikipedia",
+          "url": "https://sv.wikipedia.org/wiki/Youtube",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "YouTube",
+          "url": "https://sea.mashable.com/youtube",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "YouTube – Apps on Google Play",
+          "url": "https://play.google.com/store/apps/details?id=com.google.android.youtube&hl=en_GB",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "YouTube officially announces TikTok competitor, YouTube Shorts",
+          "url": "https://sea.mashable.com/tech/12412/youtube-officially-announces-tiktok-competitor-youtube-shorts",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "Explained: What is YouTube?",
+          "url": "https://www.webwise.ie/parents/what-is-youtube",
+          "source": "parallel",
+          "sourceRank": 10
+        },
+        {
+          "title": "Q&As - The Mozilla Blog",
+          "url": "https://blog.mozilla.org/en/category/internet-culture/interviews",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Script breakdown - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Script_breakdown",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Michael B. Jordan - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Michael_B._Jordan",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Ernst Chladni - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Chladni_figure",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Fair Use - Copyright - LibGuides at Cornell University",
+          "url": "https://guides.library.cornell.edu/copyright/fair-use",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "The Mozilla Blog",
+          "url": "https://blog.mozilla.org/en",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Home - The GitHub Blog",
+          "url": "https://github.blog",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "NLM Web Policies",
+          "url": "https://www.nlm.nih.gov/web_policies.html",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Latest News | TechCrunch",
+          "url": "https://techcrunch.com/latest",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Academy Awards - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Academy_Awards",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "YouTube",
+          "url": "https://www.youtube.com/YOUTUBE",
+          "source": "parallel"
+        },
+        {
+          "title": "Security News | TechCrunch",
+          "url": "https://techcrunch.com/category/security",
+          "source": "index"
+        },
+        {
+          "title": "AI News & Artificial Intelligence | TechCrunch",
+          "url": "https://techcrunch.com/category/artificial-intelligence",
+          "source": "index"
+        },
+        {
+          "title": "Apple news and analysis | TechCrunch",
+          "url": "https://techcrunch.com/tag/apple",
+          "source": "index"
+        },
+        {
+          "title": "Startups | TechCrunch",
+          "url": "https://techcrunch.com/category/startups",
+          "source": "index"
+        },
+        {
+          "title": "Apps | Read the latest app news on TechCrunch",
+          "url": "https://techcrunch.com/category/apps",
+          "source": "index"
+        },
+        {
+          "title": "Venture Capital News | TechCrunch",
+          "url": "https://techcrunch.com/category/venture",
+          "source": "index"
+        },
+        {
+          "title": "Reichstag building - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Reichstag_building",
+          "source": "index"
+        },
+        {
+          "title": "Internet Culture - The Mozilla Blog",
+          "url": "https://blog.mozilla.org/en/category/internet-culture",
+          "source": "index"
+        },
+        {
+          "title": "Firefox Features - The Mozilla Blog",
+          "url": "https://blog.mozilla.org/en/category/firefox-ja/firefox-features",
+          "source": "index"
+        }
+      ]
+    },
+    "relativty theory": {
+      "recordedOrder": [
+        {
+          "title": "Relativity - Space-Time, Gravity, Physics | Britannica",
+          "url": "https://www.britannica.com/science/relativity/General-relativity",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "THE FOUNDATION OF THE GENERAL THEORY OF RELATIVITY",
+          "url": "https://sites.pitt.edu/~jdnorton/teaching/cosmology_2025/pdf/Einstein_Extension_Relativity_1916.pdf",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "Albert Einstein - Nobel Lecture - NobelPrize.org",
+          "url": "https://www.nobelprize.org/uploads/2018/06/einstein-lecture.pdf",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "Relativity Theory - an overview | ScienceDirect Topics",
+          "url": "https://www.sciencedirect.com/topics/physics-and-astronomy/relativity-theory",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "Theory of relativity - wikidoc",
+          "url": "https://www.wikidoc.org/index.php/Theory_of_relativity",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "Relativity: The Special and the General Theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Relativity%3A_The_Special_and_the_General_Theory",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "Relativity Theory | Encyclopedia.com",
+          "url": "https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/relativity-theory",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "https://arxiv.org/pdf/0908.2562",
+          "url": "https://arxiv.org/pdf/0908.2562",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "Theory of relativity - Wikipedia",
+          "url": "https://en.m.wikipedia.org/wiki/Theory_of_relativity",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "Special relativity / Elementary Tour part 2: The principle of relativity « Einstein-Online",
+          "url": "https://www.einstein-online.info/en/RelativityPrinciple",
+          "source": "parallel",
+          "sourceRank": 10
+        },
+        {
+          "title": "Theory of relativity - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Theory_of_relativity",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Information theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Information_theory",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Game theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Game_theory",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Set theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Set_theory",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Number theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Number_theory",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Computational complexity theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Computational_complexity_theory",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Quantum mechanics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Quantum_mechanics",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Branches of physics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Branches_of_physics",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Trait theory - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Character_trait",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Theorem - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Theorem",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "relativity summary | Britannica",
+          "url": "https://www.britannica.com/summary/relativity",
+          "source": "parallel"
+        },
+        {
+          "title": "34.2 General Relativity and Quantum Gravity - College Physics 2e | OpenStax",
+          "url": "https://openstax.org/books/college-physics-2e/pages/34-2-general-relativity-and-quantum-gravity",
+          "source": "parallel"
+        },
+        {
+          "title": "Special Theory of Relativity - Special and General Relativity - The Physics of the Universe",
+          "url": "https://www.physicsoftheuniverse.com/topics_relativity_special.html",
+          "source": "parallel"
+        },
+        {
+          "title": "Theory of relativity | Physics | Research Starters | EBSCOhost",
+          "url": "https://www.ebsco.com/research-starters/physics/theory-relativity",
+          "source": "parallel"
+        },
+        {
+          "title": "A Science Odyssey: People and Discoveries: Einstein announces the general theory of relativity",
+          "url": "https://www.pbs.org/wgbh/aso/databank/entries/dp15ei.html",
+          "source": "parallel"
+        },
+        {
+          "title": "How I created the theory of relativity",
+          "url": "http://dhdpla.physics.ucsd.edu/2025/Winter/physics2d/einsteinonrelativity.pdf",
+          "source": "parallel"
+        },
+        {
+          "title": "General Relativity",
+          "url": "https://sites.pitt.edu/~jdnorton/teaching/HPS_0410/chapters/general_relativity",
+          "source": "parallel"
+        },
+        {
+          "title": "Relativity: Chpt. 15",
+          "url": "https://www.gutenberg.org/files/5001/old/5001-h/files/ch15.htm",
+          "source": "parallel"
+        },
+        {
+          "title": "General Relativity",
+          "url": "https://www.math.brown.edu/tbanchof/STG/ma8/papers/dstanke/Project/Relativity.html",
+          "source": "parallel"
+        },
+        {
+          "title": "General Relativity, Very, Very Briefly 1. The Problem 2. ...",
+          "url": "https://sites.pitt.edu/~jdnorton/teaching/Einstein_graduate/pdfs/GR_very_briefly.pdf",
+          "source": "parallel"
+        }
+      ]
+    },
+    "heart attack symptoms": {
+      "recordedOrder": [
+        {
+          "title": "Heart Attack, Stroke and Cardiac Arrest Symptoms | American Heart Association",
+          "url": "https://www.heart.org/en/about-us/heart-attack-and-stroke-symptoms?%3Futm_source=AHA&sa=X",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "Know the Warning Signs of Heart Attack and Stroke",
+          "url": "https://international.heart.org/en/-/media/International/Files/Heart-Attack-Stroke-Warning-Signs/HeartAttackandStrokeWarningSignsInternationalEnglish.pdf",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "Warning Signs of a Heart Attack | American Heart Association",
+          "url": "https://www.heart.org/en/health-topics/heart-attack/warning-signs-of-a-heart-attack",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "Heart Attack - Symptoms | NHLBI, NIH",
+          "url": "https://www.nhlbi.nih.gov/health/heart-attack/symptoms",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "Heart attack - symptoms, causes and treatment - BHF",
+          "url": "https://www.bhf.org.uk/informationsupport/conditions/heart-attack",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "Warning Signs of Heart Attack",
+          "url": "https://www.heart.org/en/-/media/Files/Health-Topics/Answers-by-Heart/What-Are-the-Warning-Signs-of-Heart-Attack.pdf",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "Heart Attack Explained | American Stroke Association",
+          "url": "https://www.stroke.org/en/health-topics/heart-attack/heart-attack-explained",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "Heart attack symptoms: Know what's a medical emergency - Mayo Clinic",
+          "url": "https://www.mayoclinic.org/diseases-conditions/heart-attack/in-depth/heart-attack-symptoms/art-20047744",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "Heart Attack Signs & Symptoms | cdc.gov",
+          "url": "http://medbox.iiab.me/modules/en-cdc/www.cdc.gov/heartdisease/signs_symptoms.htm",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "Common Heart Attack Warning Symptoms",
+          "url": "https://www.heart.org/-/media/Files/Health-Topics/Heart-Attack/Heart-Attack-warning-signs-infographic.pdf?sc_lang=en",
+          "source": "parallel",
+          "sourceRank": 10
+        },
+        {
+          "title": "Eating Disorders: MedlinePlus",
+          "url": "https://medlineplus.gov/eatingdisorders.html",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Heart Disease Prevention | MedlinePlus",
+          "url": "https://medlineplus.gov/howtopreventheartdisease.html",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Anxiety disorders",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/anxiety-disorders",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Asthma",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/asthma",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Malnutrition: MedlinePlus",
+          "url": "https://medlineplus.gov/malnutrition.html",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Anaemia",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/anaemia",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Bubonic plague - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Bubonic_plague",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Easy-to-Read Health Information: MedlinePlus",
+          "url": "https://medlineplus.gov/all_easytoread.html",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "COVID-19 - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/COVID-19",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Cholesterol | MedlinePlus",
+          "url": "https://medlineplus.gov/cholesterol.html",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "During a Heart Attack, Every Minute Counts",
+          "url": "https://stanfordhealthcare.org/content/dam/valleycare/60th-anniversary/cardiovascular-health-vc-heart-attack-signs.pdf",
+          "source": "parallel"
+        },
+        {
+          "title": "Warning Signs of a Heart Attack | Circulation",
+          "url": "https://www.ahajournals.org/doi/10.1161/circulationaha.113.006126",
+          "source": "parallel"
+        },
+        {
+          "title": "Symptoms of a heart attack",
+          "url": "https://www.nhs.uk/conditions/heart-attack/symptoms",
+          "source": "parallel"
+        },
+        {
+          "title": "Heart Attack (Myocardial Infarction) | Fact Sheets | Yale Medicine",
+          "url": "https://www.yalemedicine.org/conditions/heart-attack",
+          "source": "parallel"
+        },
+        {
+          "title": "Heart attack - Symptoms & causes - Mayo Clinic",
+          "url": "https://www.mayoclinic.org/diseases-conditions/heart-attack/symptoms-causes/syc-20373106",
+          "source": "parallel"
+        },
+        {
+          "title": "Warning Signs of a Heart Attack | Circulation",
+          "url": "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.113.006126?doi=10.1161%2FCIRCULATIONAHA.113.006126",
+          "source": "parallel"
+        },
+        {
+          "title": "Heart Attack | Myocardial Infarction | MedlinePlus",
+          "url": "https://medlineplus.gov/heartattack.html",
+          "source": "parallel"
+        },
+        {
+          "title": "Heart Attack Warning Signs | The Texas Heart Institute®",
+          "url": "https://www.texasheart.org/heart-health/heart-information-center/topics/heart-attack-warning-signs",
+          "source": "parallel"
+        },
+        {
+          "title": "Heart Attack, Stroke and Cardiac Arrest Symptoms www.heart.org https://www.heart.org › about-us › heart-attack-and-strok...",
+          "url": "https://www.heart.org/en/about-us/heart-attack-and-stroke-symptoms",
+          "source": "parallel"
+        },
+        {
+          "title": "About Heart Attack Symptoms, Risk, and Recovery | Heart Disease | CDC",
+          "url": "https://cdc.gov/heart-disease/about/heart-attack.html",
+          "source": "parallel"
+        }
+      ]
+    },
+    "intitle:geometry": {
+      "recordedOrder": [
+        {
+          "title": "Geometry - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Geometry",
+          "source": "index",
+          "sourceRank": 1
+        }
+      ],
+      "loadMore": []
+    },
+    "climate change -wikipedia": {
+      "recordedOrder": [
+        {
+          "title": "Biodiversity",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/biodiversity",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Drowning",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/drowning",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Health-care waste",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/health-care-waste",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Air Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics/air-topics",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "A - Z Topic Index | US EPA",
+          "url": "https://www.epa.gov/topics-epa-web",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Electricity in health-care facilities",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/electricity-in-health-care-facilities",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Environmental Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Pluto Moons - NASA Science",
+          "url": "https://science.nasa.gov/dwarf-planets/pluto/moons",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Neptune Moons - NASA Science",
+          "url": "https://science.nasa.gov/neptune/moons",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Fact sheets",
+          "url": "https://www.who.int/news-room/fact-sheets",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Asteroids, Comets, and Meteors",
+          "url": "https://science.nasa.gov/asteroids-comets-meteors",
+          "source": "index"
+        },
+        {
+          "title": "Uranus Moons - NASA Science",
+          "url": "https://science.nasa.gov/uranus/moons",
+          "source": "index"
+        },
+        {
+          "title": "Meteors and Meteorites - NASA Science",
+          "url": "https://science.nasa.gov/solar-system/meteors-meteorites",
+          "source": "index"
+        },
+        {
+          "title": "Universe - NASA Science",
+          "url": "https://science.nasa.gov/universe",
+          "source": "index"
+        },
+        {
+          "title": "Facts About Earth",
+          "url": "https://science.nasa.gov/earth/facts",
+          "source": "index"
+        },
+        {
+          "title": "Asteroids",
+          "url": "https://science.nasa.gov/solar-system/asteroids",
+          "source": "index"
+        },
+        {
+          "title": "Comets",
+          "url": "https://science.nasa.gov/solar-system/comets",
+          "source": "index"
+        },
+        {
+          "title": "About the Planets",
+          "url": "https://science.nasa.gov/solar-system/planets",
+          "source": "index"
+        },
+        {
+          "title": "Adolescent and young adult health",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/adolescents-health-risks-and-solutions",
+          "source": "index"
+        },
+        {
+          "title": "MedlinePlus: RSS Feeds",
+          "url": "https://medlineplus.gov/rss.html",
+          "source": "index"
+        }
+      ]
+    },
+    "kuiper belt vs oort cloud": {
+      "recordedOrder": [
+        {
+          "title": "Kuiper Belt and Oort Cloud - NASA Solar System Exploration",
+          "url": "https://solarsystem.nasa.gov/internal_resources/1031",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "Relationship of the Kuiper Belt to the Oort Cloud - NASA Science",
+          "url": "https://science.nasa.gov/asset/hubble/relationship-of-the-kuiper-belt-to-the-oort-cloud",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "Kuiper Belt and Oort Cloud - Cloudfront.net",
+          "url": "https://d2pn8kiwq2w21t.cloudfront.net/documents/ss_kuiperbelt.pdf",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "ESA - Kuiper Belt and Oort Cloud in context",
+          "url": "https://www.esa.int/ESA_Multimedia/Images/2014/12/Kuiper_Belt_and_Oort_Cloud_in_context",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "Kuiper Belt and Oort Cloud",
+          "url": "https://www.eso.org/public/archives/static/outreach/eduoff/info-solsys/images/kuiperbelt-a4-150.pdf",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "Kuiper Belt and Oort Cloud | Solar System - Space FM",
+          "url": "https://www.space.fm/astronomy/planetarysystems/beltsclouds.html",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "What effect, if any, do the objects in the Kuiper Belt and Oort Cloud have on the orbits or characteristics of the eight major planets? | Astronomy.com",
+          "url": "https://www.astronomy.com/science/what-effect-if-any-do-the-objects-in-the-kuiper-belt-and-oort-cloud-have-on-the-orbits-or-characteristics-of-the-eight-major-planets",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "Comets, the Kuiper Belt and the Oort Cloud - Las Cumbres Observatory",
+          "url": "https://lco.global/spacebook/solar-system/comets-kuiper-belt-and-oort-cloud",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "The evolution of comets in the Oort cloud and Kuiper belt",
+          "url": "https://www2.boulder.swri.edu/AR2003/Nature_comets.pdf",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "X",
+          "url": "https://arxiv.org/pdf/2001.07579",
+          "source": "parallel",
+          "sourceRank": 10
+        },
+        {
+          "title": "Oort Cloud",
+          "url": "https://science.nasa.gov/solar-system/oort-cloud",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Kuiper Belt",
+          "url": "https://science.nasa.gov/solar-system/kuiper-belt",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Solar System - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Solar_System",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Solar System: Facts - NASA Science",
+          "url": "https://science.nasa.gov/solar-system/solar-system-facts",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "About the Planets",
+          "url": "https://science.nasa.gov/solar-system/planets",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Comets",
+          "url": "https://science.nasa.gov/solar-system/comets",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Asteroids, Comets, and Meteors",
+          "url": "https://science.nasa.gov/asteroids-comets-meteors",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Pluto & Dwarf Planets",
+          "url": "https://science.nasa.gov/dwarf-planets",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Jupiter Moons",
+          "url": "https://science.nasa.gov/jupiter/jupiter-moons",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Neptune",
+          "url": "https://science.nasa.gov/neptune",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Why Can We Detect Kuiper Belts Around Other Stars But Cannot See Our Own Oort Cloud? – National Radio Astronomy Observatory",
+          "url": "https://public.nrao.edu/ask/why-can-we-detect-kuiper-belts-around-other-stars-but-cannot-see-our-own-oort-cloud",
+          "source": "parallel"
+        },
+        {
+          "title": "Kuiper Belt and Oort Cloud",
+          "url": "https://serc.carleton.edu/resources/45349.html",
+          "source": "parallel"
+        },
+        {
+          "title": "Gerard Kuiper and the Trans-Neptunian Comet Belt | AMNH",
+          "url": "https://www.amnh.org/learn-teach/curriculum-collections/cosmic-horizons-book/kuiper-belt",
+          "source": "parallel"
+        },
+        {
+          "title": "https://spaceplace.nasa.gov/oort-cloud/en/Oort_cloud_Snap_poster_8.5x11.pdf",
+          "url": "https://spaceplace.nasa.gov/oort-cloud/en/Oort_cloud_Snap_poster_8.5x11.pdf",
+          "source": "parallel"
+        },
+        {
+          "title": "Mystery of far-out planetoid deepens | New Scientist",
+          "url": "https://www.newscientist.com/article/1917138-mystery-of-far-out-planetoid-deepens",
+          "source": "parallel"
+        },
+        {
+          "title": "Oort Cloud: Facts - NASA Science",
+          "url": "https://science.nasa.gov/solar-system/oort-cloud/facts",
+          "source": "parallel"
+        },
+        {
+          "title": "Hypothetical Planet X",
+          "url": "https://science.nasa.gov/solar-system/planet-x",
+          "source": "index"
+        },
+        {
+          "title": "Pluto Moons - NASA Science",
+          "url": "https://science.nasa.gov/dwarf-planets/pluto/moons",
+          "source": "index"
+        },
+        {
+          "title": "Sun - NASA Science",
+          "url": "https://science.nasa.gov/sun",
+          "source": "index"
+        },
+        {
+          "title": "Mars - NASA Science",
+          "url": "https://science.nasa.gov/mars",
+          "source": "index"
+        }
+      ]
+    },
+    "techcrunch disrupt 2026": {
+      "recordedOrder": [
+        {
+          "title": "TechCrunch Disrupt 2026 | TechCrunch",
+          "url": "https://techcrunch.com/events/techcrunch-disrupt/?utm_source=google&utm_medium=ad&utm_campaign=disrupt2026&utm_content=addiscount&promo=Disrupt25&display=true",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Tickets - TechCrunch Disrupt 2026 | TechCrunch",
+          "url": "https://techcrunch.com/events/techcrunch-disrupt/tickets/?utm_source=tc&utm_medium=ad&utm_campaign=disrupt2026&utm_content=rb&promo=topbanner_rbend",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Latest News | TechCrunch",
+          "url": "https://techcrunch.com/latest",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Startups | TechCrunch",
+          "url": "https://techcrunch.com/category/startups",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Venture Capital News | TechCrunch",
+          "url": "https://techcrunch.com/category/venture",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "AI News & Artificial Intelligence | TechCrunch",
+          "url": "https://techcrunch.com/category/artificial-intelligence",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "TechCrunch | Startup and Technology News",
+          "url": "https://techcrunch.com",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Apps | Read the latest app news on TechCrunch",
+          "url": "https://techcrunch.com/category/apps",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Security News | TechCrunch",
+          "url": "https://techcrunch.com/category/security",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Apple news and analysis | TechCrunch",
+          "url": "https://techcrunch.com/tag/apple",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Endocrine Disruptor Screening Program (EDSP) | US EPA",
+          "url": "https://www.epa.gov/endocrine-disruption",
+          "source": "index"
+        },
+        {
+          "title": "Sinners (2025 film) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Sinners_(2025_film)",
+          "source": "index"
+        },
+        {
+          "title": "MongoDB - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/MongoDB",
+          "source": "index"
+        },
+        {
+          "title": "React (software) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/React_(software)",
+          "source": "index"
+        },
+        {
+          "title": "Sun - NASA Science",
+          "url": "https://science.nasa.gov/sun",
+          "source": "index"
+        },
+        {
+          "title": "Brendan Eich - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Brendan_Eich",
+          "source": "index"
+        },
+        {
+          "title": "Information - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Information",
+          "source": "index"
+        },
+        {
+          "title": "Ethics of Artificial Intelligence and Robotics (Stanford Encyclopedia of Philosophy/Fall 2023 Edition)",
+          "url": "https://plato.stanford.edu/archives/fall2023/entries/ethics-ai",
+          "source": "index"
+        },
+        {
+          "title": "FIFA - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/FIFA",
+          "source": "index"
+        },
+        {
+          "title": "Biodiversity",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/biodiversity",
+          "source": "index"
+        }
+      ]
+    },
+    "latest github copilot news": {
+      "recordedOrder": [
+        {
+          "title": "GitHub Copilot can now interact with desktop apps with computer use - GitHub Changelog",
+          "url": "https://github.blog/changelog/2026-10-01-github-copilot-can-now-interact-with-desktop-apps",
+          "source": "parallel",
+          "sourceRank": 1
+        },
+        {
+          "title": "GitHub Copilot app is now available in technical preview - GitHub Changelog",
+          "url": "https://github.blog/changelog/2026-05-14-github-copilot-app-is-now-available-in-technical-preview",
+          "source": "parallel",
+          "sourceRank": 2
+        },
+        {
+          "title": "GitHub Copilot app generally available - GitHub Changelog",
+          "url": "https://github.blog/changelog/2026-06-17-github-copilot-app-generally-available",
+          "source": "parallel",
+          "sourceRank": 3
+        },
+        {
+          "title": "copilot-cli/changelog.md at main · github/copilot-cli · GitHub",
+          "url": "https://github.com/github/copilot-cli/blob/main/changelog.md",
+          "source": "parallel",
+          "sourceRank": 4
+        },
+        {
+          "title": "What's new in Copilot Studio, August 2026: GitHub Copilot harness | Microsoft Copilot Blog",
+          "url": "https://www.microsoft.com/en-us/copilot/blog/copilot-studio/new-and-improved-github-copilot-harness-agent-skills-and-richer-context",
+          "source": "parallel",
+          "sourceRank": 5
+        },
+        {
+          "title": "New GitHub Copilot agent edges into DevOps | TechTarget",
+          "url": "https://www.techtarget.com/it-infrastructure/news/366623845/New-GitHub-Copilot-agent-edges-into-DevOps",
+          "source": "parallel",
+          "sourceRank": 6
+        },
+        {
+          "title": "GitHub Copilot Coding Agent Can Now Use Microsoft Teams Conversations",
+          "url": "https://www.techrepublic.com/article/news-github-copilot-teams-conversations-coding-agent",
+          "source": "parallel",
+          "sourceRank": 7
+        },
+        {
+          "title": "Use Case: copilot - GitHub Changelog",
+          "url": "https://github.blog/changelog/label/copilot",
+          "source": "parallel",
+          "sourceRank": 8
+        },
+        {
+          "title": "GitHub Copilot Chat aims to replace Googling for devs | TechTarget",
+          "url": "https://www.techtarget.com/it-infrastructure/news/366545272/GitHub-Copilot-Chat-aims-to-replace-Googling-for-devs",
+          "source": "parallel",
+          "sourceRank": 9
+        },
+        {
+          "title": "GitHub Copilot is Getting Multi-Model Capabilities",
+          "url": "https://www.thurrott.com/a-i/312285/github-copilot-to-support-new-ai-models-from-anthropic-google-and-openai",
+          "source": "parallel",
+          "sourceRank": 10
+        },
+        {
+          "title": "The latest on GitHub Copilot - The GitHub Blog",
+          "url": "https://github.blog/ai-and-ml/github-copilot",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "The latest on LLMs - The GitHub Blog",
+          "url": "https://github.blog/ai-and-ml/llms",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "The latest on AI & ML - The GitHub Blog",
+          "url": "https://github.blog/ai-and-ml",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "The latest on Generative AI - The GitHub Blog",
+          "url": "https://github.blog/ai-and-ml/generative-ai",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "The latest on application development - The GitHub Blog",
+          "url": "https://github.blog/developer-skills/application-development",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "The latest on machine learning - The GitHub Blog",
+          "url": "https://github.blog/ai-and-ml/machine-learning",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "GitHub Changelog",
+          "url": "https://github.blog/changelog",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Improve how you use GitHub at work - The GitHub Blog",
+          "url": "https://github.blog/developer-skills/github",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "MDN Web Docs",
+          "url": "https://developer.mozilla.org/en-US",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Home - The GitHub Blog",
+          "url": "https://github.blog",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Weekly Update – October 5, 2026 | GitHub Agentic Workflows",
+          "url": "https://github.github.com/gh-aw/blog/2026-10-05-weekly-update",
+          "source": "parallel"
+        },
+        {
+          "title": "GitHub Copilot desktop released amid reliability and pricing concerns | TechTarget",
+          "url": "https://www.techtarget.com/it-infrastructure/news/366644857/GitHub-Copilot-desktop-released-amid-reliability-and-pricing-concerns",
+          "source": "parallel"
+        },
+        {
+          "title": "GitHub Copilot for Business is Now Available - Thurrott.com",
+          "url": "https://www.thurrott.com/dev/279343/github-copilot-for-business-is-now-available",
+          "source": "parallel"
+        },
+        {
+          "title": "Build 2026: Microsoft Announces GitHub Copilot App - Thurrott.com",
+          "url": "https://www.thurrott.com/dev/336962/build-2026-microsoft-announces-github-copilot-app",
+          "source": "parallel"
+        },
+        {
+          "title": "Using GitHub Copilot with GitHub Agentic Workflows | GitHub Agentic Workflows",
+          "url": "https://github.github.com/gh-aw/engines/copilot",
+          "source": "parallel"
+        },
+        {
+          "title": "Important updates: GitHub Copilot support ending for JetBrains 2025.1.x - Microsoft for Java Developers",
+          "url": "https://devblogs.microsoft.com/java/github-copilot-support-ending-for-jetbrains-2025-1-x",
+          "source": "parallel"
+        },
+        {
+          "title": "GitHub Copilot CLI Latest Version & Changelog — Release Cadence",
+          "url": "https://status.itlibra.com/en/updates/github-copilot-cli",
+          "source": "parallel"
+        },
+        {
+          "title": "Claude Sonnet 5.5 in GitHub Copilot - GitHub Changelog",
+          "url": "https://github.blog/changelog/2026-09-28-claude-sonnet-5-5-in-github-copilot",
+          "source": "parallel"
+        },
+        {
+          "title": "GitHub Copilot weekly releases — September 14",
+          "url": "https://github.blog/changelog/2026-09-18-github-copilot-weekly-releases-september-14",
+          "source": "parallel"
+        },
+        {
+          "title": "Updates to GitHub Copilot for Slack and Microsoft Teams - GitHub Changelog",
+          "url": "https://github.blog/changelog/2026-09-25-updates-to-github-copilot-for-slack-and-microsoft-teams",
+          "source": "parallel"
+        }
+      ]
+    },
+    "air pollution health effects": {
+      "recordedOrder": [
+        {
+          "title": "Ambient (outdoor) air pollution",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Particulate Matter (PM) Pollution | US EPA",
+          "url": "https://www.epa.gov/pm-pollution",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Health Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics/health-topics",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "Air Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics/air-topics",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Arsenic",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/arsenic",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Food additives: MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/article/002435.htm",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Soy: MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/article/007204.htm",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Criteria Air Pollutants | US EPA",
+          "url": "https://www.epa.gov/criteria-air-pollutants",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Coal - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Coal",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Per- and Polyfluoroalkyl Substances (PFAS) | US EPA",
+          "url": "https://www.epa.gov/pfas",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Environmental Topics | US EPA",
+          "url": "https://www.epa.gov/environmental-topics",
+          "source": "index"
+        },
+        {
+          "title": "Health-care waste",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/health-care-waste",
+          "source": "index"
+        },
+        {
+          "title": "Carbohydrate - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Carbohydrate",
+          "source": "index"
+        },
+        {
+          "title": "MedlinePlus: Genetics",
+          "url": "https://medlineplus.gov/genetics",
+          "source": "index"
+        },
+        {
+          "title": "Ageing and health",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/ageing-and-health",
+          "source": "index"
+        },
+        {
+          "title": "Adolescent and young adult health",
+          "url": "https://www.who.int/news-room/fact-sheets/detail/adolescents-health-risks-and-solutions",
+          "source": "index"
+        },
+        {
+          "title": "Atmospheric temperature - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Surface_air_temperature",
+          "source": "index"
+        },
+        {
+          "title": "Atomic bombings of Hiroshima and Nagasaki - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Atomic_bombings_of_Hiroshima_and_Nagasaki",
+          "source": "index"
+        },
+        {
+          "title": "Alcohol | Drinking | MedlinePlus",
+          "url": "https://medlineplus.gov/alcohol.html",
+          "source": "index"
+        },
+        {
+          "title": "Malnutrition - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Malnutrition",
+          "source": "index"
+        }
+      ]
+    },
+    "football": {
+      "recordedOrder": [
+        {
+          "title": "Blind football - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Blind_football",
+          "source": "index",
+          "sourceRank": 1
+        },
+        {
+          "title": "Association football - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Association_football",
+          "source": "index",
+          "sourceRank": 2
+        },
+        {
+          "title": "Football boot - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Football_boot",
+          "source": "index",
+          "sourceRank": 3
+        },
+        {
+          "title": "CP football - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/CP_football",
+          "source": "index",
+          "sourceRank": 4
+        },
+        {
+          "title": "Football pitch - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Football_pitch",
+          "source": "index",
+          "sourceRank": 5
+        },
+        {
+          "title": "Ball (association football) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Ball_(association_football)",
+          "source": "index",
+          "sourceRank": 6
+        },
+        {
+          "title": "Defender (association football) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Defender_(association_football)",
+          "source": "index",
+          "sourceRank": 7
+        },
+        {
+          "title": "Kit (association football) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Kit_(association_football)",
+          "source": "index",
+          "sourceRank": 8
+        },
+        {
+          "title": "Forward (association football) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Forward_(association_football)",
+          "source": "index",
+          "sourceRank": 9
+        },
+        {
+          "title": "Goalkeeper (association football) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Goalkeeper_(association_football)",
+          "source": "index",
+          "sourceRank": 10
+        }
+      ],
+      "loadMore": [
+        {
+          "title": "Glossary of association football terms - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Glossary_of_association_football",
+          "source": "index"
+        },
+        {
+          "title": "Rugby School - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Rugby_School",
+          "source": "index"
+        },
+        {
+          "title": "1900 Summer Olympics - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/1900_Olympics",
+          "source": "index"
+        },
+        {
+          "title": "Melbourne Cricket Ground - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Melbourne_Cricket_Ground",
+          "source": "index"
+        },
+        {
+          "title": "FIFA - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/FIFA",
+          "source": "index"
+        },
+        {
+          "title": "Contact sport - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Contact_sport",
+          "source": "index"
+        },
+        {
+          "title": "Midfielder - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Midfielder",
+          "source": "index"
+        },
+        {
+          "title": "Shin guard - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Shin_guard",
+          "source": "index"
+        },
+        {
+          "title": "Team sport - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Team_sport",
+          "source": "index"
+        },
+        {
+          "title": "List of ball games - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Ball_game",
+          "source": "index"
+        }
+      ]
+    }
+  }
+}

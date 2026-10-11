@@ -115,7 +115,7 @@
 
 .ph-map-panel {
   position: sticky;
-  top: 90px;
+  top: calc(90px + var(--ph-shell-h, 0px));
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);

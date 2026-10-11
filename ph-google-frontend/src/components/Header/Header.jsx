@@ -40,8 +40,10 @@ function useDismiss(open, setOpen, ref) {
  * Left: the logo (linking home) on every page but the homepage, whose hero
  * already carries the large logo; on results it is followed by the search box.
  * Right: History, Settings, the apps menu and the account menu.
+ *
+ * `searchCategory`: a search typed here stays on that results tab (Images).
  */
-export default function Header({ searchQuery = '' }) {
+export default function Header({ searchQuery = '', searchCategory = null }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -69,7 +71,19 @@ export default function Header({ searchQuery = '' }) {
           {isSearchResults ? (
             <div className="ph-header-search-wrap">
               <Logo size="small" />
-              <SearchBar initialValue={searchQuery} variant="header" showSubmitButton={true} />
+              <SearchBar
+                initialValue={searchQuery}
+                variant="header"
+                showSubmitButton={true}
+                onSearchSubmit={
+                  searchCategory
+                    ? text =>
+                        navigate(
+                          `/search?q=${encodeURIComponent(text.trim())}&category=${encodeURIComponent(searchCategory)}`
+                        )
+                    : undefined
+                }
+              />
             </div>
           ) : (
             !isHomePage && <Logo size="small" />

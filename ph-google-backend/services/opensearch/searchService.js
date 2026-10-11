@@ -1,7 +1,9 @@
 const { getClient, checkHealth, describeConnectionError } = require('./client');
 const { INDEX } = require('./indexManager');
 const { parseQuery } = require('./queryParser');
-const { buildSearchBody } = require('./queryBuilder');
+const { buildSearchBody, buildQualityFilters } = require('./queryBuilder');
+const { buildDocumentId } = require('./documentMapper');
+const { meaningfulWords, requiredMentions } = require('../external/resultRelevance');
 const { ApiError } = require('../../utils/apiResponse');
 const { config } = require('../../config/env');
 const logger = require('../../utils/logger');
@@ -59,6 +61,59 @@ const DUPLICATES_AGG = {
   }
 };
 
+/**
+ * The Wayback Machine's copies among the matches. A page crawled both at its
+ * own address and as web.archive.org/web/<timestamp>/<address> is one article
+ * shown twice, and the content hash does not catch it: the archive adds a
+ * banner, so the two texts differ by a few words.
+ */
+const ARCHIVE_HOST = 'web.archive.org';
+/** OpenSearch returns at most 100 hits from a top_hits aggregation. */
+const ARCHIVE_COPIES_CHECKED = 100;
+const ARCHIVED_AGG = {
+  filter: { term: { domain: ARCHIVE_HOST } },
+  aggs: { copies: { top_hits: { size: ARCHIVE_COPIES_CHECKED, _source: ['url'] } } }
+};
+
+/**
+ * The address a Wayback Machine URL is a copy of, or null when the URL is
+ * not one: https://web.archive.org/web/20240105020744/https://example.com/a
+ * (the timestamp may carry a flag such as "id_") → https://example.com/a.
+ */
+function archivedOriginal(url) {
+  const match = /^https?:\/\/web\.archive\.org\/web\/\d{4,14}[a-z_]*\/(.+)$/i.exec(
+    typeof url === 'string' ? url.trim() : ''
+  );
+  if (!match) return null;
+  return /^https?:\/\//i.test(match[1]) ? match[1] : `http://${match[1]}`;
+}
+
+/**
+ * Which archived copies duplicate a page that is itself among the matches.
+ *
+ * Only then is a copy left out. When the original was never crawled, or does
+ * not match this search, the archived copy is the only way to that article
+ * and stays. Decided from the whole matching set, not from one page of it,
+ * so the answer — and with it the total — is the same on every page.
+ *
+ * @param {Array} copies  the archived hits (`_id`, `_source.url`)
+ * @param {(ids: string[]) => Promise<Set<string>>} matching  which of these
+ *        document ids the search matches
+ * @returns {Promise<string[]>} ids of the copies to leave out
+ */
+async function archiveDuplicates(copies, matching) {
+  const copiesOf = new Map(); // id of the original -> ids of its archived copies
+  for (const hit of copies) {
+    const original = archivedOriginal(hit && hit._source && hit._source.url);
+    const originalId = original ? buildDocumentId(original) : null;
+    if (!originalId || originalId === hit._id) continue;
+    copiesOf.set(originalId, [...(copiesOf.get(originalId) || []), hit._id]);
+  }
+  if (copiesOf.size === 0) return [];
+  const present = await matching([...copiesOf.keys()]);
+  return [...copiesOf.entries()].filter(([id]) => present.has(id)).flatMap(([, ids]) => ids);
+}
+
 function countDuplicates(aggregations) {
   const buckets = aggregations?.duplicates?.groups?.buckets || [];
   return buckets.reduce((sum, bucket) => sum + bucket.doc_count - 1, 0);
@@ -112,19 +167,24 @@ function stripMarks(text) {
 function buildSnippet(hit) {
   const highlight = hit.highlight || {};
   const source = hit._source || {};
+  const cut = text => (text.length > 300 ? `${text.slice(0, 300).trim()}…` : text);
+  const join = list => list.map(stripMarks).join(' … ').replace(/\s+/g, ' ').trim();
+  // A fragment with a <mark> is where the page matched the query. Content's
+  // `no_match_size` fragment has none: it is only the page's opening text.
+  const matched = list => (list || []).filter(fragment => /<mark>/.test(fragment));
 
-  const fragments = [...(highlight.content || []), ...(highlight.description || [])];
+  const fromMatches = join([...matched(highlight.content), ...matched(highlight.description)]);
+  if (fromMatches) return cut(fromMatches);
 
-  if (fragments.length > 0) {
-    const joined = fragments.map(stripMarks).join(' … ').replace(/\s+/g, ' ').trim();
-    if (joined) return joined.length > 300 ? `${joined.slice(0, 300).trim()}…` : joined;
-  }
-
+  // The page matched in its title or headings only: its own description
+  // says what it is about better than its first lines do.
   const description = String(source.description || '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (description)
-    return description.length > 300 ? `${description.slice(0, 300).trim()}…` : description;
+  if (description) return cut(description);
+
+  const opening = join([...(highlight.content || []), ...(highlight.description || [])]);
+  if (opening) return cut(opening);
 
   return 'No description available.';
 }
@@ -150,8 +210,9 @@ function getTimeAgo(date) {
  *
  * The index already de-duplicates by canonical URL (the document _id), so
  * this catches the remaining case: the same body text published at genuinely
- * different addresses — syndicated articles, mirrors, web.archive.org copies.
- * The highest-scoring copy of each is kept.
+ * different addresses — syndicated articles and mirrors. The highest-scoring
+ * copy of each is kept. (A web.archive.org copy differs from its original by
+ * the archive's banner, so it is left out earlier: see archiveDuplicates.)
  *
  * @param {Array} hits  in ranked order
  * @param {{url: Set, content: Set}} [seen]  carries state across batches of
@@ -246,11 +307,20 @@ function formatHit(hit, { includeDebug }) {
  * @param {string} params.query
  * @param {number} [params.page]
  * @param {number} [params.limit]
+ * @param {number} [params.offset]     where the results start in the ranked,
+ *        de-duplicated list, instead of (page - 1) * limit. "Load more" asks
+ *        for the next results after the ones already shown, whatever the
+ *        size of the batches before; the walk below is the same either way.
  * @param {string} [params.sort]        relevance | newest | oldest
  * @param {string} [params.domain]
  * @param {string} [params.dateWindow]
  * @param {string} [params.language]
  * @param {boolean} [params.isArticle]  restrict to news articles
+ * @param {boolean} [params.topicalWhenWeak]  when the index holds no page
+ *        about the query, return only the pages that mention its meaningful
+ *        words instead of every partial match (see buildTopicalFilter). Off
+ *        unless asked for: the results page and the News tab ask, AI answers
+ *        do not. With `isArticle`, "no page" means no article.
  * @param {boolean} [params.debug]      include scoring detail (dev only)
  * @returns {Promise<Object>}
  */
@@ -258,11 +328,13 @@ async function search({
   query,
   page = 1,
   limit = 10,
+  offset,
   sort = 'relevance',
   domain = '',
   dateWindow = 'any',
   language = '',
   isArticle,
+  topicalWhenWeak = false,
   debug = false
 }) {
   const startedAt = Date.now();
@@ -281,7 +353,9 @@ async function search({
   if (parsed.isEmpty) return empty();
 
   // Say so plainly rather than letting the cluster reject the request.
-  if (page * limit > MAX_RESULT_WINDOW) {
+  const start = Number.isInteger(offset) && offset >= 0 ? offset : (page - 1) * limit;
+  const end = start + limit;
+  if (end > MAX_RESULT_WINDOW) {
     throw ApiError.badRequest(
       `Only the first ${MAX_RESULT_WINDOW.toLocaleString('en-US')} results can be paged through. ` +
         'Refine the search to narrow them down.'
@@ -304,7 +378,7 @@ async function search({
   //    paged through than `totalResults` counts. How many depends on where
   //    the copies rank, which only the walk itself can tell: in that case it
   //    continues to the end of the window and counts them.
-  const needed = page * limit;
+  const needed = end;
   const seen = { url: new Set(), content: new Set() };
   const ranked = [];
   let fetched = 0;
@@ -312,15 +386,40 @@ async function search({
   let duplicates = 0;
   let maxScore = 0;
   let walkWholeWindow = false;
+  // Measured beside the search, so under the same filters: for News the
+  // counts are of articles, which is what its own relevance decision needs.
+  const qualityFilters = buildQualityFilters(parsed);
+  let quality = null;
+  // Set once the index has been found to hold no page about the query: the
+  // words a page must then mention to be shown (see below).
+  let topical = null;
+  // Archived copies of pages that are themselves among the matches.
+  let excludeIds = [];
+  let archiveChecked = false;
 
   while ((ranked.length < needed || walkWholeWindow) && fetched < MAX_RESULT_WINDOW) {
     const size = walkWholeWindow
       ? MAX_RESULT_WINDOW - fetched
       : Math.min(needed * DEDUPE_OVERFETCH, MAX_RESULT_WINDOW - fetched);
-    const body = buildSearchBody(parsed, { ...options, from: fetched, size });
+    const body = buildSearchBody(parsed, {
+      ...options,
+      topical,
+      excludeIds,
+      from: fetched,
+      size
+    });
     delete body.highlight;
     body._source = RANK_FIELDS;
-    if (fetched === 0) body.aggs = { duplicates: DUPLICATES_AGG };
+    if (fetched === 0) {
+      body.aggs = { duplicates: DUPLICATES_AGG };
+      if (!archiveChecked) body.aggs.archived = ARCHIVED_AGG;
+      // How well the index covers this query (see buildQualityFilters).
+      // Filters beside the search: they count, and change no score.
+      if (qualityFilters && !topical) {
+        body.aggs.fullMatches = { filter: qualityFilters.full };
+        body.aggs.aboutMatches = { filter: qualityFilters.about };
+      }
+    }
 
     const response = await runSearch(body);
     if (!response) return empty();
@@ -329,6 +428,47 @@ async function search({
     if (fetched === 0) {
       totalHits = response.body.hits.total.value;
       duplicates = countDuplicates(response.body.aggregations);
+      const aggregations = response.body.aggregations || {};
+      if (qualityFilters && aggregations.aboutMatches && aggregations.fullMatches) {
+        quality = {
+          fullMatches: aggregations.fullMatches.doc_count,
+          aboutMatches: aggregations.aboutMatches.doc_count
+        };
+      }
+
+      // No page is about the query, so what matched did so on scattered
+      // words — and with a long query, on its generic ones ("best", "in").
+      // Those are not answers. The ranking is run again keeping only pages
+      // that mention the words carrying the query's meaning; totals and
+      // pages are then counted from that set, the same on every page.
+      if (topicalWhenWeak && !topical && quality && quality.aboutMatches === 0) {
+        const words = meaningfulWords(parsed);
+        if (words.length > 0) {
+          topical = { words, required: requiredMentions(words.length) };
+          quality.looseMatches = Math.max(0, totalHits - duplicates);
+          quality.topicalOnly = true;
+          continue;
+        }
+      }
+
+      // An archived copy of a page that also matches is the same article
+      // twice. The ranking is run once more without those copies, so the
+      // total and every page are counted from what is actually shown.
+      if (!archiveChecked) {
+        archiveChecked = true;
+        const copies = aggregations.archived?.copies?.hits?.hits || [];
+        if (copies.length > 0) {
+          excludeIds = await archiveDuplicates(copies, async ids => {
+            const check = buildSearchBody(parsed, { ...options, topical, ids, size: ids.length });
+            delete check.highlight;
+            check._source = false;
+            const found = await runSearch(check);
+            return new Set((found?.body?.hits?.hits || []).map(hit => hit._id));
+          });
+          if (excludeIds.length > 0) continue;
+        }
+      }
+
       maxScore = hits.reduce((max, hit) => Math.max(max, hit._score || 0), 0);
       walkWholeWindow = totalHits > MAX_RESULT_WINDOW && duplicates > 0;
     }
@@ -339,7 +479,7 @@ async function search({
 
   // 2. Fetch this page's documents, with highlights. The ids filter does not
   //    score, so every document keeps the score it was ranked by.
-  const pageKeys = ranked.slice((page - 1) * limit, needed);
+  const pageKeys = ranked.slice(start, needed);
   let pageHits = [];
   if (pageKeys.length > 0) {
     const response = await runSearch(
@@ -367,6 +507,10 @@ async function search({
     reachableResults: walkWholeWindow ? ranked.length : Math.max(0, totalHits - duplicates),
     duplicatesRemoved: duplicates,
     maxScore,
+    // { fullMatches, aboutMatches } — how many matching pages contain every
+    // word of the query, and how many are about it. Absent when the query
+    // has no free text to measure.
+    ...(quality ? { quality } : {}),
     responseTimeMs: Date.now() - startedAt,
     engine: 'opensearch'
   };
@@ -430,6 +574,8 @@ async function suggestFromTitles(prefix, limit = 5) {
 }
 
 module.exports = {
+  archivedOriginal,
+  archiveDuplicates,
   search,
   suggestFromTitles,
   dedupeHits,

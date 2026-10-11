@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import {
   ExternalLink,
   ImageOff,
@@ -13,7 +13,8 @@ import {
   Navigation
 } from 'lucide-react';
 import { safeHttpUrl } from '../../utils/safeUrl';
-import ImageLightbox from './ImageLightbox';
+import ImageLightbox, { SiteIcon, siteOf } from './ImageLightbox';
+import PlacesMap from './PlacesMap';
 import '../ImageResults/ImageResults.css';
 import '../VideoResults/VideoResults.css';
 import './ExternalVerticals.css';
@@ -26,7 +27,7 @@ import './ExternalVerticals.css';
  * re-checked with safeHttpUrl before it is used, even though the backend
  * already accepts only http(s): a result that fails is not linked, or not
  * shown. Videos and places open the original page in a new tab; an image
- * opens a preview first (ImageLightbox). Nothing is embedded.
+ * opens a preview beside the grid first (ImageLightbox). Nothing is embedded.
  */
 
 /** "No images found" vs "nothing available right now" — they mean different things. */
@@ -48,6 +49,26 @@ function VerticalEmpty({ icon: Icon, unavailable, emptyText }) {
   );
 }
 
+/**
+ * The tab's search service is switched off and the crawler's own index has
+ * nothing for it either. Not "no results": the search this tab normally runs
+ * was never made, and the page says so rather than suggesting other keywords.
+ *
+ * @param {{kind: 'Image'|'Video'|'Map'}} props
+ */
+export function VerticalServiceOff({ kind }) {
+  return (
+    <div className="ph-empty-state ph-card animate-fade-in" role="status">
+      <CloudOff size={28} className="ph-empty-icon" aria-hidden="true" />
+      <h3>{kind} search is temporarily unavailable.</h3>
+      <p>
+        This search service is switched off right now, so there is nothing to show here. Your search
+        still works on the All tab.
+      </p>
+    </div>
+  );
+}
+
 /** Hides results whose image fails to load, instead of showing a broken icon. */
 function useBroken() {
   const [broken, setBroken] = useState(() => new Set());
@@ -61,13 +82,78 @@ function useBroken() {
 // Images
 // ---------------------------------------------------------------------------
 
+/** Narrowest a grid column may be, and the space between columns, in pixels. */
+const MIN_COLUMN = 190;
+const GAP = 14;
+/** The grid's row unit: a tile spans as many of these as its height needs. */
+const ROW = 4;
+/** The caption under each image: the site line and up to two title lines. */
+const CAPTION = 62;
+/** Very tall or very wide images are cropped to these width/height ratios. */
+const MIN_RATIO = 0.5;
+const MAX_RATIO = 2.2;
+const DEFAULT_RATIO = 4 / 3;
+
+/** An image's width/height ratio, from the result or as loaded; cropped to a sensible range. */
+function ratioOf(image, measured) {
+  const known =
+    image.width > 0 && image.height > 0 ? image.width / image.height : measured.get(image.id);
+  const ratio = known > 0 ? known : DEFAULT_RATIO;
+  return Math.min(MAX_RATIO, Math.max(MIN_RATIO, ratio));
+}
+
+/** How many columns fit the grid's width, kept up to date as it changes. */
+function useColumns(ref, shown) {
+  const [layout, setLayout] = useState({ columns: 2, width: 0 });
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const measure = () => {
+      const width = element.clientWidth;
+      const columns = Math.max(2, Math.floor((width + GAP) / (MIN_COLUMN + GAP)));
+      setLayout(prev =>
+        prev.columns === columns && prev.width === width ? prev : { columns, width }
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref, shown]);
+  return layout;
+}
+
+/**
+ * Where each tile goes: in order, into the shortest column so far. Tiles
+ * stay in result order in the page (and for the keyboard); only their place
+ * on screen is chosen. Appending images never moves the ones already placed.
+ */
+function placeTiles(images, { columns, width }, measured) {
+  const columnWidth = width > 0 ? (width - GAP * (columns - 1)) / columns : MIN_COLUMN;
+  const heights = new Array(columns).fill(0);
+  return images.map(image => {
+    const ratio = ratioOf(image, measured);
+    const rows = Math.ceil((columnWidth / ratio + CAPTION + GAP) / ROW);
+    const column = heights.indexOf(Math.min(...heights));
+    const row = heights[column];
+    heights[column] += rows;
+    return { image, ratio, column, row, rows };
+  });
+}
+
 export function ExternalImageResults({ results, unavailable }) {
   const [broken, markBroken] = useBroken();
   // The open preview is remembered by id, so it survives a tile dropping out
   // of the grid when its thumbnail fails.
   const [openId, setOpenId] = useState(null);
+  // Width/height ratios of images whose result did not give their size.
+  const [measured, setMeasured] = useState(() => new Map());
+  const gridRef = useRef(null);
   const visible = results.filter(image => !broken.has(image.id) && safeHttpUrl(image.thumbnailUrl));
+  const layout = useColumns(gridRef, visible.length > 0);
   const openIndex = visible.findIndex(image => image.id === openId);
+  const open = openIndex >= 0;
 
   const closePreview = useCallback(() => {
     // Hand focus back to the tile the preview was opened from.
@@ -77,6 +163,22 @@ export function ExternalImageResults({ results, unavailable }) {
     setOpenId(null);
     if (tile) tile.focus();
   }, [openId]);
+
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  const navigatePreview = useCallback(next => {
+    setOpenId(current => {
+      const image = visibleRef.current[next];
+      return image ? image.id : current;
+    });
+  }, []);
+
+  const noteSize = (image, element) => {
+    if (image.width > 0 && image.height > 0) return;
+    if (!element.naturalWidth || !element.naturalHeight) return;
+    const ratio = element.naturalWidth / element.naturalHeight;
+    setMeasured(prev => (prev.get(image.id) === ratio ? prev : new Map(prev).set(image.id, ratio)));
+  };
 
   if (visible.length === 0) {
     return (
@@ -88,59 +190,66 @@ export function ExternalImageResults({ results, unavailable }) {
     );
   }
 
+  const tiles = placeTiles(visible, layout, measured);
+
   return (
-    <>
-      <div className="ph-image-grid animate-fade-in">
-        {visible.map(image => {
-          const site = image.sourceName || image.sourceDomain;
+    <div className={`ph-img-view animate-fade-in${open ? ' has-preview' : ''}`}>
+      <div
+        ref={gridRef}
+        className="ph-masonry"
+        style={{ gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))` }}
+        data-columns={layout.columns}
+      >
+        {tiles.map(({ image, ratio, column, row, rows }) => {
+          const site = siteOf(image);
           const label = image.title || (site ? `Image from ${site}` : 'Image result');
+          const selected = image.id === openId;
           return (
             // A button, not a link: clicking opens the preview and stays on
             // the page. The preview holds the links to the site and the image.
             <button
               key={image.id}
               type="button"
-              className="ph-image-tile ph-ext-tile"
+              className={`ph-masonry-tile${selected ? ' is-selected' : ''}`}
+              style={{ gridColumn: column + 1, gridRow: `${row + 1} / span ${rows}` }}
               data-image-id={image.id}
               onClick={() => setOpenId(image.id)}
               aria-haspopup="dialog"
+              aria-pressed={selected}
+              aria-label={site && image.title ? `${image.title}, from ${site}` : label}
               title={label}
             >
-              <div className="ph-image-thumb">
+              <span className="ph-masonry-thumb" style={{ aspectRatio: String(ratio) }}>
                 <img
                   src={safeHttpUrl(image.thumbnailUrl)}
                   alt={label}
                   loading="lazy"
                   referrerPolicy="no-referrer"
+                  onLoad={event => noteSize(image, event.currentTarget)}
                   onError={() => markBroken(image.id)}
                 />
-              </div>
-              <div className="ph-image-meta">
-                {image.title && <span className="ph-image-title">{image.title}</span>}
-                <span className="ph-image-source">
-                  {site}
-                  {image.width && image.height && (
-                    <>
-                      {' '}
-                      · {image.width}×{image.height}
-                    </>
-                  )}
+              </span>
+              <span className="ph-masonry-caption">
+                <span className="ph-masonry-site">
+                  <SiteIcon url={image.sourceUrl || image.imageUrl} />
+                  <span className="ph-image-source">{site}</span>
                 </span>
-              </div>
+                {image.title && <span className="ph-image-title">{image.title}</span>}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {openIndex >= 0 && (
+      {open && (
         <ImageLightbox
           images={visible}
           index={openIndex}
-          onNavigate={next => setOpenId(visible[next].id)}
+          onNavigate={navigatePreview}
           onClose={closePreview}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -250,97 +359,130 @@ export function ExternalPlaceResults({ results, unavailable }) {
   }
 
   return (
-    <ol className="ph-ext-place-list animate-fade-in">
-      {results.map(place => {
-        const mapsUrl = safeHttpUrl(place.mapsUrl);
-        const website = safeHttpUrl(place.website);
-        const thumb = !broken.has(place.id) && safeHttpUrl(place.thumbnailUrl);
-        const tel = telHref(place.phone);
-        const hasCoords = Number.isFinite(place.latitude) && Number.isFinite(place.longitude);
-        return (
-          <li key={place.id} className="ph-ext-place ph-card">
-            <div className="ph-ext-place-body">
-              <h3 className="ph-ext-place-title">{place.title}</h3>
+    <>
+      {/* A small map of the places below, drawn from the coordinates they
+          already carry. Absent when none of them has a location. */}
+      <PlacesMap places={results} />
+      <ol className="ph-ext-place-list animate-fade-in">
+        {results.map(place => {
+          const mapsUrl = safeHttpUrl(place.mapsUrl);
+          const website = safeHttpUrl(place.website);
+          // The page these details were read from, when the result says.
+          const sourceUrl = safeHttpUrl(place.sourceUrl);
+          const thumb = !broken.has(place.id) && safeHttpUrl(place.thumbnailUrl);
+          const tel = telHref(place.phone);
+          const hasCoords = Number.isFinite(place.latitude) && Number.isFinite(place.longitude);
+          return (
+            <li key={place.id} className="ph-ext-place ph-card">
+              <div className="ph-ext-place-body">
+                <h3 className="ph-ext-place-title">{place.title}</h3>
 
-              {(Number.isFinite(place.rating) || place.reviews || place.category) && (
-                <div className="ph-ext-place-rating">
-                  {Number.isFinite(place.rating) && (
-                    <>
-                      <strong>{place.rating.toFixed(1)}</strong>
-                      <Stars rating={place.rating} />
-                    </>
+                {(Number.isFinite(place.rating) || place.reviews || place.category) && (
+                  <div className="ph-ext-place-rating">
+                    {Number.isFinite(place.rating) && (
+                      <>
+                        <strong>{place.rating.toFixed(1)}</strong>
+                        <Stars rating={place.rating} />
+                      </>
+                    )}
+                    {place.reviews && (
+                      <span>
+                        {place.reviews.toLocaleString()} review{place.reviews === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    {place.category && <span className="ph-place-category">{place.category}</span>}
+                  </div>
+                )}
+
+                {place.address && (
+                  <p className="ph-ext-place-line">
+                    <MapPin size={13} aria-hidden="true" /> {place.address}
+                  </p>
+                )}
+                {place.hours && (
+                  <p className="ph-ext-place-line">
+                    <Clock size={13} aria-hidden="true" /> {place.hours}
+                  </p>
+                )}
+                {place.phone && (
+                  <p className="ph-ext-place-line">
+                    <Phone size={13} aria-hidden="true" />{' '}
+                    {tel ? <a href={tel}>{place.phone}</a> : place.phone}
+                  </p>
+                )}
+                {/* Why a place has no pin: its page gave a position that could
+                    not be checked against anything independent, or gave none. */}
+                {!hasCoords && place.locationStatus === 'unverified' && (
+                  <p className="ph-ext-place-line ph-ext-place-coords">
+                    <Compass size={13} aria-hidden="true" /> Location could not be verified, so it
+                    is not shown on the map
+                  </p>
+                )}
+                {!hasCoords && place.locationStatus !== 'unverified' && sourceUrl && (
+                  <p className="ph-ext-place-line ph-ext-place-coords">
+                    <Compass size={13} aria-hidden="true" /> No map location published for this
+                    place
+                  </p>
+                )}
+                {hasCoords && (
+                  <p className="ph-ext-place-line ph-ext-place-coords">
+                    <Compass size={13} aria-hidden="true" /> {place.latitude.toFixed(5)},{' '}
+                    {place.longitude.toFixed(5)}
+                  </p>
+                )}
+
+                <div className="ph-ext-place-actions">
+                  {mapsUrl && (
+                    <a
+                      className="ph-ext-place-btn primary"
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Navigation size={13} aria-hidden="true" /> View on Maps
+                    </a>
                   )}
-                  {place.reviews && (
-                    <span>
-                      {place.reviews.toLocaleString()} review{place.reviews === 1 ? '' : 's'}
-                    </span>
+                  {website && (
+                    <a
+                      className="ph-ext-place-btn"
+                      href={website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Globe size={13} aria-hidden="true" /> Website
+                      <ExternalLink size={11} aria-hidden="true" />
+                    </a>
                   )}
-                  {place.category && <span className="ph-place-category">{place.category}</span>}
+                  {sourceUrl && (
+                    <a
+                      className="ph-ext-place-btn"
+                      href={sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="The page these details come from"
+                    >
+                      Source{place.sourceDomain ? `: ${place.sourceDomain}` : ''}
+                      <ExternalLink size={11} aria-hidden="true" />
+                    </a>
+                  )}
                 </div>
-              )}
-
-              {place.address && (
-                <p className="ph-ext-place-line">
-                  <MapPin size={13} aria-hidden="true" /> {place.address}
-                </p>
-              )}
-              {place.hours && (
-                <p className="ph-ext-place-line">
-                  <Clock size={13} aria-hidden="true" /> {place.hours}
-                </p>
-              )}
-              {place.phone && (
-                <p className="ph-ext-place-line">
-                  <Phone size={13} aria-hidden="true" />{' '}
-                  {tel ? <a href={tel}>{place.phone}</a> : place.phone}
-                </p>
-              )}
-              {hasCoords && (
-                <p className="ph-ext-place-line ph-ext-place-coords">
-                  <Compass size={13} aria-hidden="true" /> {place.latitude.toFixed(5)},{' '}
-                  {place.longitude.toFixed(5)}
-                </p>
-              )}
-
-              <div className="ph-ext-place-actions">
-                {mapsUrl && (
-                  <a
-                    className="ph-ext-place-btn primary"
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Navigation size={13} aria-hidden="true" /> View on Maps
-                  </a>
-                )}
-                {website && (
-                  <a
-                    className="ph-ext-place-btn"
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Globe size={13} aria-hidden="true" /> Website
-                    <ExternalLink size={11} aria-hidden="true" />
-                  </a>
-                )}
               </div>
-            </div>
 
-            {thumb && (
-              <img
-                className="ph-ext-place-thumb"
-                src={thumb}
-                alt=""
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                onError={() => markBroken(place.id)}
-              />
-            )}
-          </li>
-        );
-      })}
-    </ol>
+              {thumb && (
+                <img
+                  className="ph-ext-place-thumb"
+                  src={thumb}
+                  alt=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={() => markBroken(place.id)}
+                />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </>
   );
 }
 
@@ -350,14 +492,14 @@ export function ExternalPlaceResults({ results, unavailable }) {
 
 export function VerticalSkeleton({ tab }) {
   if (tab === 'images') {
+    // Varied heights, like the masonry grid it stands in for.
+    const heights = [180, 240, 150, 210, 260, 170, 230, 160, 200, 250, 175, 220];
     return (
-      <div className="ph-image-grid animate-pulse" aria-label="Loading images" role="status">
-        {Array.from({ length: 12 }, (_, i) => (
-          <div key={i} className="ph-image-tile ph-ext-skeleton-tile">
-            <div className="ph-image-thumb ph-ext-skeleton-block" />
-            <div className="ph-image-meta">
-              <div className="ph-skeleton-line ph-ext-skeleton-text" />
-            </div>
+      <div className="ph-masonry-skeleton animate-pulse" aria-label="Loading images" role="status">
+        {heights.map((height, i) => (
+          <div key={i} className="ph-masonry-skeleton-tile">
+            <div className="ph-ext-skeleton-block" style={{ height }} />
+            <div className="ph-skeleton-line ph-ext-skeleton-text" />
           </div>
         ))}
       </div>

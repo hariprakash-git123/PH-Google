@@ -1,4 +1,5 @@
 const { dateWindowToCutoff } = require('../../utils/validators');
+const { isTimeSensitive } = require('../ranking/queryIntent');
 
 /**
  * Builds the OpenSearch query.
@@ -583,6 +584,11 @@ function buildScoreFunctions({ boostFreshness }) {
  * @param {string} [options.language]
  * @param {boolean} [options.isArticle]   restrict to news articles
  * @param {string[]} [options.ids]        restrict to these document ids
+ * @param {string[]} [options.excludeIds] leave these documents out (copies of
+ *        a page that is already among the matches; see searchService)
+ * @param {{words: string[], required: number}} [options.topical]
+ *        restrict to pages that mention this many of these words (see
+ *        buildTopicalFilter)
  * @param {boolean} [options.explain]     development scoring breakdown
  */
 function buildSearchBody(parsed, options = {}) {
@@ -595,6 +601,8 @@ function buildSearchBody(parsed, options = {}) {
     language = '',
     isArticle,
     ids,
+    excludeIds,
+    topical,
     explain = false
   } = options;
 
@@ -619,22 +627,31 @@ function buildSearchBody(parsed, options = {}) {
       // narrow: domain=wikipedia.org with site:en.wikipedia.org is the latter.
       filter: [
         ...buildFilters({ domain, dateWindow, language, isArticle, ids }),
-        ...operators.filter
+        ...operators.filter,
+        ...(topical ? [buildTopicalFilter(topical.words, topical.required)] : []).filter(Boolean)
       ],
       // `should` here only reorders; it must never gate what matches.
       minimum_should_match: 0
     }
   };
-  if (operators.mustNot.length > 0) boolQuery.bool.must_not = operators.mustNot;
+  const mustNot = [...operators.mustNot];
+  if (Array.isArray(excludeIds) && excludeIds.length > 0) {
+    mustNot.push({ ids: { values: excludeIds } });
+  }
+  if (mustNot.length > 0) boolQuery.bool.must_not = mustNot;
 
   // Sorting by date explicitly means the user wants chronology, so relevance
-  // scoring is left alone rather than being blended with recency.
+  // scoring is left alone rather than being blended with recency. Otherwise
+  // recency lifts a page only when the query asks for something recent
+  // ("latest", "news", this year…): for "theory of relativity" a page
+  // published this week is not a better answer for being new.
   const sortingByDate = sort === 'newest' || sort === 'oldest';
+  const wantsRecent = isTimeSensitive(parsed.raw || '');
 
   const query = {
     function_score: {
       query: boolQuery,
-      functions: buildScoreFunctions({ boostFreshness: !sortingByDate }),
+      functions: buildScoreFunctions({ boostFreshness: !sortingByDate && wantsRecent }),
       score_mode: 'multiply',
       boost_mode: 'multiply'
     }
@@ -690,8 +707,125 @@ function buildSearchBody(parsed, options = {}) {
   return body;
 }
 
+/** Where a page says what it is about, as opposed to mentioning something in passing. */
+const ABOUT_FIELDS = ['title', 'headings', 'description', 'keywords', 'url'];
+const ALL_TEXT_FIELDS = [...ABOUT_FIELDS, 'content'];
+
+/**
+ * Two filters that measure how well the index covers a query — used as
+ * aggregations beside the search, so they count without touching a score:
+ *
+ *   full   pages that contain every word of the query somewhere
+ *   about  pages that contain every word in their title, headings,
+ *          description, keywords or address — pages that are about it
+ *
+ * The match count cannot tell a good result set from a bad one: "best pizza
+ * in chennai" matches 28 pages, none of which mentions both pizza and
+ * Chennai. `about` can: it is zero exactly when the index has no page on the
+ * subject. The caller decides what to do with that (services/externalSearch).
+ *
+ * Each word is its own clause, so every word is required; a stop word
+ * analyses to nothing and is let through (`zero_terms_query: all`). Quoted
+ * phrases must appear as phrases, and one alternative of each OR group.
+ *
+ * @param {import('./queryParser').ParsedQuery} parsed
+ * @returns {{full: Object, about: Object}|null} null when the query has no
+ *          free text to measure (operators only, or nothing at all)
+ */
+function buildQualityFilters(parsed) {
+  if (!parsed || parsed.isEmpty) return null;
+  const grouped = hasOrGroups(parsed);
+  const words = grouped ? parsed.plainTerms : parsed.coreTerms;
+  const phrases = parsed.phrases || [];
+  if (words.length + phrases.length === 0 && !grouped) return null;
+
+  const word = (query, fields) => ({
+    multi_match: { query, type: 'best_fields', fields, operator: 'and', zero_terms_query: 'all' }
+  });
+  const phrase = (query, fields) => ({ multi_match: { query, type: 'phrase', fields, slop: 0 } });
+  const filterOver = fields => ({
+    bool: {
+      must: [
+        ...words.map(w => word(w, fields)),
+        ...phrases.map(p => phrase(p, fields)),
+        ...(grouped ? parsed.orGroups : []).map(group => ({
+          bool: {
+            should: group.map(alternative =>
+              alternative.type === 'phrase'
+                ? phrase(alternative.value, fields)
+                : word(alternative.value, fields)
+            ),
+            minimum_should_match: 1
+          }
+        }))
+      ]
+    }
+  });
+
+  return { full: filterOver(ALL_TEXT_FIELDS), about: filterOver(ABOUT_FIELDS) };
+}
+
+/** Fields a word is looked for in when a page has to show it is on a subject. */
+const TOPICAL_FIELDS = ['title', 'headings', 'description', 'keywords', 'content'];
+
+/**
+ * A filter that keeps only pages which mention the words that carry a
+ * query's meaning.
+ *
+ * The recall clause is deliberately forgiving — 70% of a long query's words
+ * is enough — and it counts every word alike. "best restaurants in
+ * combatore" is therefore matched by any page with "best" and "restaurants"
+ * on it: travel guides to other countries, a swimmer's biography. That is
+ * fine while the index also holds a page about the subject, which outranks
+ * them. When it holds none, those pages are all there is, and they are not
+ * answers.
+ *
+ * So when the index has no page about the query (the caller measures that:
+ * see buildQualityFilters), it is asked again with this filter: the
+ * meaningful words — the caller leaves out stop words and words that fit any
+ * subject — must be on the page, `required` of them. A word a letter or two
+ * away counts, so a misspelt place name still finds the pages that spell it
+ * properly. The tolerance is tighter than the fuzzy clause's AUTO, which
+ * allows two edits from six letters and so takes "regime" for "recipe": none
+ * for a short word, one from five letters, two from eight (the same rule
+ * external results are checked with, in external/resultRelevance.js).
+ *
+ * A filter: it decides which pages qualify and changes no score.
+ *
+ * @param {string[]} words     the query's meaningful words, as typed
+ * @param {number} required    how many of them a page must mention
+ * @returns {Object|null} null when there is nothing to require
+ */
+function buildTopicalFilter(words, required) {
+  const list = (Array.isArray(words) ? words : []).filter(Boolean);
+  if (list.length === 0) return null;
+
+  const edits = word => {
+    if (word.length < 5) return 0;
+    return word.length < 8 ? 1 : 2;
+  };
+
+  return {
+    bool: {
+      should: list.map(word => ({
+        multi_match: {
+          query: word,
+          type: 'best_fields',
+          fields: TOPICAL_FIELDS,
+          fuzziness: edits(word),
+          prefix_length: 2,
+          max_expansions: 30
+        }
+      })),
+      minimum_should_match: Math.min(list.length, Math.max(1, Number(required) || list.length))
+    }
+  };
+}
+
 module.exports = {
   buildSearchBody,
+  buildQualityFilters,
+  buildTopicalFilter,
   buildMustClause,
   buildShouldClauses,
   buildFilters,

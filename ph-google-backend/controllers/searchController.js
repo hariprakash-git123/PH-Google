@@ -7,7 +7,7 @@ const externalVerticals = require('../services/externalVerticals');
 const analyticsService = require('../services/analyticsService');
 const SearchLog = require('../models/SearchLog');
 const Suggestion = require('../models/Suggestion');
-const { sendSuccess, asyncHandler } = require('../utils/apiResponse');
+const { sendSuccess, asyncHandler, ApiError } = require('../utils/apiResponse');
 const {
   parseSearchQuery,
   maxPageFor,
@@ -22,6 +22,43 @@ const {
   CATEGORY_OPTIONS
 } = require('../utils/validators');
 const { config } = require('../config/env');
+const { encodeCursor, decodeCursor } = require('../utils/searchCursor');
+
+/** The largest page of the Images tab: its first screen of pictures. */
+const IMAGES_MAX_LIMIT = 60;
+const externalSearch = require('../services/externalSearch');
+const logger = require('../utils/logger');
+
+/**
+ * One debug line per search saying who answered it (LOG_LEVEL=debug): the
+ * index, an external provider, or nobody because the tab has no provider
+ * that can serve it. Names, statuses and counts only — `external` is the
+ * same object the response carries, which never holds a key or a request.
+ */
+function logServed(category, query, page, outcome) {
+  const external = outcome.external || null;
+  const fromProvider = external && external.status === 'ok' ? external.count || 0 : 0;
+  const total = (outcome.results || []).length;
+  const vertical = externalVerticals.handles(category);
+  const providerOff = Boolean(external) && external.status === 'disabled';
+
+  let servedBy = 'index';
+  if (fromProvider > 0) {
+    servedBy = total > fromProvider ? `${external.provider}+index` : external.provider;
+  } else if (vertical && external && !providerOff) {
+    // The tab's provider is on but gave nothing; the crawler's index is not
+    // asked instead (services/externalVerticals.js).
+    servedBy = 'none';
+  }
+  const details = { category, query, page, servedBy, results: total, external };
+  // Images, videos and maps have one external provider. With it off, the
+  // web-result provider does not take over: it has no such search.
+  if (vertical && providerOff) {
+    const webProvider = externalSearch.webProviderOrder()[0];
+    if (webProvider !== external.provider) details.unsupportedBy = webProvider;
+  }
+  logger.debug('Search served', details);
+}
 
 /**
  * Dispatches a category to the vertical index that backs it.
@@ -54,12 +91,17 @@ function runVerticalSearch(category, params) {
 const search = asyncHandler(async (req, res) => {
   // 1. Validate and normalise every parameter up front.
   const query = parseSearchQuery(req.query.q);
-  const limit = parseLimit(req.query.limit);
+  const category = parseEnum(req.query.category, CATEGORY_OPTIONS, 'all', 'category');
+  // The Images grid shows up to IMAGES_MAX_LIMIT pictures before Load more;
+  // every other tab keeps the server's own maximum.
+  const limit = parseLimit(
+    req.query.limit,
+    category === 'images' ? { max: Math.max(config.search.maxLimit, IMAGES_MAX_LIMIT) } : undefined
+  );
   // The page size decides how far the result window reaches.
   const page = parsePage(req.query.page, { limit });
   const sort = parseEnum(req.query.sort, SORT_OPTIONS, 'relevance', 'sort');
   const dateWindow = parseEnum(req.query.date, DATE_OPTIONS, 'any', 'date');
-  const category = parseEnum(req.query.category, CATEGORY_OPTIONS, 'all', 'category');
   const domain = parseDomain(req.query.domain);
   const language = parseLanguage(req.query.language);
 
@@ -81,18 +123,62 @@ const search = asyncHandler(async (req, res) => {
     });
   }
 
+  // "Load more": a cursor from the previous response says where the next
+  // batch starts. It belongs to this exact search — the query, tab and
+  // filters — and is refused for any other. Without one, `page` works as
+  // it always has.
+  const identity = { query, category, sort, domain, dateWindow, language };
+  const cursor =
+    req.query.cursor !== undefined && req.query.cursor !== ''
+      ? decodeCursor(String(req.query.cursor), identity)
+      : null;
+  // Where this batch starts in the source's own list.
+  const start = cursor ? cursor.offset : (page - 1) * limit;
+  // A batch of more results is not a new search: it is counted in the
+  // analytics as the page it reaches, and not added to history again.
+  const batchPage = cursor ? Math.floor(start / limit) + 1 : page;
+  const isNewSearch = !cursor && page === 1;
+  /** How far a source's list can be read: its total, within the result window. */
+  const pageableOf = outcome =>
+    Math.min(
+      outcome.totalResults || 0,
+      outcome.reachableResults ?? outcome.totalResults ?? 0,
+      config.search.maxResultWindow
+    );
+
   // 2. Non-web verticals run against their own indexes, all built by the
   //    same crawler: images/videos from Media, news from article-marked
   //    pages, maps from extracted geo data. With SerpApi enabled, images,
   //    videos and maps come from Google Images/Videos/Maps instead (see
   //    services/externalVerticals.js); news always stays the crawler's.
   if (category !== 'all') {
-    const verticalParams = { query, page, limit, sort, domain, dateWindow, language };
+    const verticalParams = {
+      query,
+      page,
+      limit,
+      sort,
+      domain,
+      dateWindow,
+      language,
+      ...(cursor ? { offset: start, rounds: cursor.rounds || 1 } : {})
+    };
     const outcome = externalVerticals.handles(category)
       ? await externalVerticals.search(category, verticalParams, () =>
           runVerticalSearch(category, verticalParams)
         )
       : await runVerticalSearch(category, verticalParams);
+    logServed(category, query, batchPage, outcome);
+
+    // "Load more" needed a further round of provider requests and could not
+    // have it (unavailable, paused, or the day's limit): an error to retry,
+    // not the end of the list.
+    if (cursor && outcome.results.length === 0 && outcome.moreFailed) {
+      throw ApiError.serviceUnavailable(
+        outcome.moreFailed.reason === 'daily_limit'
+          ? 'No more results can be loaded today: the daily search limit has been reached.'
+          : 'More results could not be loaded right now. Try again in a moment.'
+      );
+    }
 
     await Promise.all([
       analyticsService.recordSearch({
@@ -100,11 +186,20 @@ const search = asyncHandler(async (req, res) => {
         userId,
         resultCount: outcome.totalResults,
         responseTimeMs: outcome.responseTimeMs,
-        page,
+        page: batchPage,
         filters: appliedFilters
       }),
-      page === 1 ? analyticsService.recordHistory({ query, userId }) : Promise.resolve(null)
+      isNewSearch ? analyticsService.recordHistory({ query, userId }) : Promise.resolve(null)
     ]);
+
+    // Each vertical is one list (the index's, or a provider's answer cut into
+    // batches); more exists while that list has results not yet shown — or,
+    // for Images and Videos from Parallel, while a further round of requests
+    // may still find some (`moreRounds`).
+    const nextOffset = start + outcome.results.length;
+    const hasMore =
+      outcome.results.length > 0 &&
+      (nextOffset < pageableOf(outcome) || Boolean(outcome.moreRounds));
 
     return sendSuccess(res, {
       query,
@@ -117,11 +212,15 @@ const search = asyncHandler(async (req, res) => {
       searchTerms: outcome.searchTerms,
       total: outcome.totalResults,
       pagination: buildPagination({
-        page,
+        page: batchPage,
         limit,
         totalResults: outcome.totalResults,
         reachableResults: outcome.reachableResults
       }),
+      hasMore,
+      nextCursor: hasMore
+        ? encodeCursor(identity, { offset: nextOffset, rounds: outcome.rounds || 0 })
+        : null,
       latency: (outcome.responseTimeMs / 1000).toFixed(3) + 's',
       responseTimeMs: outcome.responseTimeMs,
       indexed: true,
@@ -130,16 +229,12 @@ const search = asyncHandler(async (req, res) => {
     });
   }
 
-  // 3. Run the real search.
-  const outcome = await searchDispatcher.webSearch({
-    query,
-    page,
-    limit,
-    sort,
-    domain,
-    dateWindow,
-    language
-  });
+  // 3. Run the real search: the first page, or the next batch of one.
+  const searchParams = { query, page, limit, sort, domain, dateWindow, language };
+  const outcome = cursor
+    ? await searchDispatcher.webSearchMore(searchParams, cursor)
+    : await searchDispatcher.webSearch(searchParams);
+  logServed(category, query, batchPage, outcome);
 
   // 4. Record analytics and (for signed-in users) history. Both are
   //    fire-and-forget by design but awaited so tests are deterministic.
@@ -149,11 +244,28 @@ const search = asyncHandler(async (req, res) => {
       userId,
       resultCount: outcome.totalResults,
       responseTimeMs: outcome.responseTimeMs,
-      page,
+      page: batchPage,
       filters: appliedFilters
     }),
-    page === 1 ? analyticsService.recordHistory({ query, userId }) : Promise.resolve(null)
+    isNewSearch ? analyticsService.recordHistory({ query, userId }) : Promise.resolve(null)
   ]);
+
+  // Where the next batch starts: the index's own offset, and how many of the
+  // external answer's results have been shown and where they go.
+  let next;
+  let hasMore;
+  if (cursor) {
+    ({ next, hasMore } = outcome);
+  } else {
+    const continuation = outcome.continuation || {
+      externalOffset: 0,
+      externalMore: false,
+      placement: null
+    };
+    const fromIndex = outcome.results.filter(result => result.source === 'index').length;
+    next = { offset: start + fromIndex, ...continuation };
+    hasMore = next.offset < pageableOf(outcome) || continuation.externalMore;
+  }
 
   // Pagination is the index's alone: external results appear on page 1
   // only, after the index's results, so pages 2+ are exactly the index's.
@@ -161,7 +273,7 @@ const search = asyncHandler(async (req, res) => {
   // still one page.
   const externalCount = (outcome.external && outcome.external.count) || 0;
   const pagination = buildPagination({
-    page,
+    page: batchPage,
     limit,
     totalResults: outcome.totalResults,
     reachableResults: outcome.reachableResults
@@ -176,9 +288,11 @@ const search = asyncHandler(async (req, res) => {
     results: outcome.results,
     searchTerms: outcome.searchTerms,
     // `total` is the real number of matching documents in the index, plus
-    // the external results actually shown — never a provider's estimate.
-    total: outcome.totalResults + externalCount,
+    // the external results shown so far — never a provider's estimate.
+    total: outcome.totalResults + (cursor ? next.externalOffset : externalCount),
     pagination,
+    hasMore,
+    nextCursor: hasMore ? encodeCursor(identity, next) : null,
     latency: (outcome.responseTimeMs / 1000).toFixed(3) + 's',
     responseTimeMs: outcome.responseTimeMs,
     // Provider, status and count only — never configuration or credentials.

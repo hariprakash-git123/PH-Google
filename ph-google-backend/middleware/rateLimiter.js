@@ -63,4 +63,20 @@ const imageLimiter = build({
   message: 'Too many image downloads. Please slow down.'
 });
 
-module.exports = { authLimiter, searchLimiter, crawlerLimiter, aiLimiter, imageLimiter };
+// The in-app browser tabs ask whether a site may be framed (one request per
+// page opened). Each makes this server contact another site, so it is capped.
+const embedLimiter = build({
+  name: 'embed',
+  windowMs: config.rateLimit.embedWindowMs,
+  max: config.rateLimit.embedMax,
+  message: 'Too many pages opened. Please slow down.'
+});
+
+module.exports = {
+  authLimiter,
+  searchLimiter,
+  crawlerLimiter,
+  aiLimiter,
+  imageLimiter,
+  embedLimiter
+};

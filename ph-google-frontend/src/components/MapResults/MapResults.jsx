@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, ExternalLink, Navigation, Compass } from 'lucide-react';
+import { safeEmbedUrl, safeHttpUrl } from '../../utils/safeUrl';
 import './MapResults.css';
+
+/** The map the backend embeds (verticalSearchService.osmEmbedUrl). */
+const MAP_HOSTS = ['www.openstreetmap.org'];
+
+/**
+ * The map runs its own scripts on its own origin; its attribution and
+ * "View larger map" links open a new tab (popups that escape the sandbox).
+ * It cannot navigate this page.
+ */
+const MAP_SANDBOX = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
 
 /**
  * Map results.
@@ -9,6 +20,9 @@ import './MapResults.css';
  * Place/LocalBusiness, geo meta tags, or the `.geo` microformat). The map
  * itself is an OpenStreetMap embed, which needs no API key and sets no
  * tracking cookies.
+ *
+ * Addresses come from crawled pages: links only for plain http(s), and the
+ * map is framed only from OpenStreetMap over https, sandboxed.
  */
 export default function MapResults({ results, query }) {
   const [selectedId, setSelectedId] = useState(null);
@@ -23,15 +37,15 @@ export default function MapResults({ results, query }) {
       <div className="ph-empty-state ph-card animate-fade-in">
         <MapPin size={28} className="ph-empty-icon" />
         <h3>No places found for &quot;{query}&quot;</h3>
-        <p>
-          Places are extracted from coordinates published on crawled pages. Crawl pages about
-          locations to grow this index.
-        </p>
+        <p>Try different or fewer keywords, or look on the All tab.</p>
       </div>
     );
   }
 
   const selected = results.find(p => p.id === selectedId) || results[0];
+  const mapEmbed = safeEmbedUrl(selected.embedUrl, MAP_HOSTS);
+  const mapLink = safeHttpUrl(selected.mapUrl);
+  const sourceLink = safeHttpUrl(selected.sourcePage);
 
   return (
     <div className="ph-map-layout animate-fade-in">
@@ -63,13 +77,20 @@ export default function MapResults({ results, query }) {
       <div className="ph-map-panel">
         <div className="ph-map-frame">
           {/* key forces the iframe to reload when the selection changes */}
-          <iframe
-            key={selected.id}
-            title={`Map of ${selected.name}`}
-            src={selected.embedUrl}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
+          {mapEmbed ? (
+            <iframe
+              key={selected.id}
+              title={`Map of ${selected.name}`}
+              src={mapEmbed}
+              sandbox={MAP_SANDBOX}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <p className="ph-map-unavailable" role="status">
+              The map for this place cannot be shown.
+            </p>
+          )}
         </div>
 
         <div className="ph-map-details">
@@ -77,12 +98,16 @@ export default function MapResults({ results, query }) {
           {selected.address && <p className="ph-map-address">{selected.address}</p>}
 
           <div className="ph-map-links">
-            <a href={selected.mapUrl} target="_blank" rel="noopener noreferrer">
-              <Navigation size={13} /> Open in OpenStreetMap
-            </a>
-            <a href={selected.sourcePage} target="_blank" rel="noopener noreferrer">
-              <ExternalLink size={13} /> Source: {selected.domain}
-            </a>
+            {mapLink && (
+              <a href={mapLink} target="_blank" rel="noopener noreferrer">
+                <Navigation size={13} /> Open in OpenStreetMap
+              </a>
+            )}
+            {sourceLink && (
+              <a href={sourceLink} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={13} /> Source: {selected.domain}
+              </a>
+            )}
           </div>
         </div>
       </div>

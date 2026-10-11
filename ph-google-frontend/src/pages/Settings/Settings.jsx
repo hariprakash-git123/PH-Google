@@ -16,7 +16,8 @@ import './Settings.css';
 export default function SettingsPage() {
   // Start from what is saved, so opening Settings never resets anything.
   const [initial] = useState(loadPreferences);
-  const [safeSearch, setSafeSearch] = useState(initial.safeSearch);
+  // Kept as saved; Safe Search is shown as not available yet (no control changes it).
+  const [safeSearch] = useState(initial.safeSearch);
   const [region, setRegion] = useState(initial.region);
   const [language, setLanguage] = useState(initial.language);
   const [themeMode, setThemeMode] = useState(initial.theme);
@@ -62,19 +63,22 @@ export default function SettingsPage() {
                   <span>Safe Search</span>
                 </div>
                 <p className="ph-setting-desc">
-                  Filter explicit web results and media content automatically.
+                  Not available yet: results are not filtered for explicit content.
                 </p>
               </div>
+              {/* Shown off and disabled rather than as a switch that does
+                  nothing: no part of search applies it yet. */}
               <button
                 type="button"
-                className={`ph-toggle-switch ${safeSearch ? 'on' : ''}`}
-                onClick={() => setSafeSearch(!safeSearch)}
+                className="ph-toggle-switch"
                 role="switch"
-                aria-checked={safeSearch}
-                aria-label="Safe Search"
+                aria-checked={false}
+                aria-label="Safe Search (not available yet)"
+                disabled
+                title="Not available yet"
               >
                 <span className="ph-toggle-thumb" />
-                <span className="ph-toggle-text">{safeSearch ? 'On' : 'Off'}</span>
+                <span className="ph-toggle-text">Off</span>
               </button>
             </div>
 
@@ -85,7 +89,8 @@ export default function SettingsPage() {
                   <span>Default Region</span>
                 </div>
                 <p className="ph-setting-desc">
-                  Tailor local web search results and regional news relevance.
+                  Used for &ldquo;Trending now&rdquo; on the homepage. Search results are not
+                  filtered by region.
                 </p>
               </div>
               <select

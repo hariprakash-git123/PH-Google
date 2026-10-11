@@ -1,0 +1,70 @@
+/* Related searches under the web results: two columns of quiet pills. */
+
+.ph-related-searches {
+  margin: 8px 0 24px;
+}
+
+.ph-related-title {
+  margin: 0 0 12px;
+  font-family: var(--ph-font-display);
+  font-size: var(--ph-text-base);
+  font-weight: 600;
+  color: var(--ph-text);
+}
+
+.ph-related-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ph-related-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--ph-border-subtle);
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-bg-sunken);
+  color: var(--ph-text);
+  font: inherit;
+  font-size: var(--ph-text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--ph-transition-fast),
+    border-color var(--ph-transition-fast);
+}
+
+.ph-related-item svg {
+  flex-shrink: 0;
+  color: var(--ph-text-muted);
+}
+
+.ph-related-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ph-related-item:hover {
+  background: var(--ph-surface-hover);
+  border-color: var(--ph-border);
+}
+
+.ph-related-item:focus-visible {
+  outline: 2px solid var(--ph-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .ph-related-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -977,8 +977,9 @@ describe('operator query building', () => {
       });
     });
 
-    it('applies the same quality and freshness multipliers to every operator query', () => {
-      const expected = buildScoreFunctions({ boostFreshness: true });
+    it('applies the same quality multiplier to every operator query; recency only when asked for', () => {
+      // None of these asks for anything recent: quality alone, as for any query.
+      const expected = buildScoreFunctions({ boostFreshness: false });
       for (const query of [
         'site:wikipedia.org physics',
         'python -java',
@@ -993,6 +994,10 @@ describe('operator query building', () => {
         expect(fn.score_mode).toBe('multiply');
         expect(fn.boost_mode).toBe('multiply');
       }
+      // The same operators on a time-sensitive query keep the freshness lift.
+      expect(bodyOf('site:github.blog latest copilot news').query.function_score.functions).toEqual(
+        buildScoreFunctions({ boostFreshness: true })
+      );
     });
 
     it('keeps `should` from gating results', () => {
@@ -2013,7 +2018,7 @@ describe('lang: operator', () => {
 
     it('leaves the ranking weights alone', () => {
       expect(bodyOf('lang:en python').query.function_score.functions).toEqual(
-        buildScoreFunctions({ boostFreshness: true })
+        buildScoreFunctions({ boostFreshness: false })
       );
       expect(FIELD_BOOSTS.title).toBe(8);
       expect(CLAUSE_BOOSTS.exactTitle).toBe(60);

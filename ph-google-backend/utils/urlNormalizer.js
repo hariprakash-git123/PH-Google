@@ -150,6 +150,65 @@ function canonicalKey(url) {
 }
 
 /**
+ * Which page a result is, for telling repeats apart when results from
+ * different sources are shown together: the canonical key, with the forms
+ * that name the same page made one —
+ *
+ *   a mobile host       en.m.wikipedia.org, m.example.com  → en.wikipedia.org, example.com
+ *   a stray ";"         youtube.com/;                       → youtube.com
+ *   a default document  example.com/docs/index.html         → example.com/docs
+ *   a marketing tag     ?promo=…, ?_hsenc=…, ?mc_cid=…         → dropped (as utm_* already are)
+ *
+ * Used only to compare results. Document ids stay on canonicalKey, which
+ * this does not change, so nothing stored is affected.
+ *
+ * @param {string} url
+ * @returns {string|null}
+ */
+// Campaign tags that name how a visitor arrived, not which page it is. Kept
+// out of canonicalKey (document ids depend on it); used only to compare results.
+const MARKETING_PARAMS = new Set(['promo', '_hsenc', '_hsmi', 'mc_cid', 'mc_eid']);
+
+function withoutMarketingParams(url) {
+  try {
+    const parsed = new URL(url.trim());
+    for (const name of [...parsed.searchParams.keys()]) {
+      if (MARKETING_PARAMS.has(name.toLowerCase())) parsed.searchParams.delete(name);
+    }
+    return parsed.href;
+  } catch {
+    return url;
+  }
+}
+
+function resultIdentityKey(url) {
+  const key = canonicalKey(
+    typeof url === 'string' ? withoutMarketingParams(url.replace(/;+(?=$|[?#])/, '')) : url
+  );
+  if (!key) return null;
+  const slash = key.indexOf('/');
+  const query = key.indexOf('?');
+  const hostEnd =
+    slash === -1
+      ? query === -1
+        ? key.length
+        : query
+      : query === -1
+        ? slash
+        : Math.min(slash, query);
+  const host = key
+    .slice(0, hostEnd)
+    .replace(/^m\./, '')
+    .replace(/^mobile\./, '')
+    .replace(/\.m\.(?=[^.]+\.[^.]+$)/, '.');
+  const rest = key
+    .slice(hostEnd)
+    .replace(/\/index\.html?(?=$|\?)/i, '')
+    .replace(/;+(?=$|\?)/, '');
+  return `${host}${rest}`;
+}
+
+/**
  * The registrable-ish root domain: "blog.example.co.uk" -> "example.co.uk".
  *
  * Uses a small list of multi-part public suffixes rather than bundling the
@@ -222,6 +281,7 @@ module.exports = {
   normalizeUrl,
   hostnameOf,
   canonicalKey,
+  resultIdentityKey,
   rootDomainOf,
   pathOf,
   TRACKING_PARAMS

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ExternalLink, X, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { safeHttpUrl } from '../../utils/safeUrl';
 import './ImageResults.css';
 
 /**
@@ -23,7 +24,8 @@ export default function ImageResults({ results, query }) {
     });
   }, []);
 
-  const visible = results.filter(r => !broken.has(r.url));
+  // Addresses come from crawled pages: only plain http(s) images are shown.
+  const visible = results.filter(r => !broken.has(r.url) && safeHttpUrl(r.url));
   const active = activeIndex >= 0 ? visible[activeIndex] : null;
 
   const close = useCallback(() => setActiveIndex(-1), []);
@@ -56,10 +58,7 @@ export default function ImageResults({ results, query }) {
       <div className="ph-empty-state ph-card animate-fade-in">
         <ImageOff size={28} className="ph-empty-icon" />
         <h3>No images found for &quot;{query}&quot;</h3>
-        <p>
-          Images are indexed from the pages the crawler visits. Crawl an image-rich site from the
-          admin console to grow this index.
-        </p>
+        <p>Try different or fewer keywords, or look on the All tab.</p>
       </div>
     );
   }
@@ -154,10 +153,16 @@ export default function ImageResults({ results, query }) {
                 {active.format && <span>{active.format}</span>}
               </div>
               <div className="ph-lightbox-links">
-                <a href={active.sourcePage} target="_blank" rel="noopener noreferrer">
-                  Visit page <ExternalLink size={13} />
-                </a>
-                <a href={active.url} target="_blank" rel="noopener noreferrer">
+                {safeHttpUrl(active.sourcePage) && (
+                  <a
+                    href={safeHttpUrl(active.sourcePage)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visit page <ExternalLink size={13} />
+                  </a>
+                )}
+                <a href={safeHttpUrl(active.url)} target="_blank" rel="noopener noreferrer">
                   Open image <ExternalLink size={13} />
                 </a>
               </div>

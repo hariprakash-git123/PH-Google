@@ -75,6 +75,8 @@ function emptySearchResult(query, category, message) {
       hasNextPage: false,
       hasPreviousPage: false
     },
+    hasMore: false,
+    nextCursor: null,
     error: message || null
   };
 }
@@ -85,7 +87,9 @@ export const searchApi = {
    *
    * @param {string} query
    * @param {string} category  all | images | news | videos | maps
-   * @param {Object} filters   { date, language, domain, sort, page, limit }
+   * @param {Object} filters   { date, language, domain, sort, page, limit, cursor }
+   *        `cursor` ("Load more") comes from the previous response's
+   *        `nextCursor` and asks for the batch after it; `page` is then not sent.
    */
   async search(query = '', category = 'all', filters = {}) {
     try {
@@ -93,7 +97,7 @@ export const searchApi = {
         params: {
           q: query,
           category,
-          page: filters.page || 1,
+          ...(filters.cursor ? { cursor: filters.cursor } : { page: filters.page || 1 }),
           limit: filters.limit || 10,
           sort: mapSort(filters.sort),
           domain: filters.domain || '',
@@ -111,6 +115,23 @@ export const searchApi = {
   async getSearchConfig() {
     try {
       return await api.get('/search/config');
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * GET /api/trending — current trending searches for a country, for the
+   * homepage card. Resolves with `{ region, updatedAt, trends: [{ title,
+   * query }], stale }`, or null when the request failed: the card has its
+   * own fallback, so a failure here is never an error to show.
+   *
+   * @param {string} [region]  ISO country code (IN, US, GB, …)
+   */
+  async getTrending(region = 'IN') {
+    try {
+      const data = await api.get('/trending', { params: { region }, auth: false });
+      return data && Array.isArray(data.trends) ? data : null;
     } catch {
       return null;
     }

@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header/Header';
 import SearchTabs from '../../components/SearchTabs/SearchTabs';
 import Filters from '../../components/Filters/Filters';
 import AIAnswer from '../../components/AIAnswer/AIAnswer';
 import SearchResult from '../../components/SearchResult/SearchResult';
-import Pagination from '../../components/Pagination/Pagination';
+import LoadMore from '../../components/LoadMore/LoadMore';
 import ImageResults from '../../components/ImageResults/ImageResults';
 import VideoResults from '../../components/VideoResults/VideoResults';
 import NewsResults from '../../components/NewsResults/NewsResults';
@@ -14,28 +14,77 @@ import {
   ExternalImageResults,
   ExternalVideoResults,
   ExternalPlaceResults,
+  VerticalServiceOff,
   VerticalSkeleton
 } from '../../components/ExternalVerticals/ExternalVerticals';
+import ImageRefinements from '../../components/ExternalVerticals/ImageRefinements';
+import RelatedSearches from '../../components/RelatedSearches/RelatedSearches';
 import { searchApi } from '../../services/searchApi';
 import { loadPreferences } from '../../services/preferences';
-import {
-  SlidersHorizontal,
-  ShieldCheck,
-  Globe,
-  HelpCircle,
-  ArrowRight,
-  AlertCircle,
-  Link2
-} from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Link2 } from 'lucide-react';
 import './SearchResults.css';
 
 /** Each vertical shows the number of results that suits its layout. */
 const PAGE_SIZE_BY_TAB = {
   all: 10,
-  images: 24,
+  images: 60,
   videos: 12,
   news: 10,
   maps: 10
+};
+
+/** "Load more" asks for this many results at a time: 20 pictures, 10 of anything else. */
+const LOAD_MORE_SIZE_BY_TAB = { images: 20 };
+const LOAD_MORE_SIZE = 10;
+
+/**
+ * An address as one result: scheme and host in lower case, no fragment, no
+ * trailing slash. The path and query keep their case — a YouTube video id,
+ * for one, is case-sensitive, and two ids differing only in case are two videos.
+ */
+function linkKey(link) {
+  const text = String(link).trim();
+  try {
+    const url = new URL(text);
+    const path = url.pathname.replace(/\/+$/, '');
+    return `${url.protocol}//${url.host}${path}${url.search}`;
+  } catch {
+    return text.replace(/\/+$/, '');
+  }
+}
+
+/** What makes two results the same: their id, or the address they open. */
+function resultKeys(result) {
+  const link = result.url || result.videoUrl || result.imageUrl || result.sourceUrl || '';
+  return [result.id ? `id:${result.id}` : null, link ? `url:${linkKey(link)}` : null].filter(
+    Boolean
+  );
+}
+
+/** The results not already in `shown`, in order and without repeats among themselves. */
+function onlyNew(shown, incoming) {
+  const seen = new Set(shown.flatMap(resultKeys));
+  return incoming.filter(result => {
+    const keys = resultKeys(result);
+    if (keys.some(key => seen.has(key))) return false;
+    keys.forEach(key => seen.add(key));
+    return true;
+  });
+}
+
+const EMPTY_STATE = {
+  results: [],
+  total: 0,
+  latency: '0.000s',
+  pagination: null,
+  message: null,
+  indexed: true,
+  error: null,
+  external: null,
+  hasMore: false,
+  nextCursor: null,
+  loadingMore: false,
+  loadMoreError: null
 };
 
 /** Every tab the page knows; anything else in the URL means "all". */
@@ -72,34 +121,44 @@ export default function SearchResults() {
     return { ...DEFAULT_FILTERS, region, safeSearch };
   });
 
-  const [searchData, setSearchData] = useState({
-    results: [],
-    total: 0,
-    latency: '0.000s',
-    pagination: null,
-    message: null,
-    indexed: true,
-    error: null,
-    external: null,
-    loading: true
-  });
+  const [searchData, setSearchData] = useState({ ...EMPTY_STATE, loading: true });
+
+  // One search — a query with its filters and starting page — and one tab of it.
+  const searchKey = JSON.stringify([
+    query,
+    page,
+    filters.sort,
+    filters.domain,
+    filters.date,
+    filters.language
+  ]);
+  const viewKey = `${searchKey}|${activeTab}`;
+  // Each tab of the current search keeps what it has loaded, so going back to
+  // a tab shows the results already loaded there. A new search starts afresh.
+  const tabsRef = useRef({ searchKey: null, tabs: new Map() });
+  // The view on screen. A response for any other view is not shown.
+  const viewRef = useRef(viewKey);
+  viewRef.current = viewKey;
+  // Batches being fetched, by view: one at a time for each.
+  const loadingMoreRef = useRef(new Set());
 
   useEffect(() => {
     let isSubscribed = true;
+    if (tabsRef.current.searchKey !== searchKey) {
+      tabsRef.current = { searchKey, tabs: new Map() };
+      loadingMoreRef.current = new Set();
+    }
+    const kept = tabsRef.current.tabs.get(activeTab);
+    if (kept) {
+      setSearchData(kept);
+      return () => {
+        isSubscribed = false;
+      };
+    }
     setSearchData(prev => ({ ...prev, loading: true, error: null }));
 
     if (!query) {
-      setSearchData({
-        results: [],
-        total: 0,
-        latency: '0.000s',
-        pagination: null,
-        message: null,
-        indexed: true,
-        error: null,
-        external: null,
-        loading: false
-      });
+      setSearchData({ ...EMPTY_STATE, loading: false });
       return () => {
         isSubscribed = false;
       };
@@ -116,8 +175,9 @@ export default function SearchResults() {
       })
       .then(data => {
         if (!isSubscribed) return;
-        setSearchData({
-          results: data.results || [],
+        const loaded = {
+          ...EMPTY_STATE,
+          results: onlyNew([], data.results || []),
           total: data.total || 0,
           latency: data.latency || '0.000s',
           pagination: data.pagination || null,
@@ -125,8 +185,13 @@ export default function SearchResults() {
           indexed: data.indexed !== false,
           error: data.error || null,
           external: data.external || null,
+          hasMore: Boolean(data.hasMore) && Boolean(data.nextCursor),
+          nextCursor: data.nextCursor || null,
           loading: false
-        });
+        };
+        // A failed search is not kept: coming back to the tab tries again.
+        if (!loaded.error) tabsRef.current.tabs.set(activeTab, loaded);
+        setSearchData(loaded);
       });
 
     return () => {
@@ -150,17 +215,59 @@ export default function SearchResults() {
     [setSearchParams]
   );
 
-  const handlePageChange = useCallback(
-    newPage => {
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev);
-        if (newPage <= 1) next.delete('page');
-        else next.set('page', String(newPage));
-        return next;
+  /**
+   * "Load more": the next batch after the results on screen, appended to
+   * them. One request at a time per tab; a response that arrives after the
+   * search or the tab has changed is not shown there; a failure keeps every
+   * result already loaded and offers to try again.
+   */
+  const loadMore = useCallback(async () => {
+    const view = viewKey;
+    const tab = activeTab;
+    const owner = tabsRef.current;
+    const current = owner.tabs.get(tab);
+    if (!current || !current.nextCursor || loadingMoreRef.current.has(view)) return;
+    loadingMoreRef.current.add(view);
+
+    // Applied to the tab's kept state — still right if the person has moved
+    // to another tab meanwhile — and shown only if this view is on screen.
+    const commit = patch => {
+      if (tabsRef.current !== owner) return; // a new search has started
+      const before = owner.tabs.get(tab);
+      if (!before) return;
+      const after = { ...before, ...patch(before) };
+      owner.tabs.set(tab, after);
+      if (viewRef.current === view) setSearchData(after);
+    };
+
+    commit(() => ({ loadingMore: true, loadMoreError: null }));
+    let data;
+    try {
+      data = await searchApi.search(query, tab, {
+        cursor: current.nextCursor,
+        limit: LOAD_MORE_SIZE_BY_TAB[tab] || LOAD_MORE_SIZE,
+        sort: filters.sort,
+        domain: filters.domain,
+        date: filters.date,
+        language: filters.language
       });
-    },
-    [setSearchParams]
-  );
+    } finally {
+      loadingMoreRef.current.delete(view);
+    }
+
+    if (data.error) {
+      commit(() => ({ loadingMore: false, loadMoreError: data.error }));
+      return;
+    }
+    commit(before => ({
+      results: [...before.results, ...onlyNew(before.results, data.results || [])],
+      hasMore: Boolean(data.hasMore) && Boolean(data.nextCursor),
+      nextCursor: data.nextCursor || null,
+      total: typeof data.total === 'number' ? Math.max(before.total, data.total) : before.total,
+      loadingMore: false,
+      loadMoreError: null
+    }));
+  }, [viewKey, activeTab, query, filters.sort, filters.domain, filters.date, filters.language]);
 
   const handleTabChange = useCallback(
     tab => {
@@ -176,6 +283,16 @@ export default function SearchResults() {
     [setSearchParams]
   );
 
+  /** A new image search: a category chip, a related search. */
+  const searchImages = useCallback(
+    text => {
+      const next = String(text || '').trim();
+      if (!next) return;
+      navigate(`/search?q=${encodeURIComponent(next)}&category=images`);
+    },
+    [navigate]
+  );
+
   const handleSuggestionClick = topic => {
     navigate(`/search?q=${encodeURIComponent(topic)}`);
   };
@@ -187,14 +304,23 @@ export default function SearchResults() {
   // it switched on; otherwise they are the crawler's own verticals.
   const external = searchData.external;
   const fromGoogle = Boolean(external) && external.status !== 'disabled';
-  const externalUnavailable = fromGoogle && external.status === 'unavailable';
+  // Asked and could not answer, or could not be asked today: "not available
+  // right now", which is not the same as a search that found nothing.
+  const externalUnavailable =
+    fromGoogle &&
+    (external.status === 'unavailable' ||
+      (external.status === 'skipped' && ['daily_limit', 'busy'].includes(external.reason)));
+  // Switched off, and the crawler's own vertical has nothing to show in its
+  // place: the tab says its service is off rather than "no results found".
+  const serviceOff =
+    Boolean(external) && external.status === 'disabled' && searchData.results.length === 0;
   const showingFrom =
     pagination && searchData.results.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
   const showingTo = pagination ? showingFrom + searchData.results.length - 1 : 0;
 
   return (
     <div className="ph-results-page">
-      <Header searchQuery={query} />
+      <Header searchQuery={query} searchCategory={activeTab === 'images' ? 'images' : null} />
 
       <SearchTabs
         activeTab={activeTab}
@@ -244,6 +370,9 @@ export default function SearchResults() {
           className={`ph-results-layout ${WIDE_TABS.has(activeTab) ? 'ph-results-layout-wide' : ''}`}
         >
           <div className="ph-results-content">
+            {activeTab === 'images' && query && (
+              <ImageRefinements query={query} onSearch={searchImages} />
+            )}
             {!query ? (
               <div className="ph-empty-state ph-card animate-fade-in">
                 <h3>Enter a search query</h3>
@@ -286,7 +415,7 @@ export default function SearchResults() {
                         <p>
                           {filters.domain
                             ? `Nothing in the index matches that query on ${filters.domain}. Try removing the site filter.`
-                            : 'Try different keywords, or crawl more pages from the admin console to grow the index.'}
+                            : 'Try different or fewer keywords.'}
                         </p>
                       </div>
                     )}
@@ -299,6 +428,8 @@ export default function SearchResults() {
                       results={searchData.results}
                       unavailable={externalUnavailable}
                     />
+                  ) : serviceOff ? (
+                    <VerticalServiceOff kind="Image" />
                   ) : (
                     <ImageResults results={searchData.results} query={query} />
                   ))}
@@ -308,6 +439,8 @@ export default function SearchResults() {
                       results={searchData.results}
                       unavailable={externalUnavailable}
                     />
+                  ) : serviceOff ? (
+                    <VerticalServiceOff kind="Video" />
                   ) : (
                     <VideoResults results={searchData.results} query={query} />
                   ))}
@@ -318,18 +451,23 @@ export default function SearchResults() {
                       results={searchData.results}
                       unavailable={externalUnavailable}
                     />
+                  ) : serviceOff ? (
+                    <VerticalServiceOff kind="Map" />
                   ) : (
                     <MapResults results={searchData.results} query={query} />
                   ))}
 
-                {pagination && searchData.results.length > 0 && (
-                  <Pagination
-                    currentPage={pagination.page}
-                    totalPages={pagination.totalPages}
-                    hasNextPage={pagination.hasNextPage}
-                    hasPreviousPage={pagination.hasPreviousPage}
-                    onPageChange={handlePageChange}
+                {searchData.results.length > 0 && (
+                  <LoadMore
+                    hasMore={searchData.hasMore}
+                    loading={searchData.loadingMore}
+                    error={searchData.loadMoreError}
+                    onLoadMore={loadMore}
                   />
+                )}
+
+                {activeTab === 'all' && (
+                  <RelatedSearches query={query} onSearch={handleSuggestionClick} />
                 )}
               </>
             )}
@@ -342,25 +480,10 @@ export default function SearchResults() {
                   <SlidersHorizontal size={15} />
                   <h4>Search controls</h4>
                 </div>
+                {/* Only what the search really applies is listed. Safe Search
+                    and Region are not applied to results (see Settings), so
+                    they are not shown here as if they were. */}
                 <div className="ph-sidebar-controls-list">
-                  <div className="ph-control-item">
-                    <div className="ph-control-info">
-                      <ShieldCheck size={14} />
-                      <span>Safe Search</span>
-                    </div>
-                    <span className="ph-control-badge">
-                      {filters.safeSearch ? 'Active' : 'Disabled'}
-                    </span>
-                  </div>
-
-                  <div className="ph-control-item">
-                    <div className="ph-control-info">
-                      <Globe size={14} />
-                      <span>Region</span>
-                    </div>
-                    <span className="ph-control-badge">{filters.region}</span>
-                  </div>
-
                   <div className="ph-control-item">
                     <div className="ph-control-info">
                       <SlidersHorizontal size={14} />
@@ -382,28 +505,6 @@ export default function SearchResults() {
                 >
                   Advanced filters
                 </button>
-              </div>
-
-              <div className="ph-sidebar-card ph-card">
-                <div className="ph-sidebar-header">
-                  <HelpCircle size={15} />
-                  <h4>Try these</h4>
-                </div>
-                <div className="ph-try-list">
-                  {['search ranking explained', 'how web crawlers work', 'OpenSearch tutorial'].map(
-                    topic => (
-                      <button
-                        key={topic}
-                        type="button"
-                        className="ph-try-item-btn"
-                        onClick={() => handleSuggestionClick(topic)}
-                      >
-                        <span>{topic}</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    )
-                  )}
-                </div>
               </div>
 
               <div className="ph-sidebar-card ph-card ph-privacy-card">

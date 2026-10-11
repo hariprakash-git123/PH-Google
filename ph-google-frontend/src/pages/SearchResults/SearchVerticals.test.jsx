@@ -17,7 +17,12 @@ import { searchApi } from '../../services/searchApi';
  */
 
 vi.mock('../../services/searchApi', () => ({
-  searchApi: { search: vi.fn(), getAiAnswer: vi.fn(), sendAiFeedback: vi.fn() }
+  searchApi: {
+    search: vi.fn(),
+    getAiAnswer: vi.fn(),
+    sendAiFeedback: vi.fn(),
+    getSuggestions: vi.fn(async () => [])
+  }
 }));
 vi.mock('../../components/Header/Header', () => ({ default: () => <div data-testid="header" /> }));
 vi.mock('../../components/Filters/Filters', () => ({ default: () => null }));
@@ -164,12 +169,102 @@ describe('vertical tabs', () => {
 
   it('with SerpApi disabled, the crawler layouts are used as before', async () => {
     searchApi.search.mockResolvedValue(
-      response([], { provider: 'serpapi', status: 'disabled', count: 0, reason: 'disabled' })
+      response(
+        [
+          {
+            id: 'crawled-1',
+            url: 'https://pics.example/crawled.jpg',
+            title: 'Crawled image',
+            alt: 'A crawled image',
+            source: 'pics.example'
+          }
+        ],
+        { provider: 'serpapi', status: 'disabled', count: 0, reason: 'disabled' }
+      )
     );
     renderPage('/search?q=python&category=images');
+    expect(await screen.findByAltText('A crawled image')).toBeInTheDocument();
+    expect(screen.queryByText(/temporarily unavailable/)).not.toBeInTheDocument();
+  });
+
+  it('with no external status at all, an empty tab is the crawler index saying nothing was found', async () => {
+    searchApi.search.mockResolvedValue(response([], null));
+    renderPage('/search?q=python&category=images');
+    expect(await screen.findByText(/No images found for/)).toBeInTheDocument();
+    expect(screen.queryByText(/temporarily unavailable/)).not.toBeInTheDocument();
+    // Public users are not told to crawl from the admin console.
+    expect(screen.queryByText(/admin console/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('service off, unavailable and nothing found are three different states', () => {
+  const off = { provider: 'serpapi', status: 'disabled', count: 0, reason: 'disabled' };
+
+  it.each([
+    ['images', 'Image search is temporarily unavailable.', /No images found/],
+    ['videos', 'Video search is temporarily unavailable.', /No videos found/],
+    ['maps', 'Map search is temporarily unavailable.', /No places found/]
+  ])(
+    '%s: the service is switched off and nothing is shown in its place',
+    async (tab, text, notFound) => {
+      searchApi.search.mockResolvedValue(response([], off));
+      renderPage(`/search?q=python&category=${tab}`);
+      const heading = await screen.findByText(text);
+      expect(heading.closest('[role="status"]')).toHaveTextContent(/switched off right now/);
+      expect(screen.queryByText(notFound)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Try different or fewer keywords/)).not.toBeInTheDocument();
+      // Nothing is invented to fill the tab.
+      expect(
+        document.querySelectorAll('.ph-image-tile, .ph-video-card, .ph-ext-place')
+      ).toHaveLength(0);
+    }
+  );
+
+  it.each([
+    [
+      'the provider failed',
+      { provider: 'serpapi', status: 'unavailable', count: 0, reason: 'timeout' }
+    ],
+    [
+      'the daily limit is used up',
+      { provider: 'serpapi', status: 'skipped', count: 0, reason: 'daily_limit' }
+    ],
+    ['the provider is busy', { provider: 'serpapi', status: 'skipped', count: 0, reason: 'busy' }]
+  ])('%s: not available right now', async (_label, external) => {
+    searchApi.search.mockResolvedValue(response([], external));
+    renderPage('/search?q=python&category=videos');
+    expect(await screen.findByText('No results available right now.')).toBeInTheDocument();
+    expect(screen.queryByText('No videos found for this search.')).not.toBeInTheDocument();
+    expect(screen.queryByText(/switched off/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['images', 'No images found for this search.'],
+    ['videos', 'No videos found for this search.'],
+    ['maps', 'No places found for this search.']
+  ])('%s: the search ran and found nothing', async (tab, text) => {
+    searchApi.search.mockResolvedValue(response([]));
+    renderPage(`/search?q=python&category=${tab}`);
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(screen.getByText('Try different or fewer keywords.')).toBeInTheDocument();
     expect(
-      await screen.findByText(/Images are indexed from the pages the crawler visits/)
-    ).toBeInTheDocument();
+      screen.queryByText(/unavailable|switched off|available right now/)
+    ).not.toBeInTheDocument();
+  });
+
+  it('a filter the provider cannot apply is still "nothing found", not an outage', async () => {
+    searchApi.search.mockResolvedValue(
+      response([], { provider: 'serpapi', status: 'skipped', count: 0, reason: 'language_filter' })
+    );
+    renderPage('/search?q=python&category=images');
+    expect(await screen.findByText('No images found for this search.')).toBeInTheDocument();
+  });
+
+  it('the All tab is untouched by a switched-off provider', async () => {
+    searchApi.search.mockResolvedValue(response([], off));
+    renderPage('/search?q=python');
+    expect(await screen.findByText(/No results found for/)).toBeInTheDocument();
+    expect(screen.queryByText(/temporarily unavailable/)).not.toBeInTheDocument();
   });
 });
 

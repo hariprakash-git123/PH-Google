@@ -173,8 +173,10 @@ services:
       OPENSEARCH_NODE: http://opensearch:9200
       REDIS_URL: redis://redis:6379
       PORT: "5000"
-      # The origin the browser actually loads the frontend from.
-      FRONTEND_URL: http://localhost:8080,http://localhost:3000
+      # The origin(s) the browser loads the frontend from — the CORS
+      # allow-list. Local defaults; set FRONTEND_URL in the shell or the
+      # project-root .env to change it (docker-compose.prod.yml requires it).
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080,http://localhost:3000}
       # Defaults to production so the containerised stack behaves the way a
       # deployment does. Run `NODE_ENV=development docker compose up` when you
       # want readable logs and stack traces in responses.
@@ -237,10 +239,16 @@ services:
     stop_grace_period: 30s
     # The image's HEALTHCHECK probes the API on :5000, which this process
     # never serves, so it would always report unhealthy. The worker has no
-    # health endpoint of its own; `restart` covers a crashed process.
+    # health endpoint of its own.
     healthcheck:
       disable: true
-    restart: unless-stopped
+    # Never restarted by Docker. The worker crawls by itself whenever it
+    # runs, so it runs only when someone starts it: with `unless-stopped` a
+    # worker left running came back after every Docker or machine restart,
+    # crawling with nobody having asked. The cost is that a crashed worker
+    # stays down until it is started again — unfinished work is not lost, the
+    # next worker reclaims it (crawlMaintenanceService).
+    restart: "no"
 
   # -------------------------------------------------------------------------
   # Frontend
@@ -250,10 +258,12 @@ services:
       context: ./ph-google-frontend
       dockerfile: Dockerfile
       args:
-        # Baked into the bundle at build time. This is the URL the browser
-        # uses, so it is the host's published port — not http://backend:5000,
-        # which only resolves inside the compose network.
-        VITE_API_BASE_URL: http://localhost:5000/api
+        # Baked into the bundle at build time. "/api" is the page's own
+        # origin: the frontend's nginx proxies it to the backend service
+        # (ph-google-frontend/nginx.conf), the same way production does.
+        # The backend is still published on 5000 below for local tools and
+        # the Vite dev server (`npm run dev`, which calls localhost:5000).
+        VITE_API_BASE_URL: /api
     image: ph-google-frontend:local
     container_name: ph-google-frontend
     ports:
@@ -297,6 +307,10 @@ volumes:
 #    create a non-admin role for the application, and stop publishing 9200
 #    and 5601 to the host — reach them through the compose network or an
 #    authenticated proxy instead.
-# 5. Give the backend a long, unique JWT_SECRET and serve the frontend over
-#    HTTPS, so the auth cookies introduced in Phase 4 can be Secure.
+# 5. Give the backend a long, unique JWT_SECRET and serve the site over
+#    HTTPS (sessions are Bearer tokens sent with every API call).
+#
+# The production layering of this file — one published port, Redis
+# password, watermarks, logging — is docker-compose.prod.yml; the full
+# procedure is DEPLOYMENT.md.
 # ---------------------------------------------------------------------------

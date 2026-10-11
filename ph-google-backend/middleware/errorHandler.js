@@ -60,8 +60,11 @@ function errorHandler(err, req, res, next) {
       status,
       error: err
     });
-    // Never leak internals on a 500.
-    if (config.isProduction) message = 'Internal server error.';
+    // Never leak internals on a 500. A "service unavailable" this server
+    // raised on purpose (ApiError, operational) carries a message written for
+    // the visitor — "try again in a moment" — and keeps it.
+    const deliberate = err.isOperational === true && status === 503;
+    if (config.isProduction && !deliberate) message = 'Internal server error.';
   } else {
     logger.debug('Request rejected', {
       method: req.method,

@@ -1,8 +1,8 @@
 .ph-admin-sidebar {
   width: 260px;
-  height: 100vh;
+  height: calc(100vh - var(--ph-shell-h, 0px));
   position: sticky;
-  top: 0;
+  top: var(--ph-shell-h, 0px);
   background: #141414;
   border-right: 1px solid #2e2d2a;
   display: flex;
@@ -103,7 +103,7 @@
   background: #141414;
   border-bottom: 1px solid #2e2d2a;
   position: sticky;
-  top: 0;
+  top: var(--ph-shell-h, 0px);
   z-index: 110;
 }
 
@@ -131,8 +131,8 @@
      close button; its own logo row would only repeat them. */
   .ph-admin-sidebar {
     position: fixed;
-    top: 65px;
-    height: calc(100vh - 65px);
+    top: calc(65px + var(--ph-shell-h, 0px));
+    height: calc(100vh - 65px - var(--ph-shell-h, 0px));
     left: -280px;
     max-width: 85vw;
     visibility: hidden;

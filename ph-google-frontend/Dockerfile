@@ -15,10 +15,11 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Vite inlines VITE_* variables at build time, so this is baked into the
-# bundle rather than read at runtime. It is the URL the *browser* uses, which
-# is the host's published port — not the compose service name, which only
-# resolves inside the network.
-ARG VITE_API_BASE_URL=http://localhost:5000/api
+# bundle rather than read at runtime. "/api" is the page's own origin: this
+# image's nginx proxies it to the backend (nginx.conf), so the same bundle
+# works on any domain, over HTTP or HTTPS. Override it only to call an API
+# hosted elsewhere.
+ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 COPY . .

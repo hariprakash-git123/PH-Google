@@ -923,6 +923,7 @@ All responses use one envelope:
 | GET    | `/api/ai-answer`                     | optional | any   | AI answer written from the retrieved documents, with cited sources (see [AI answers](#ai-answers))                         |
 | POST   | `/api/ai-answer/feedback`            | optional | any   | Thumbs up / down on an AI answer                                                                                           |
 | GET    | `/api/images/download`               | none     | any   | One image from image search, as a file download. Needs the `downloadToken` the search response gave for that image (`?url=&sig=&name=`). |
+| GET    | `/api/trending`                      | none     | any   | Current trending searches for a country (`?region=IN`), for the homepage card. Cached; empty list, never an error, when the provider cannot answer. |
 | GET    | `/api/history`                       | yes      | own   | Your search history                                                                                                        |
 | POST   | `/api/history`                       | yes      | own   | Record a query                                                                                                             |
 | DELETE | `/api/history/:id`                   | yes      | own   | Delete one entry                                                                                                           |

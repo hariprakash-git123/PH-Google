@@ -9,8 +9,13 @@ ph-google/           React + Vite frontend          -> http://localhost:8080
 ph-google-backend/   Node + Express API             -> http://localhost:5000
                      ...and the crawl worker, the only process that fetches pages
 docker-compose.yml   the whole stack, plus OpenSearch, Redis and Dashboards
+docker-compose.prod.yml  production overrides, layered on the file above
+DEPLOYMENT.md        production deployment runbook (configuration, init, checks)
 docs/adr/            architecture decision records
 ```
+
+**Deploying to a server?** Follow [DEPLOYMENT.md](DEPLOYMENT.md). The plain
+`docker compose up` below is the local-development stack.
 
 ## Run it
 

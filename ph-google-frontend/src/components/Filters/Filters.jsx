@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Globe, Link2, ArrowUpDown, ShieldCheck, X } from 'lucide-react';
+import { Calendar, Globe, Link2, ArrowUpDown, X } from 'lucide-react';
 import './Filters.css';
 
 /**
@@ -118,29 +118,11 @@ export default function Filters({ filters, onFilterChange, onClose }) {
             spellCheck="false"
           />
         </div>
-
-        {/* Safe Search — display preference, not an index filter */}
-        <div className="ph-filter-group ph-filter-toggle-group">
-          <label className="ph-filter-label">
-            <ShieldCheck size={14} />
-            <span>Safe Search</span>
-          </label>
-          <button
-            type="button"
-            className={`ph-toggle-switch ${filters.safeSearch ? 'on' : ''}`}
-            onClick={() => onFilterChange('safeSearch', !filters.safeSearch)}
-            aria-label="Toggle Safe Search"
-            aria-pressed={filters.safeSearch}
-          >
-            <span className="ph-toggle-thumb" />
-            <span className="ph-toggle-text">{filters.safeSearch ? 'On' : 'Off'}</span>
-          </button>
-        </div>
       </div>
 
       <p className="ph-filters-note">
-        Date, language, site and sort are applied by the search index. Safe Search is a local
-        preference — content classification is not part of the crawler yet.
+        Date, language, site and sort are applied by the search index. Safe Search filtering is not
+        available yet, so results are not filtered for explicit content.
       </p>
     </div>
   );

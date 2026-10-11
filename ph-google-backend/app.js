@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 const { config } = require('./config/env');
 const logger = require('./utils/logger');
-const { sendSuccess } = require('./utils/apiResponse');
+const { sendSuccess, ApiError } = require('./utils/apiResponse');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const openSearchClient = require('./services/opensearch/client');
 const redisConnection = require('./services/queue/connection');
@@ -19,6 +19,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const trendingRoutes = require('./routes/trendingRoutes');
+const embedRoutes = require('./routes/embedRoutes');
 
 /**
  * Builds the Express application.
@@ -30,7 +32,8 @@ function createApp() {
   const app = express();
 
   // Correct client IPs behind a proxy, which the rate limiter depends on.
-  app.set('trust proxy', 1);
+  // TRUST_PROXY (config/env.js): 1 by default — the frontend's nginx.
+  app.set('trust proxy', config.trustProxy);
   app.disable('x-powered-by');
 
   // --- Security headers -------------------------------------------------
@@ -60,7 +63,8 @@ function createApp() {
         if (allowedOrigins.includes(origin)) return callback(null, true);
 
         logger.warn('Blocked CORS origin', { origin });
-        return callback(new Error('Not allowed by CORS'));
+        // 403, not a server error: the request is refused, nothing failed.
+        return callback(ApiError.forbidden('This origin is not allowed to call the API.'));
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -99,49 +103,49 @@ function createApp() {
   });
 
   // --- Health -----------------------------------------------------------
+  // Public and unauthenticated, so it says only whether each part is up:
+  // no hosts, ports, database or index names, cluster names or error text.
+  // Admins get the detail from /api/admin/search/status and
+  // /api/admin/crawler/status.
+  //
+  // The store checks are remembered for a few seconds, so polling the
+  // endpoint cannot open a new Redis connection per request.
+  const HEALTH_CACHE_MS = 5000;
+  let storeChecks = null; // { at, value: Promise<[search, queue]> }
+  const checkStores = () => {
+    if (!storeChecks || Date.now() - storeChecks.at > HEALTH_CACHE_MS) {
+      storeChecks = {
+        at: Date.now(),
+        value: Promise.all([openSearchClient.checkHealth(), redisConnection.checkHealth()])
+      };
+    }
+    return storeChecks.value;
+  };
+
   const health = async (req, res) => {
     const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
     const ready = mongoose.connection.readyState;
     const mongoOk = ready === 1;
 
-    // Report every store. MongoDB holds application data; OpenSearch powers
-    // search; Redis carries the crawl queue.
-    const [searchHealth, queueHealth] = await Promise.all([
-      openSearchClient.checkHealth(),
-      redisConnection.checkHealth()
-    ]);
+    // MongoDB holds application data; OpenSearch powers search; Redis
+    // carries the crawl queue.
+    const [searchHealth, queueHealth] = await checkStores();
     const searchRequired = config.searchEngine === 'opensearch';
     const searchOk = searchHealth.ok || !searchRequired;
 
     return sendSuccess(res, {
       service: 'ph-google-backend',
       status: mongoOk && searchOk ? 'ok' : 'degraded',
-      message: 'PH-Google backend is running.',
-      environment: config.nodeEnv,
       database: {
         state: states[ready] || 'unknown',
-        name: mongoose.connection.name || null,
         connected: mongoOk
       },
-      search: {
-        engine: config.searchEngine,
-        connected: searchHealth.ok,
-        status: searchHealth.status,
-        node: searchHealth.node,
-        index: searchHealth.index,
-        cluster: searchHealth.clusterName || null,
-        error: searchHealth.error || null
-      },
+      search: { connected: Boolean(searchHealth.ok) },
       // Redis carries the crawl queue only. It being down stops new crawls
       // from being scheduled; it does not affect search or any request a
       // normal user makes, which is why it does not make the service
       // "degraded".
-      queue: {
-        connected: queueHealth.ok,
-        url: queueHealth.url,
-        status: queueHealth.status,
-        error: queueHealth.error || null
-      },
+      queue: { connected: Boolean(queueHealth.ok) },
       uptimeSeconds: Math.round(process.uptime()),
       timestamp: new Date()
     });
@@ -160,6 +164,8 @@ function createApp() {
   app.use('/api/analytics', analyticsRoutes);
   app.use('/api/ai-answer', aiRoutes);
   app.use('/api/images', imageRoutes);
+  app.use('/api/trending', trendingRoutes);
+  app.use('/api/embed-check', embedRoutes);
 
   // --- Errors -----------------------------------------------------------
   app.use(notFoundHandler);

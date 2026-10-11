@@ -18,6 +18,22 @@ process.env.DISABLE_RATE_LIMIT = 'true';
 process.env.CRAWLER_DELAY_MS = '0';
 process.env.CRAWLER_TIMEOUT_MS = '4000';
 
+// The provider stand-ins return placeholder titles ("Google result 1"), which
+// no query's words appear in. The check that a provider's answer covers the
+// query is therefore off by default here and switched on by the tests that
+// are about it (tests/unit/resultValidation.test.js).
+process.env.EXTERNAL_RESULT_VALIDATION = 'false';
+
+// A developer's .env may choose Parallel exclusively and hold a real key; no
+// test may ever send a request with it. So the override is cleared (the
+// provider is then SEARCH_PROVIDER, as before), fallback is the default "on",
+// and Parallel is off with no key. The tests that are about Parallel switch
+// it on themselves, against a local stand-in.
+process.env.EXTERNAL_SEARCH_PROVIDER = '';
+process.env.SEARCH_PROVIDER_FALLBACK = 'true';
+process.env.PARALLEL_ENABLED = 'false';
+process.env.PARALLEL_API_KEY = '';
+
 // Never let a test read the developer's real database.
 delete process.env.MONGO_URI;
 

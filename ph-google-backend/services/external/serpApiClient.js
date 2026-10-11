@@ -49,7 +49,8 @@ const RESULT_KEYS = {
   google: 'organic_results',
   google_images: 'images_results',
   google_videos: 'video_results',
-  google_maps: 'local_results'
+  google_maps: 'local_results',
+  google_trends_trending_now: 'trending_searches'
 };
 
 /** Engines that accept the `location` parameter (Maps takes coordinates instead). */

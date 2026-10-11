@@ -28,6 +28,34 @@ function parseOrigins(raw) {
 }
 
 /**
+ * Express's `trust proxy`, from TRUST_PROXY: how many proxies in front of the
+ * API to believe about the client's address (X-Forwarded-For). It decides
+ * what the rate limits count as one client, so it must match the real path a
+ * request takes — never more hops than there are, or a client can forge its
+ * address:
+ *
+ *   1 (default)  one proxy: the frontend's nginx, which sets the header itself
+ *                — also behind a load balancer, where nginx's real_ip module
+ *                recovers the visitor's address (DEPLOYMENT.md)
+ *   0 / false    nothing in front: the API is reached directly
+ *   a list       addresses or subnets of the trusted proxies, e.g.
+ *                "loopback, 10.0.0.0/8" (passed to Express as given)
+ */
+function parseTrustProxy(raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === '') return 1;
+  const text = String(raw).trim().toLowerCase();
+  if (text === 'false' || text === 'off' || text === 'no') return false;
+  if (/^\d+$/.test(text)) {
+    const hops = Number(text);
+    return hops === 0 ? false : hops;
+  }
+  return String(raw)
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+/**
  * Builds the crawler's User-Agent.
  *
  * Convention for a well-behaved bot is a name, a version and a URL a site
@@ -65,6 +93,8 @@ const config = {
     secret: process.env.JWT_SECRET || '',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   },
+
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
 
   // CORS: explicit allow-list in production, localhost dev servers otherwise.
   cors: {
@@ -255,6 +285,8 @@ const config = {
     // limited more tightly than search.
     imageWindowMs: toInt(process.env.RATE_LIMIT_IMAGE_WINDOW_MS, 60 * 1000),
     imageMax: toInt(process.env.RATE_LIMIT_IMAGE_MAX, 30),
+    embedWindowMs: toInt(process.env.RATE_LIMIT_EMBED_WINDOW_MS, 60 * 1000),
+    embedMax: toInt(process.env.RATE_LIMIT_EMBED_MAX, 60),
     disabled: process.env.DISABLE_RATE_LIMIT === 'true' || isTest
   },
 
@@ -318,8 +350,16 @@ const config = {
     engine: (process.env.SERPAPI_ENGINE || 'google').trim().toLowerCase(),
     // Only for tests (a local stand-in) or a proxy.
     baseUrl: (process.env.SERPAPI_BASE_URL || 'https://serpapi.com').trim().replace(/\/+$/, ''),
-    // Give up on SerpApi after this long; the index's results are unaffected.
-    timeoutMs: Math.min(15000, Math.max(500, toInt(process.env.SERPAPI_TIMEOUT_MS, 3000))),
+    // Give up on a SerpApi web search after this long; the index's results
+    // are unaffected. SERPAPI_WEB_TIMEOUT_MS, or its older name
+    // SERPAPI_TIMEOUT_MS.
+    timeoutMs: Math.min(
+      15000,
+      Math.max(
+        500,
+        toInt(process.env.SERPAPI_WEB_TIMEOUT_MS, toInt(process.env.SERPAPI_TIMEOUT_MS, 3000))
+      )
+    ),
     // The same for the Images, Videos and Maps tabs. Longer, because there
     // SerpApi is the whole result rather than an addition to it: waiting a
     // few seconds beats showing nothing.
@@ -347,6 +387,145 @@ const config = {
     minInternalResults: Math.max(0, toInt(process.env.SERPAPI_MIN_INTERNAL_RESULTS, 0)),
     // Requests in flight at once; a search beyond this skips SerpApi.
     maxConcurrent: Math.max(1, toInt(process.env.SERPAPI_MAX_CONCURRENT, 2))
+  },
+
+  // --- Which provider adds external web results ---------------------------
+  // The index always answers first; this chooses who supplies the extra web
+  // results appended on page 1. (Not SEARCH_ENGINE, which chooses the index.)
+  externalSearch: {
+    // serpapi (Google results, the default) | bing | parallel.
+    // EXTERNAL_SEARCH_PROVIDER is the same setting under a clearer name and
+    // wins when both are set; SEARCH_PROVIDER keeps working on its own.
+    provider: (process.env.EXTERNAL_SEARCH_PROVIDER || process.env.SEARCH_PROVIDER || 'serpapi')
+      .trim()
+      .toLowerCase(),
+    // When the chosen provider cannot answer (timeout, outage, rate limit,
+    // rejected key), ask the others that are configured. On unless "false".
+    // Set it to "false" to use the chosen provider exclusively.
+    fallback: process.env.SEARCH_PROVIDER_FALLBACK !== 'false',
+    // Decide by what the index found, not by how much. When no indexed page
+    // is about the query (every query word in its title, headings,
+    // description or address), the external provider is asked and its
+    // results are placed first. "false" restores the count-only rule
+    // (SERPAPI_MIN_INTERNAL_RESULTS), with index results always first.
+    relevanceGate: process.env.EXTERNAL_RELEVANCE_GATE !== 'false',
+    // Check that a provider's web results cover the query's meaningful words
+    // before showing or caching them (services/external/resultRelevance.js).
+    // A list that does not is rejected; SerpApi is asked once more for a
+    // fresh copy, then the other provider. "false" accepts whatever arrives.
+    validateResults: process.env.EXTERNAL_RESULT_VALIDATION !== 'false'
+  },
+
+  // --- Bing web search (RapidAPI: bing-search-apis) ------------------------
+  // Used for the external web results when SEARCH_PROVIDER=bing. Web search
+  // only: images, videos, maps and trends stay with SerpApi.
+  bing: {
+    // Server-side only. Sent as a request header; never logged or returned.
+    apiKey: (process.env.BING_SEARCH_API_KEY || '').trim(),
+    // The RapidAPI host this key is subscribed to.
+    host: (process.env.BING_SEARCH_HOST || 'bing-search-apis.p.rapidapi.com').trim(),
+    // Only for tests (a local stand-in) or a proxy. Defaults to https://<host>.
+    baseUrl: (process.env.BING_SEARCH_BASE_URL || '').trim().replace(/\/+$/, ''),
+    // Give up on Bing after this long; the fallback or the index answers.
+    timeoutMs: Math.min(15000, Math.max(500, toInt(process.env.BING_SEARCH_TIMEOUT_MS, 3000))),
+    // Results asked for and shown under the index's results.
+    maxResults: Math.min(20, Math.max(1, toInt(process.env.BING_SEARCH_MAX_RESULTS, 10))),
+    // Country code sent as `cc`.
+    cc: (process.env.BING_SEARCH_CC || 'IN').trim().toUpperCase(),
+    // Identical requests within this window reuse the stored response. 0 disables.
+    cacheTtlMs: Math.max(0, toInt(process.env.BING_SEARCH_CACHE_TTL_MS, 10 * 60 * 1000)),
+    cacheMaxEntries: Math.max(1, toInt(process.env.BING_SEARCH_CACHE_MAX_ENTRIES, 200)),
+    // Successful requests per UTC day from this process. 0 means no daily cap.
+    dailyLimit: Math.max(0, toInt(process.env.BING_SEARCH_DAILY_LIMIT, 50)),
+    // Requests in flight at once; a search beyond this skips Bing.
+    maxConcurrent: Math.max(1, toInt(process.env.BING_SEARCH_MAX_CONCURRENT, 2))
+  },
+
+  // --- Parallel web search (Parallel Search API) ---------------------------
+  // POST {baseUrl}/v1/search: ranked URLs with excerpts. Used for the external
+  // web results when the provider above is `parallel`. Web search only:
+  // images, videos, maps and trends stay with SerpApi. Never used by AI
+  // answers, never stored.
+  parallel: {
+    // Asked only when this is "true" and a key is set. While off, no request
+    // is ever made — also not as a fallback for another provider.
+    enabled: process.env.PARALLEL_ENABLED === 'true',
+    // Server-side only. Sent in the x-api-key header; never logged or returned.
+    apiKey: (process.env.PARALLEL_API_KEY || '').trim(),
+    // Only for tests (a local stand-in) or a proxy.
+    baseUrl: (process.env.PARALLEL_BASE_URL || 'https://api.parallel.ai')
+      .trim()
+      .replace(/\/+$/, ''),
+    // turbo | fast | basic | advanced. The API's own default is `advanced`
+    // (~3s); `fast` answers in about a second, which a results page can wait for.
+    mode: (process.env.PARALLEL_MODE || 'fast').trim().toLowerCase(),
+    // Give up on Parallel after this long; the fallback or the index answers.
+    timeoutMs: Math.min(15000, Math.max(500, toInt(process.env.PARALLEL_TIMEOUT_MS, 4000))),
+    // Results asked for and shown with the index's results.
+    maxResults: Math.min(10, Math.max(1, toInt(process.env.PARALLEL_MAX_RESULTS, 10))),
+    // Identical requests within this window reuse the stored response. 0 disables.
+    cacheTtlMs: Math.max(0, toInt(process.env.PARALLEL_CACHE_TTL_MS, 10 * 60 * 1000)),
+    cacheMaxEntries: Math.max(1, toInt(process.env.PARALLEL_CACHE_MAX_ENTRIES, 200)),
+    // Requests sent per UTC day from this process. Every request sent counts,
+    // failed or not: how Parallel bills a failed request is not documented, so
+    // none is assumed free. A safety cap, not a plan figure. 0 means no cap.
+    dailyLimit: Math.max(0, toInt(process.env.PARALLEL_DAILY_LIMIT, 100)),
+    // Requests in flight at once; a search beyond this skips Parallel.
+    maxConcurrent: Math.max(1, toInt(process.env.PARALLEL_MAX_CONCURRENT, 2)),
+    // Let the Images and Videos tabs use Parallel for discovery while SerpApi
+    // cannot serve them (services/parallelVerticals.js). Off unless "true":
+    // it makes this server read the pages Parallel finds, at search time.
+    verticals: process.env.PARALLEL_VERTICALS_ENABLED === 'true'
+  },
+
+  // --- Maps: OpenStreetMap (Nominatim) -----------------------------------
+  // Used by the Maps tab to check a pin against where OpenStreetMap places
+  // the town its address names, and to add places OpenStreetMap itself knows
+  // (services/external/nominatimClient.js). No key. Off unless "true": it
+  // sends the search text and town names to the service below.
+  maps: {
+    osm: {
+      enabled: process.env.MAPS_OSM_ENABLED === 'true',
+      // The public service by default. Its usage policy requires that this
+      // can be changed without a new build — point it at your own Nominatim
+      // if the deployment outgrows the public one.
+      baseUrl: (process.env.NOMINATIM_BASE_URL || 'https://nominatim.openstreetmap.org')
+        .trim()
+        .replace(/\/+$/, ''),
+      // The policy requires the application to identify itself; a library's
+      // default User-Agent is refused. Include a contact address or URL.
+      userAgent: (
+        process.env.NOMINATIM_USER_AGENT ||
+        `PH-Search-Maps/1.0${(process.env.CRAWLER_CONTACT_URL || '').trim() ? ` (+${process.env.CRAWLER_CONTACT_URL.trim()})` : ''}`
+      ).trim(),
+      timeoutMs: Math.min(15000, Math.max(1000, toInt(process.env.NOMINATIM_TIMEOUT_MS, 5000))),
+      // Never two requests within this long of each other. The policy's
+      // absolute limit is one a second; this cannot be set below it.
+      minIntervalMs: Math.max(1000, toInt(process.env.NOMINATIM_MIN_INTERVAL_MS, 1100)),
+      // A search does not wait behind a queue longer than this; it goes without.
+      maxWaitMs: Math.max(0, toInt(process.env.NOMINATIM_MAX_WAIT_MS, 6000)),
+      // Requests per UTC day from this process. 0 means no cap.
+      dailyLimit: Math.max(0, toInt(process.env.NOMINATIM_DAILY_LIMIT, 500)),
+      // Answers are kept this long (the policy requires caching). Towns do not move.
+      cacheTtlMs: Math.max(0, toInt(process.env.NOMINATIM_CACHE_TTL_MS, 7 * 24 * 60 * 60 * 1000)),
+      cacheMaxEntries: Math.max(1, toInt(process.env.NOMINATIM_CACHE_MAX_ENTRIES, 1000))
+    }
+  },
+
+  // --- Trending now (the homepage card) ----------------------------------
+  // GET /api/trending: current trending searches for a country, from
+  // SerpApi's Google Trends "Trending Now" engine. Uses the SerpApi settings
+  // above (key, on/off switch, daily limit); nothing else is required.
+  trending: {
+    // Country used when a request names none. ISO code: IN, US, GB, …
+    region: (process.env.TRENDING_REGION || 'IN').trim().toUpperCase(),
+    // How long fetched trends are served before asking again. Every refresh
+    // is one SerpApi search, counted in SERPAPI_DAILY_LIMIT.
+    cacheTtlMs: Math.max(60 * 1000, toInt(process.env.TRENDING_CACHE_TTL_MS, 10 * 60 * 1000)),
+    // Give up on a refresh after this long; the card keeps what it had.
+    timeoutMs: Math.min(20000, Math.max(1000, toInt(process.env.TRENDING_TIMEOUT_MS, 8000))),
+    // Trends returned to the homepage.
+    maxItems: Math.min(20, Math.max(1, toInt(process.env.TRENDING_MAX_ITEMS, 8)))
   },
 
   // --- Image download (the Download button in image search) --------------
@@ -424,4 +603,4 @@ function configWarnings() {
   return warnings;
 }
 
-module.exports = { config, assertValidConfig, configWarnings };
+module.exports = { config, assertValidConfig, configWarnings, parseTrustProxy };

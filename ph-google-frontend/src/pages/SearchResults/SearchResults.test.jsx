@@ -19,7 +19,8 @@ vi.mock('../../services/searchApi', () => ({
   searchApi: {
     search: vi.fn(),
     getAiAnswer: vi.fn(),
-    sendAiFeedback: vi.fn()
+    sendAiFeedback: vi.fn(),
+    getSuggestions: vi.fn(async () => [])
   }
 }));
 vi.mock('../../components/Header/Header', () => ({ default: () => <div data-testid="header" /> }));

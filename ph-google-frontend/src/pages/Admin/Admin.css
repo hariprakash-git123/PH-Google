@@ -1,12 +1,12 @@
 .ph-admin-page {
   display: flex;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--ph-shell-h, 0px));
   background: #141414;
   color: #f4f1ea;
 }
 
 .ph-admin-loading {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--ph-shell-h, 0px));
   display: flex;
   align-items: center;
   justify-content: center;

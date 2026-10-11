@@ -92,7 +92,7 @@ function parseImageUrl(raw) {
 }
 
 /** One GET to an address already checked. Resolves with the response stream. */
-function requestOnce(url, target, { signal, connect }) {
+function requestOnce(url, target, { signal, connect, accept = 'image/*' }) {
   return new Promise((resolve, reject) => {
     const secure =
       connect && connect.protocol ? connect.protocol === 'https:' : url.protocol === 'https:';
@@ -112,7 +112,7 @@ function requestOnce(url, target, { signal, connect }) {
         path: `${url.pathname}${url.search}`,
         headers: {
           host: url.host,
-          accept: 'image/*',
+          accept,
           'user-agent': config.crawler.userAgent,
           'accept-encoding': 'identity'
         },
@@ -229,4 +229,4 @@ async function fetchImage(rawUrl, options = {}) {
   }
 }
 
-module.exports = { fetchImage, parseImageUrl, sniffImage, ImageDownloadError };
+module.exports = { fetchImage, parseImageUrl, sniffImage, requestOnce, ImageDownloadError };

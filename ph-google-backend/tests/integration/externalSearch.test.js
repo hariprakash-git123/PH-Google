@@ -109,7 +109,13 @@ describe('SerpApi enabled', () => {
     expect(data.total).toBe(5);
     // Pagination stays the index's own.
     expect(data.pagination).toMatchObject({ totalResults: 2, totalPages: 1, hasNextPage: false });
-    expect(data.external).toEqual({ provider: 'serpapi', status: 'ok', count: 3, cached: false });
+    expect(data.external).toEqual({
+      provider: 'serpapi',
+      status: 'ok',
+      count: 3,
+      cached: false,
+      placement: 'ranked'
+    });
   });
 
   it('drops a Google copy of a page the index already shows', async () => {

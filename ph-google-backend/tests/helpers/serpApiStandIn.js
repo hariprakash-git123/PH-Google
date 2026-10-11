@@ -64,11 +64,20 @@ const places = n =>
     thumbnail: `https://maps.example/thumb${i + 1}.jpg`
   }));
 
+const trending = n =>
+  Array.from({ length: n }, (_, i) => ({
+    query: `trend ${i + 1}`,
+    search_volume: 1000 * (n - i),
+    increase_percentage: 500,
+    categories: [{ id: 1, name: 'Other' }]
+  }));
+
 const LIST_FOR = {
   google: ['organic_results', 'organic'],
   google_images: ['images_results', 'images'],
   google_videos: ['video_results', 'videos'],
-  google_maps: ['local_results', 'places']
+  google_maps: ['local_results', 'places'],
+  google_trends_trending_now: ['trending_searches', 'trending']
 };
 
 async function startSerpApiStandIn() {
@@ -78,6 +87,7 @@ async function startSerpApiStandIn() {
     images: images(3),
     videos: videos(3),
     places: places(3),
+    trending: trending(5),
     placeResult: null,
     status: 500,
     body: null,
@@ -138,6 +148,7 @@ async function startSerpApiStandIn() {
         images: images(3),
         videos: videos(3),
         places: places(3),
+        trending: trending(5),
         placeResult: null,
         status: 500,
         body: null,
@@ -153,4 +164,4 @@ async function startSerpApiStandIn() {
   };
 }
 
-module.exports = { startSerpApiStandIn, organic, images, videos, places };
+module.exports = { startSerpApiStandIn, organic, images, videos, places, trending };

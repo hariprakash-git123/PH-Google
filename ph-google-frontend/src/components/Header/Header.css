@@ -9,7 +9,7 @@
 /* On results the header stays put and separates by a hairline — no shadow */
 .ph-header-sticky {
   position: sticky;
-  top: 0;
+  top: var(--ph-shell-h, 0px);
   background: var(--ph-bg);
   border-bottom-color: var(--ph-border);
 }

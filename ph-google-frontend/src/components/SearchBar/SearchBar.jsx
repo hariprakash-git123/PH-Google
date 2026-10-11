@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Mic, ArrowRight } from 'lucide-react';
+import { Search, X, Mic, MicOff, ArrowRight } from 'lucide-react';
 import SearchSuggestions from '../SearchSuggestions/SearchSuggestions';
 import { searchApi } from '../../services/searchApi';
+import { loadPreferences } from '../../services/preferences';
+import { useVoiceSearch, voiceLanguage, VOICE_MESSAGES } from '../../hooks/useVoiceSearch';
 import './SearchBar.css';
 
 export default function SearchBar({
@@ -18,7 +20,6 @@ export default function SearchBar({
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [toastMessage, setToastMessage] = useState('');
 
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -99,9 +100,32 @@ export default function SearchBar({
     }
   };
 
+  // Voice: the words are put in the box as they are heard, then searched
+  // for exactly as if they had been typed and submitted.
+  const voice = useVoiceSearch({
+    lang: voiceLanguage(loadPreferences()),
+    onInterim: text => {
+      isTypingRef.current = false;
+      setQuery(text);
+    },
+    onFinal: text => {
+      isTypingRef.current = false;
+      setQuery(text);
+      handleSubmit(text);
+    }
+  });
+  const { error: voiceError, clearError: clearVoiceError } = voice;
+
+  // A voice message goes away by itself.
+  useEffect(() => {
+    if (!voiceError) return undefined;
+    const timer = setTimeout(clearVoiceError, 6000);
+    return () => clearTimeout(timer);
+  }, [voiceError, clearVoiceError]);
+
   const handleVoiceSearch = () => {
-    setToastMessage('Voice search is not connected yet.');
-    setTimeout(() => setToastMessage(''), 3000);
+    setShowDropdown(false);
+    voice.start();
   };
 
   const handleClear = () => {
@@ -137,7 +161,9 @@ export default function SearchBar({
             if (suggestions.length > 0) setShowDropdown(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={
+            voice.ready ? 'Listening…' : voice.listening ? 'Starting microphone…' : placeholder
+          }
           autoFocus={autoFocus}
           aria-label="Search the web"
           autoComplete="off"
@@ -158,10 +184,11 @@ export default function SearchBar({
 
           <button
             type="button"
-            className="ph-searchbar-btn ph-btn-mic"
+            className={`ph-searchbar-btn ph-btn-mic${voice.listening ? ' listening' : ''}`}
             onClick={handleVoiceSearch}
-            aria-label="Voice search placeholder"
-            title="Voice search"
+            aria-label={voice.listening ? 'Stop listening' : 'Search by voice'}
+            aria-pressed={voice.listening}
+            title={voice.listening ? 'Stop listening' : 'Search by voice'}
           >
             <Mic size={19} />
           </button>
@@ -189,11 +216,17 @@ export default function SearchBar({
         />
       )}
 
-      {/* Voice Search Toast Banner */}
-      {toastMessage && (
-        <div className="ph-toast-notice animate-fade-in" role="status">
-          <Mic size={15} />
-          <span>{toastMessage}</span>
+      {/* Voice search: listening, or why it did not work */}
+      {voice.listening && (
+        <div className="ph-toast-notice ph-voice-notice animate-fade-in" role="status">
+          <span className="ph-voice-dot" aria-hidden="true" />
+          <span>{voice.ready ? 'Listening… speak now' : 'Starting microphone…'}</span>
+        </div>
+      )}
+      {!voice.listening && voiceError && (
+        <div className="ph-toast-notice ph-voice-notice animate-fade-in" role="alert">
+          <MicOff size={15} aria-hidden="true" />
+          <span>{VOICE_MESSAGES[voiceError]}</span>
         </div>
       )}
     </div>

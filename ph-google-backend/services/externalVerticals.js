@@ -6,18 +6,23 @@ const { buildVerticalRequest } = require('./external/serpApiQuery');
 const { mapImageResults } = require('./external/serpApiImageMapper');
 const { mapVideoResults } = require('./external/serpApiVideoMapper');
 const { mapPlaceResults } = require('./external/serpApiMapsMapper');
+const parallelVerticals = require('./parallelVerticals');
 
 /**
  * The image, video and map verticals from SerpApi (Google Images, Google
  * Videos, Google Maps).
  *
  * While SerpApi is off (or has no key) these verticals are exactly what they
- * were: the crawler's own media and places (verticalSearchService). While it
- * is on, they come from SerpApi:
+ * were: the crawler's own media and places (verticalSearchService) — unless
+ * PARALLEL_VERTICALS_ENABLED is on, in which case they add what can be
+ * verified from a Parallel web search (parallelVerticals.js): confirmed
+ * videos, checked pictures, and places as their own pages describe them.
+ * While SerpApi is on, they come from SerpApi:
  *
- *   - one SerpApi request per query and vertical, through the same cache,
- *     daily limit and failure pause as web search (cache keys carry the
- *     vertical, so "python" on Images never answers "python" on Videos);
+ *   - one SerpApi request per query and vertical, through the same cache and
+ *     daily limit as web search (cache keys carry the vertical, so "python"
+ *     on Images never answers "python" on Videos); repeated failures pause
+ *     that vertical alone;
  *   - pages are cut from that one response, so paging costs no searches and
  *     the total is what SerpApi actually returned — never an estimate;
  *   - a failure is an empty list with a status, never an error page;
@@ -55,6 +60,9 @@ async function search(category, params, runInternal) {
 
   const available = externalSearch.availability();
   if (!available.ok) {
+    if (parallelVerticals.handles(category) && parallelVerticals.available().ok) {
+      return parallelVerticals.search(category, params);
+    }
     const outcome = await runInternal();
     return { ...outcome, external: external(available.status, { reason: available.reason }) };
   }
@@ -84,7 +92,10 @@ async function search(category, params, runInternal) {
   const all = MAPPERS[category](outcome.results);
   const page = Math.max(1, params.page || 1);
   const limit = Math.max(1, params.limit || 10);
-  const results = all.slice((page - 1) * limit, page * limit);
+  // "Load more" asks for the results after those already shown.
+  const start =
+    Number.isInteger(params.offset) && params.offset >= 0 ? params.offset : (page - 1) * limit;
+  const results = all.slice(start, start + limit);
 
   return {
     results,

@@ -79,11 +79,13 @@ describe('externalSearch — when SerpApi is not used', () => {
       ['index', 1],
       ['index', 2]
     ]);
-    // Everything else is the index's outcome as it was.
+    // Everything else is the index's outcome as it was, and there is nothing
+    // external for "Load more" to continue.
     expect({ ...out, results: undefined, external: undefined }).toEqual({
       ...internal,
       results: undefined,
-      external: undefined
+      external: undefined,
+      continuation: { externalOffset: 0, externalMore: false, placement: null }
     });
     // The index's own fields are untouched.
     expect(out.results[0]).toMatchObject(internal.results[0]);
@@ -114,7 +116,7 @@ describe('externalSearch — when SerpApi is not used', () => {
 });
 
 describe('externalSearch — merging', () => {
-  it('appends Google results after every index result, in Google order', async () => {
+  it('ranks Google results together with the index results (here the index pages lead)', async () => {
     const out = await run();
     expect(searchGoogle).toHaveBeenCalledWith({ q: 'python', params: {} });
     expect(out.results.map(r => r.source)).toEqual([
@@ -125,7 +127,13 @@ describe('externalSearch — merging', () => {
       'serpapi'
     ]);
     expect(out.results.slice(2).map(r => r.sourceRank)).toEqual([1, 2, 3]);
-    expect(out.external).toEqual({ provider: 'serpapi', status: 'ok', count: 3, cached: false });
+    expect(out.external).toEqual({
+      provider: 'serpapi',
+      status: 'ok',
+      count: 3,
+      cached: false,
+      placement: 'ranked'
+    });
   });
 
   it('never changes the index totals (pagination stays the index’s)', async () => {
@@ -215,10 +223,31 @@ describe('externalSearch — failures leave the index results', () => {
     }
   );
 
-  it('an unexpected error is reported as unavailable', async () => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    searchGoogle.mockRejectedValue(new TypeError('boom'));
-    expect((await run()).external).toMatchObject({ status: 'unavailable', reason: 'unavailable' });
+  it('a bug is not passed off as a provider failure: logged as an error, no pause', async () => {
+    const errorLog = jest.spyOn(logger, 'error').mockImplementation(() => {});
+    const warnLog = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const bug = new TypeError('boom');
+    searchGoogle.mockRejectedValueOnce(bug);
+    const internal = internalOutcome();
+    const out = await run(params(), internal);
+    // Search still answers from the index…
+    expect(out.results.map(r => r.url)).toEqual(internal.results.map(r => r.url));
+    expect(out.external).toMatchObject({ status: 'unavailable', reason: 'internal_error' });
+    // …but the error is reported as what it is, not as "SerpApi failed".
+    expect(errorLog).toHaveBeenCalledWith(
+      'Unexpected error in external search (not a provider failure)',
+      {
+        provider: 'serpapi',
+        operation: 'web',
+        query: 'python',
+        durationMs: expect.any(Number),
+        error: bug
+      }
+    );
+    expect(warnLog).not.toHaveBeenCalled();
+    // And the provider is not paused for it: the next search asks again.
+    const next = await run(params({ query: 'another' }));
+    expect(next.external.status).toBe('ok');
   });
 
   it('a rejected key pauses SerpApi instead of retrying on every search', async () => {
@@ -244,9 +273,14 @@ describe('externalSearch — failures leave the index results', () => {
     );
     const out = await run();
     expect(warn).toHaveBeenCalledWith('SerpApi request failed; showing index results only', {
+      provider: 'serpapi',
+      operation: 'web',
+      query: 'python',
       reason: 'auth',
       status: 401,
-      pausedForMs: expect.any(Number)
+      durationMs: expect.any(Number),
+      pausedForMs: expect.any(Number),
+      pauseScope: 'provider'
     });
     expect(JSON.stringify(warn.mock.calls)).not.toContain(KEY);
     expect(JSON.stringify(out)).not.toContain(KEY);

@@ -1,0 +1,110 @@
+# PH Google — production overrides
+#
+# Layered on top of docker-compose.yml; it never runs on its own:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml config   # check
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# What changes from the local stack:
+#
+#   * Only the web entry point is published: the frontend's nginx, which
+#     serves the app and proxies /api to the backend over the compose
+#     network. The backend, OpenSearch, Dashboards, Redis and MongoDB get no
+#     host ports — they are reachable only from inside the network.
+#   * Redis requires a password (REDIS_PASSWORD).
+#   * OpenSearch's disk watermarks are on again, so a filling disk blocks
+#     writes before it corrupts anything.
+#   * OpenSearch Dashboards is not started (profile "tools").
+#   * The API logs at "info", runs with NODE_ENV=production, and allows only
+#     the origin(s) in FRONTEND_URL.
+#   * The crawl worker stays behind its "crawler" profile: `up -d` does NOT
+#     start it. Starting it is a separate, deliberate decision.
+#
+# Values come from the shell or from a project-root .env file (copy
+# .env.production.example). Compose refuses to start when a required one is
+# missing. The backend's own settings (MONGO_URI, JWT_SECRET, provider keys)
+# stay in ph-google-backend/.env — see DEPLOYMENT.md.
+#
+# TLS is not terminated here. Put the deployment's HTTPS load balancer or
+# reverse proxy in front of the published port (see DEPLOYMENT.md, "TLS and
+# the domain"). With one in front, enable the real_ip lines in
+# ph-google-frontend/nginx.conf so client addresses stay correct; TRUST_PROXY
+# stays 1 either way.
+
+services:
+  opensearch:
+    ports: !reset []
+    environment:
+      # Back on (the local file turns them off for laptops). OpenSearch's own
+      # defaults: stop allocating at 85% used, move shards at 90%, and make
+      # indices read-only at 95% so a full disk cannot corrupt them.
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=85%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - cluster.routing.allocation.disk.watermark.flood_stage=95%
+      # Heap: half the memory given to this container, at most ~31g.
+      - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS:--Xms1g -Xmx1g}
+
+  dashboards:
+    # An admin tool, not part of the service. Start it on purpose, if at
+    # all, and reach it through an SSH tunnel or an authenticated proxy:
+    #   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile tools up -d dashboards
+    profiles: ["tools"]
+    ports: !reset []
+
+  mongo:
+    # Only with --profile local-db. Production normally uses a managed
+    # MongoDB through MONGO_URI; if this container is used instead, it is
+    # reachable only on the compose network.
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:?set REDIS_PASSWORD (letters and digits; see DEPLOYMENT.md)}"
+      ]
+    environment:
+      # redis-cli reads the password from here, so the healthcheck below
+      # authenticates without putting it on a command line.
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  backend:
+    # Reached only by the frontend's nginx, over the compose network.
+    ports: !reset []
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The exact origin(s) users load the site from, e.g.
+      # https://search.example.com — the CORS allow-list. Required.
+      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL to the site origin, e.g. https://search.example.com}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+      # The API is reached only through this stack's nginx, which sets
+      # X-Forwarded-For itself: one hop. Keep 1 (DEPLOYMENT.md).
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+
+  worker:
+    # Still behind the "crawler" profile; not started by `up -d`.
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+
+  frontend:
+    build:
+      args:
+        # Same origin; nginx proxies /api to the backend.
+        VITE_API_BASE_URL: /api
+    # The one published port. Bind it to 127.0.0.1 (WEB_BIND) when a
+    # reverse proxy on the same machine terminates TLS in front of it.
+    ports: !override
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy

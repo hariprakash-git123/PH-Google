@@ -143,6 +143,58 @@
   z-index: 120;
 }
 
+/* Voice search messages can be a sentence or two: they wrap, within the page. */
+.ph-voice-notice {
+  width: max-content;
+  max-width: min(440px, calc(100vw - 32px));
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.ph-voice-notice svg {
+  flex-shrink: 0;
+}
+
+/* Listening: the microphone turns red and pulses, with a red dot beside the
+   words — never colour alone, the label says it too. */
+.ph-btn-mic.listening,
+.ph-btn-mic.listening:hover {
+  background: var(--ph-danger);
+  color: #ffffff;
+  animation: ph-voice-pulse 1.4s ease-out infinite;
+}
+
+.ph-voice-dot {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: ph-voice-blink 1s ease-in-out infinite;
+}
+
+@keyframes ph-voice-pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(180, 35, 24, 0.45);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(180, 35, 24, 0);
+  }
+}
+
+@keyframes ph-voice-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-btn-mic.listening,
+  .ph-voice-dot {
+    animation: none;
+  }
+}
+
 @media (max-width: 600px) {
   .ph-searchbar-large .ph-searchbar-box {
     height: 56px;

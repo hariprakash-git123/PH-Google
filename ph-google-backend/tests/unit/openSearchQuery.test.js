@@ -511,7 +511,7 @@ describe('query building', () => {
     });
 
     it('applies quality and freshness as bounded multipliers', () => {
-      const body = buildSearchBody(parseQuery('python'), {});
+      const body = buildSearchBody(parseQuery('latest python news'), {});
       expect(body.query.function_score.boost_mode).toBe('multiply');
 
       const fns = body.query.function_score.functions;
@@ -519,10 +519,34 @@ describe('query building', () => {
       expect(fns.some(f => f.weight && f.filter && f.filter.range)).toBe(true); // freshness
     });
 
+    it.each([
+      'latest python news',
+      'python release',
+      'python 3.14 updates',
+      `elections ${new Date().getUTCFullYear()}`
+    ])('lifts recent pages for a time-sensitive query: %s', query => {
+      const fns = buildSearchBody(parseQuery(query), {}).query.function_score.functions;
+      expect(fns.some(f => f.weight && f.filter && f.filter.range)).toBe(true);
+    });
+
+    it.each([
+      'python',
+      'theory of relativity',
+      'new york',
+      'electric current',
+      'what is a web crawler',
+      'battle of 1066'
+    ])('leaves recency out when the query does not ask for it: %s', query => {
+      const fns = buildSearchBody(parseQuery(query), {}).query.function_score.functions;
+      expect(fns.some(f => f.weight)).toBe(false);
+      expect(fns.some(f => f.script_score)).toBe(true); // quality still applies
+    });
+
     it('bounds freshness so it can only lift a recent page, never bury an old one', () => {
       // Regression: a decay function here scored ~1e-42 for a 2001-dated
       // page and erased it from the results entirely.
-      const fns = buildSearchBody(parseQuery('python'), {}).query.function_score.functions;
+      const fns = buildSearchBody(parseQuery('latest python news'), {}).query.function_score
+        .functions;
 
       // No unbounded decay curve.
       expect(fns.some(f => f.gauss || f.exp || f.linear)).toBe(false);

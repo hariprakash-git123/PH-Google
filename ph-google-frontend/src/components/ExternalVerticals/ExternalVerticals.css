@@ -12,31 +12,286 @@
   cursor: zoom-in;
 }
 
-/* --- Image preview (lightbox) ---------------------------------
-   The frame, close and previous/next buttons are the existing
-   .ph-lightbox styles from ImageResults.css. */
+/* --- Image search: chips and related searches ------------------ */
 
-.ph-ext-lb-dialog {
+.ph-img-refine {
   display: flex;
-  max-width: 100%;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
   min-width: 0;
 }
 
-.ph-ext-lb .ph-lightbox-inner {
-  width: min(1000px, 92vw);
-  max-height: 92vh;
+/* One row that scrolls sideways; never wraps into a wall of chips. */
+.ph-img-chips,
+.ph-img-related-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px 2px 6px;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Over a pale image the translucent white buttons disappear. */
-.ph-ext-lb .ph-lightbox-close,
-.ph-ext-lb .ph-lightbox-nav {
+.ph-img-chip,
+.ph-img-related-item {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-pill);
+  background: var(--ph-surface);
+  color: var(--ph-text);
+  font: inherit;
+  font-size: var(--ph-text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ph-img-chip:hover,
+.ph-img-related-item:hover {
+  border-color: var(--ph-primary);
+}
+
+.ph-img-chip.is-active {
+  background: var(--ph-primary-soft);
+  border-color: var(--ph-primary);
+  color: var(--ph-primary-ink);
+  font-weight: 600;
+}
+
+.ph-img-chip:focus-visible,
+.ph-img-related-item:focus-visible,
+.ph-masonry-tile:focus-visible,
+.ph-img-panel-btn:focus-visible,
+.ph-img-panel-related-item:focus-visible {
+  outline: 2px solid var(--ph-primary);
+  outline-offset: 2px;
+}
+
+.ph-img-related {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ph-img-related-label {
+  flex: 0 0 auto;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
+.ph-img-related-list {
+  min-width: 0;
+}
+
+.ph-img-related-item {
+  background: var(--ph-bg-sunken);
+}
+
+/* --- Image search: the masonry grid ---------------------------- */
+
+/* The grid, and the preview beside it once an image is open. */
+.ph-img-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.ph-img-view.has-preview {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 42%);
+}
+
+/* Each tile is placed by row and column (see placeTiles); rows are 4px. */
+.ph-masonry {
+  display: grid;
+  grid-auto-rows: 4px;
+  column-gap: 14px;
+  min-width: 0;
+}
+
+.ph-masonry-tile {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+}
+
+.ph-masonry-thumb {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--ph-radius-lg);
+  background: var(--ph-bg-sunken);
+  border: 2px solid transparent;
+  transition: border-color 0.12s ease-out;
+}
+
+.ph-masonry-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease-out;
+}
+
+.ph-masonry-tile:hover .ph-masonry-thumb img {
+  transform: scale(1.02);
+}
+
+.ph-masonry-tile.is-selected .ph-masonry-thumb {
+  border-color: var(--ph-primary);
+}
+
+.ph-masonry-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 2px 0;
+  min-width: 0;
+}
+
+.ph-masonry-site {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ph-masonry-site .ph-image-source,
+.ph-masonry-caption .ph-image-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ph-masonry-site .ph-image-source {
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
+.ph-masonry-caption .ph-image-title {
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text);
+}
+
+.ph-site-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.ph-site-icon-generic {
+  padding: 1px;
+  color: var(--ph-text-secondary);
+}
+
+/* Loading: columns of grey blocks of different heights. */
+.ph-masonry-skeleton {
+  columns: 4 180px;
+  column-gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ph-masonry-skeleton-tile {
+  break-inside: avoid;
+  margin-bottom: 14px;
+}
+
+.ph-masonry-skeleton-tile .ph-ext-skeleton-block {
+  border-radius: var(--ph-radius-lg);
+  margin-bottom: 8px;
+}
+
+/* --- Image preview: beside the grid ---------------------------- */
+
+.ph-img-panel {
+  position: sticky;
+  top: calc(var(--ph-shell-h, 0px) + var(--header-height) + 12px);
+  max-height: calc(100vh - var(--ph-shell-h, 0px) - var(--header-height) - 24px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--ph-surface);
+  border: 1px solid var(--ph-border);
+  border-radius: var(--ph-radius-lg);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+}
+
+.ph-img-panel-backdrop {
+  display: none;
+}
+
+.ph-img-panel-bar {
+  position: sticky;
+  top: 0;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 8px 8px 14px;
+  background: var(--ph-surface);
+  border-bottom: 1px solid var(--ph-border-subtle);
 }
 
-.ph-ext-lb .ph-lightbox-close:hover,
-.ph-ext-lb .ph-lightbox-nav:hover {
-  background: rgba(0, 0, 0, 0.8);
+.ph-img-panel-site {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+}
+
+.ph-img-panel-site span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ph-img-panel-count {
+  flex: 0 0 auto;
+  margin-right: 4px;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
+.ph-img-panel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--ph-radius-pill);
+  background: none;
+  color: var(--ph-text);
+  cursor: pointer;
+}
+
+.ph-img-panel-btn:hover:not(:disabled) {
+  background: var(--ph-surface-hover);
+}
+
+.ph-img-panel-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .ph-ext-lb-stage {
@@ -49,25 +304,24 @@
   overflow: hidden;
 }
 
-.ph-ext-lb .ph-ext-lb-image {
+.ph-ext-lb-image {
   max-width: 100%;
-  max-height: 62vh;
+  max-height: 56vh;
   object-fit: contain;
   opacity: 0;
   transition: opacity 0.15s ease-out;
 }
 
-.ph-ext-lb .ph-ext-lb-image.is-loaded {
+.ph-ext-lb-image.is-loaded {
   opacity: 1;
 }
 
 /* The grid thumbnail, shown at once while the full image arrives. */
-.ph-ext-lb .ph-ext-lb-placeholder {
+.ph-ext-lb-placeholder {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  max-height: none;
   object-fit: contain;
   filter: blur(6px);
   opacity: 0.6;
@@ -106,8 +360,24 @@
   text-align: center;
 }
 
+.ph-img-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 18px;
+}
+
 .ph-ext-lb-title {
+  margin: 0;
+  font-size: var(--ph-text-base);
+  line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.ph-img-panel-facts {
+  margin: 0;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
 }
 
 .ph-ext-lb-actions {
@@ -126,37 +396,100 @@
   cursor: progress;
 }
 
+.ph-img-panel-note {
+  margin: 0;
+  font-size: var(--ph-text-xs);
+  color: var(--ph-text-secondary);
+}
+
 .ph-ext-lb-error {
-  margin: 10px 0 0;
+  margin: 0;
   font-size: 13px;
   color: var(--ph-danger, #b3261e);
 }
 
-@media (max-width: 640px) {
-  .ph-ext-lb .ph-lightbox-inner {
-    width: 100%;
-    max-height: 94vh;
+.ph-img-panel-related {
+  margin-top: 6px;
+}
+
+.ph-img-panel-related h3 {
+  margin: 0 0 8px;
+  font-size: var(--ph-text-sm);
+  font-weight: 600;
+}
+
+.ph-img-panel-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ph-img-panel-related-item {
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ph-border-subtle);
+  border-radius: var(--ph-radius-md);
+  background: var(--ph-bg-sunken);
+  cursor: pointer;
+}
+
+.ph-img-panel-related-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Narrow screens: the preview covers the page --------------- */
+
+@media (max-width: 899px) {
+  .ph-img-view.has-preview {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .ph-ext-lb .ph-ext-lb-image {
-    max-height: 46vh;
+
+  .ph-img-panel-backdrop {
+    display: block;
+    position: fixed;
+    inset: var(--ph-shell-h, 0px) 0 0 0;
+    z-index: 879;
+    background: rgba(0, 0, 0, 0.45);
   }
-  .ph-ext-lb-stage {
-    min-height: 160px;
+
+  .ph-img-panel {
+    position: fixed;
+    top: var(--ph-shell-h, 0px);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 880;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
   }
-  .ph-ext-lb .ph-lightbox-close {
-    top: 8px;
-    right: 8px;
+
+  .ph-ext-lb-image {
+    max-height: 48vh;
   }
-  .ph-ext-lb .ph-lightbox-prev {
-    left: 6px;
-  }
-  .ph-ext-lb .ph-lightbox-next {
-    right: 6px;
-  }
-  /* Three actions fit one row on a phone; each stays a full tap target. */
+
   .ph-ext-lb-actions .ph-ext-place-btn {
     flex: 1 1 auto;
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .ph-masonry {
+    column-gap: 10px;
+  }
+
+  .ph-masonry-skeleton {
+    columns: 2;
+    column-gap: 10px;
+  }
+
+  .ph-ext-lb-stage {
+    min-height: 160px;
   }
 }
 
@@ -167,6 +500,181 @@
 
 .ph-ext-link:hover {
   text-decoration: underline;
+}
+
+/* --- Map above the places -------------------------------------
+   A compact picture: OpenStreetMap tiles as plain images, a numbered
+   marker per place. Never taller than a card or two. */
+
+.ph-ext-map {
+  margin: 0 0 16px;
+}
+
+.ph-ext-map-frame {
+  position: relative;
+  height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  background: #e8e6df;
+  /* Its own stacking context: markers never rise above the page header. */
+  isolation: isolate;
+}
+
+.ph-ext-map-tiles img {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.ph-ext-map-marker {
+  position: absolute;
+  z-index: 1;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--ph-primary);
+  color: var(--ph-on-primary, #fff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.ph-ext-map-marker:hover,
+.ph-ext-map-marker.is-selected {
+  z-index: 2;
+  background: var(--text-primary, #171717);
+  color: #fff;
+}
+
+.ph-ext-map-zoom {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ph-ext-map-zoom button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-surface, #fff);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.ph-ext-map-zoom button + button {
+  border-top: 1px solid var(--border-color);
+}
+
+.ph-ext-map-zoom button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ph-ext-map-popup {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: min(300px, calc(100% - 20px));
+  padding: 10px 32px 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface, #fff);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ph-ext-map-popup-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.ph-ext-map-popup-line {
+  overflow-wrap: anywhere;
+}
+
+.ph-ext-map-popup-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.ph-ext-map-popup-link:hover {
+  text-decoration: underline;
+}
+
+.ph-ext-map-popup-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.ph-ext-map-popup-close:hover {
+  background: var(--bg-surface-hover);
+}
+
+.ph-ext-map-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 10.5px;
+  color: #333;
+  text-decoration: none;
+}
+
+.ph-ext-map-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 2px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .ph-ext-map-frame {
+    height: 200px;
+  }
 }
 
 /* --- Places --------------------------------------------------- */

@@ -1,5 +1,5 @@
 .ph-home-page {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--ph-shell-h, 0px));
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -160,6 +160,21 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+/* Trending card: "Loading trends…" and "Updated 5 min ago". */
+.ph-trending-note {
+  margin: -8px 0 0;
+  font-size: 12.5px;
+  color: var(--ph-text-muted, var(--ph-text-secondary));
+}
+
+/* A long trend stays inside the card. */
+.ph-feature-tags-list .trending-chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ph-home-footer {
